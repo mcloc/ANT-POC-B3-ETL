@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
 
 public class Main {
-	private final static String RTD_DIRETCTORY = "/home/mcloc/Downloads/12";
+	private final static String RTD_DIRETCTORY = "/home/mcloc/Downloads/13";
 	private static Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	private static GlobalProperties globalProperties = new GlobalProperties();
 	private static JDBCConnection jdbcConnection;
@@ -32,6 +32,7 @@ public class Main {
 	
 	private static int files_processed = 0;
 	private static int directories_processed = 0;
+	private static long rows_processed = 0;
 	
 
 	public static void main(String[] args) throws Exception {
@@ -56,10 +57,16 @@ public class Main {
 		File[] list = dir.listFiles();
 		Arrays.sort(list);
 		processFiles(list);
+		timer1 = System.currentTimeMillis();
+		long total_time = (timer1 - start_time) / 1000;
 		
-		
+		jdbcConnection.connClose();
+		LOGGER.info("Total time to process: " + total_time + " seconds");
 		LOGGER.info("Total directories processed: " + directories_processed);
 		LOGGER.info("Total files processed on all directories: " + files_processed);
+		LOGGER.info("Total records processed on all directories: " + rows_processed);
+		LOGGER.info("Files per sec: " + (files_processed/total_time));
+		LOGGER.info("Records per sec: " + (rows_processed/total_time));
 
 	}
 	
@@ -73,7 +80,7 @@ public class Main {
                 processFiles(_list); // Calls same method again.
             } else {
             	files_processed++;
-                LOGGER.info("Loading File: " + file.getAbsolutePath());
+//                LOGGER.info("Loading File: " + file.getAbsolutePath());
                 loadCSV(file.getAbsolutePath());
             }
         }
@@ -106,7 +113,8 @@ public class Main {
 		            + "FROM STDIN (FORMAT csv, HEADER true, DELIMITER ',')", 
 		                new BufferedReader(new FileReader(absolutePath))
 		                );
-		    LOGGER.info("File: " + absolutePath + " LOADED: " + rowsInserted + " rows");
+//		    LOGGER.info("File: " + absolutePath + " LOADED: " + rowsInserted + " rows");
+		    rows_processed += rowsInserted;
 		} catch (SQLException | IOException e) {
 			LOGGER.error("Error Loading File: " + absolutePath);
 			LOGGER.error(e.getMessage(), e);
