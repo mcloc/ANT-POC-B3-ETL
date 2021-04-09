@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
 
 public class Main {
-	private final static String RTD_DIRETCTORY = "/home/mcloc/Downloads/13";
+	private final static String RTD_DIRETCTORY = "/home/mcloc/Downloads/18";
 	private static Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	private static GlobalProperties globalProperties = new GlobalProperties();
 	private static JDBCConnection jdbcConnection;
