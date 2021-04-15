@@ -9,104 +9,114 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import br.com.assemblenewtechnologies.ANTLogSync.Main;
+
 public class ZipUtils {
+	private static Logger LOGGER = LoggerFactory.getLogger(ZipUtils.class);
+	private List<String> fileList;
+	private String OUTPUT_ZIP_FILE = null; // "Folder.zip";
+	private String SOURCE_FOLDER = null; // "D:\\Reports"; // SourceFolder path
 
-  private List <String> fileList;
-  private  String OUTPUT_ZIP_FILE = null; //"Folder.zip";
-  private  String SOURCE_FOLDER = null; //"D:\\Reports"; // SourceFolder path
+	public ZipUtils() {
+		fileList = new ArrayList<String>();
+	}
 
-  public ZipUtils() {
-      fileList = new ArrayList < String > ();
-  }
+	public void zipIt(String zipFile) {
+		byte[] buffer = new byte[1024];
+		String source = new File(SOURCE_FOLDER).getName();
+		LOGGER.info("archive SOURCE FOLDER: " + source);
+		FileOutputStream fos = null;
+		ZipOutputStream zos = null;
+		try {
+			fos = new FileOutputStream(zipFile);
+			zos = new ZipOutputStream(fos);
 
+			LOGGER.info("Archiving to output to Zip : " + zipFile);
+			FileInputStream in = null;
 
-  public void zipIt(String zipFile) {
-      byte[] buffer = new byte[1024];
-      String source = new File(SOURCE_FOLDER).getName();
-      FileOutputStream fos = null;
-      ZipOutputStream zos = null;
-      try {
-          fos = new FileOutputStream(zipFile);
-          zos = new ZipOutputStream(fos);
+			for (String file : this.fileList) {
+//				LOGGER.info("Archiving File Added : " + file);
+				ZipEntry ze = new ZipEntry(source + File.separator + file);
+				zos.putNextEntry(ze);
+				try {
+					in = new FileInputStream(SOURCE_FOLDER + File.separator + file);
+					int len;
+					while ((len = in.read(buffer)) > 0) {
+						zos.write(buffer, 0, len);
+					}
+				} finally {
+					in.close();
+					File archive_file_buffer = new File(source + File.separator + file);
+					archive_file_buffer.delete();
+				}
+			}
 
-          System.out.println("Output to Zip : " + zipFile);
-          FileInputStream in = null;
+			zos.closeEntry();
+			LOGGER.info("Folder: "+source+" successfully compressed and archived");
 
-          for (String file: this.fileList) {
-              System.out.println("File Added : " + file);
-              ZipEntry ze = new ZipEntry(source + File.separator + file);
-              zos.putNextEntry(ze);
-              try {
-                  in = new FileInputStream(SOURCE_FOLDER + File.separator + file);
-                  int len;
-                  while ((len = in .read(buffer)) > 0) {
-                      zos.write(buffer, 0, len);
-                  }
-              } finally {
-                  in.close();
-              }
-          }
+		} catch (IOException ex) {
+//			ex.printStackTrace();
+			LOGGER.error("Archiving error: " + source);
+			LOGGER.error(ex.getMessage());
+		} finally {
+			try {
+				zos.close();
+				File dir_buffer = new File(source);
+				dir_buffer.delete();
+			} catch (IOException e) {
+//				e.printStackTrace();
+				LOGGER.error(e.getMessage());
+			}
+		}
+	}
 
-          zos.closeEntry();
-          System.out.println("Folder successfully compressed");
+	public void generateFileList(File node) {
+		// add file only
+		if (node.isFile()) {
+			fileList.add(generateZipEntry(node.toString()));
+		}
 
-      } catch (IOException ex) {
-          ex.printStackTrace();
-      } finally {
-          try {
-              zos.close();
-          } catch (IOException e) {
-              e.printStackTrace();
-          }
-      }
-  }
+		if (node.isDirectory()) {
+			String[] subNote = node.list();
+			for (String filename : subNote) {
+				generateFileList(new File(node, filename));
+			}
+		}
+	}
 
-  public void generateFileList(File node) {
-      // add file only
-      if (node.isFile()) {
-          fileList.add(generateZipEntry(node.toString()));
-      }
+	private String generateZipEntry(String file) {
+		return file.substring(SOURCE_FOLDER.length() + 1, file.length());
+	}
 
-      if (node.isDirectory()) {
-          String[] subNote = node.list();
-          for (String filename: subNote) {
-              generateFileList(new File(node, filename));
-          }
-      }
-  }
+	/**
+	 * @return the oUTPUT_ZIP_FILE
+	 */
+	public String getOUTPUT_ZIP_FILE() {
+		return OUTPUT_ZIP_FILE;
+	}
 
-  private String generateZipEntry(String file) {
-      return file.substring(SOURCE_FOLDER.length() + 1, file.length());
-  }
+	/**
+	 * @param oUTPUT_ZIP_FILE the oUTPUT_ZIP_FILE to set
+	 */
+	public void setOUTPUT_ZIP_FILE(String oUTPUT_ZIP_FILE) {
+		OUTPUT_ZIP_FILE = oUTPUT_ZIP_FILE;
+	}
 
-/**
- * @return the oUTPUT_ZIP_FILE
- */
-public  String getOUTPUT_ZIP_FILE() {
-	return OUTPUT_ZIP_FILE;
-}
+	/**
+	 * @return the sOURCE_FOLDER
+	 */
+	public String getSOURCE_FOLDER() {
+		return SOURCE_FOLDER;
+	}
 
-/**
- * @param oUTPUT_ZIP_FILE the oUTPUT_ZIP_FILE to set
- */
-public  void setOUTPUT_ZIP_FILE(String oUTPUT_ZIP_FILE) {
-	OUTPUT_ZIP_FILE = oUTPUT_ZIP_FILE;
-}
+	/**
+	 * @param sOURCE_FOLDER the sOURCE_FOLDER to set
+	 */
+	public void setSOURCE_FOLDER(String sOURCE_FOLDER) {
+		SOURCE_FOLDER = sOURCE_FOLDER;
+	}
 
-/**
- * @return the sOURCE_FOLDER
- */
-public  String getSOURCE_FOLDER() {
-	return SOURCE_FOLDER;
-}
-
-/**
- * @param sOURCE_FOLDER the sOURCE_FOLDER to set
- */
-public  void setSOURCE_FOLDER(String sOURCE_FOLDER) {
-	SOURCE_FOLDER = sOURCE_FOLDER;
-}
-  
-  
-  
 }

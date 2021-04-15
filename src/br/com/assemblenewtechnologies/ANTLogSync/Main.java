@@ -110,8 +110,8 @@ public class Main {
 	}
 
 	private static void zipArchive(String last_directory) {
-		String zip_archive_path = ARCHIVE_BUFFER_DIRETCTORY + file_separator + last_directory;
-		String zip_file = ARCHIVE_DIRETCTORY+file_separator + last_directory + ".zip";
+		String zip_archive_path = ARCHIVE_BUFFER_DIRETCTORY + last_directory;
+		String zip_file = ARCHIVE_DIRETCTORY+ last_directory + ".zip";
 		ZipUtils appZip = new ZipUtils();
 		appZip.setOUTPUT_ZIP_FILE(zip_file);
 		appZip.setSOURCE_FOLDER(zip_archive_path);
