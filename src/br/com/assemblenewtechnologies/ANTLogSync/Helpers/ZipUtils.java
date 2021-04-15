@@ -12,18 +12,13 @@ import java.util.zip.ZipOutputStream;
 public class ZipUtils {
 
   private List <String> fileList;
-  private static String OUTPUT_ZIP_FILE = null; //"Folder.zip";
-  private static String SOURCE_FOLDER = null; //"D:\\Reports"; // SourceFolder path
+  private  String OUTPUT_ZIP_FILE = null; //"Folder.zip";
+  private  String SOURCE_FOLDER = null; //"D:\\Reports"; // SourceFolder path
 
   public ZipUtils() {
       fileList = new ArrayList < String > ();
   }
 
-  public static void main(String[] args) {
-      ZipUtils appZip = new ZipUtils();
-      appZip.generateFileList(new File(SOURCE_FOLDER));
-      appZip.zipIt(OUTPUT_ZIP_FILE);
-  }
 
   public void zipIt(String zipFile) {
       byte[] buffer = new byte[1024];
@@ -87,28 +82,28 @@ public class ZipUtils {
 /**
  * @return the oUTPUT_ZIP_FILE
  */
-public static String getOUTPUT_ZIP_FILE() {
+public  String getOUTPUT_ZIP_FILE() {
 	return OUTPUT_ZIP_FILE;
 }
 
 /**
  * @param oUTPUT_ZIP_FILE the oUTPUT_ZIP_FILE to set
  */
-public static void setOUTPUT_ZIP_FILE(String oUTPUT_ZIP_FILE) {
+public  void setOUTPUT_ZIP_FILE(String oUTPUT_ZIP_FILE) {
 	OUTPUT_ZIP_FILE = oUTPUT_ZIP_FILE;
 }
 
 /**
  * @return the sOURCE_FOLDER
  */
-public static String getSOURCE_FOLDER() {
+public  String getSOURCE_FOLDER() {
 	return SOURCE_FOLDER;
 }
 
 /**
  * @param sOURCE_FOLDER the sOURCE_FOLDER to set
  */
-public static void setSOURCE_FOLDER(String sOURCE_FOLDER) {
+public  void setSOURCE_FOLDER(String sOURCE_FOLDER) {
 	SOURCE_FOLDER = sOURCE_FOLDER;
 }
   

@@ -78,6 +78,7 @@ public class Main {
 
 	private static void processFiles(File[] files) throws Exception {
 		String last_directory = null;
+		boolean in_root_dir = true;
 		for (File file : files) {
 			if (file.isDirectory()) {
 				current_directory = file.getName();
@@ -91,10 +92,19 @@ public class Main {
 				Arrays.sort(_list);
 				processFiles(_list); // Calls same method again.
 				last_directory = current_directory;
+				in_root_dir = true;
 			} else {
+				in_root_dir = false;
 				files_processed++;
 //                LOGGER.info("Loading File: " + file.getAbsolutePath());
 				loadCSV(file);
+			}
+			
+			if(in_root_dir) {
+				File index = new File(RTD_DIRETCTORY+file_separator+last_directory);
+				if (index.exists())
+					index.delete();
+				zipArchive(last_directory);
 			}
 		}
 	}
@@ -121,13 +131,11 @@ public class Main {
 //		    LOGGER.info("File: " + absolutePath + " LOADED: " + rowsInserted + " rows");
 			rows_processed += rowsInserted;
 			archiveFile(file);
-
 		} catch (SQLException e) {
 			LOGGER.error("Database Error Loading File: " + file.getAbsoluteFile());
 			LOGGER.error(e.getMessage());
-			LOGGER.error("Archiving File: " + file.getAbsoluteFile());
 //			LOGGER.error(e.getMessage(), e);
-
+			archiveFile(file);
 			// throw e;
 		} catch (IOException e) {
 			LOGGER.error("Error IO Loading File: " + file.getAbsoluteFile());
@@ -137,6 +145,7 @@ public class Main {
 	}
 
 	private static void archiveFile(File file) throws IOException {
+		LOGGER.error("Archiving File: " + file.getAbsoluteFile());
 		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + file_separator + current_directory;
 		File f = new File(archive_path);
 		if (!f.exists()) {
