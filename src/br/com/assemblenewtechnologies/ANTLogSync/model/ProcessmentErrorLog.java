@@ -24,7 +24,6 @@ public class ProcessmentErrorLog {
 	private String java_class;
 
 	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentErrorLog.class);
-	private JDBCConnection jdbcConnection;
 	private Connection connection;
 
 	public static void logError(int _error_code, String processment_group, String processment_mode,
@@ -53,7 +52,7 @@ public class ProcessmentErrorLog {
 	}
 
 	private ProcessmentErrorLog(int _error_code) throws Exception {
-		getConnection();
+		connection = DBConnectionHelper.getConn();
 		ResultSet rs = getErrorByCode(_error_code);
 		int i = 0;
 		while (rs.next()) {
@@ -70,7 +69,7 @@ public class ProcessmentErrorLog {
 	}
 
 	private ProcessmentErrorLog(BigDecimal error_id) throws Exception {
-		getConnection();
+		connection = DBConnectionHelper.getConn();
 		ResultSet rs = getErrorById(error_id);
 		int i = 0;
 		while (rs.next()) {
@@ -140,20 +139,6 @@ public class ProcessmentErrorLog {
 			LOGGER.error(e1.getMessage());
 			throw new Exception(e1);
 		}
-	}
-
-	private void getConnection() throws Exception {
-		DBConnectionHelper connHelper;
-		try {
-			connHelper = DBConnectionHelper.getInstance();
-			jdbcConnection = connHelper.getJdbcConnection();
-			connection = jdbcConnection.getConn();
-			connection.setAutoCommit(true);
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
-			throw new Exception("No database connection...");
-		}
-
 	}
 
 	/**

@@ -21,7 +21,6 @@ import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentRotine;
 public class ControllerData {
 	private static Logger LOGGER = LoggerFactory.getLogger(ControllerData.class);
 	private GlobalProperties globalProperties = new GlobalProperties();
-	private JDBCConnection jdbcConnection;
 	private Connection connection;
 
 	private Map<Integer, ProcessmentError> errors = new LinkedHashMap<Integer, ProcessmentError>();
@@ -29,9 +28,7 @@ public class ControllerData {
 
 	public ControllerData() throws Exception {
 
-		DBConnectionHelper connHelper = DBConnectionHelper.getInstance();
-		jdbcConnection = connHelper.getJdbcConnection();
-		connection = jdbcConnection.getConn();
+		connection = DBConnectionHelper.getConn();
 		connection.setAutoCommit(false);
 
 		load_errors();
@@ -122,20 +119,6 @@ public class ControllerData {
 	 */
 	public void setGlobalProperties(GlobalProperties globalProperties) {
 		this.globalProperties = globalProperties;
-	}
-
-	/**
-	 * @return the jdbcConnection
-	 */
-	public JDBCConnection getJdbcConnection() {
-		return jdbcConnection;
-	}
-
-	/**
-	 * @param jdbcConnection the jdbcConnection to set
-	 */
-	public void setJdbcConnection(JDBCConnection jdbcConnection) {
-		this.jdbcConnection = jdbcConnection;
 	}
 
 	/**

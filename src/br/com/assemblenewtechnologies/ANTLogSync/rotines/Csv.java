@@ -49,18 +49,9 @@ public class Csv extends Rotine {
 	public void csv_load_start() throws Exception {
 		LOGGER.info("[CSV] csv_load_start...");
 		start_time = System.currentTimeMillis();
-
-		DBConnectionHelper connHelper;
-		try {
-			connHelper = DBConnectionHelper.getInstance();
-			jdbcConnection = connHelper.getJdbcConnection();
-			connection = jdbcConnection.getConn();
-			connection.setAutoCommit(true);
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
-			throw new Exception("No database connection...");
-		}
-
+		
+		connection = DBConnectionHelper.getConn();
+		connection.setAutoCommit(true);
 
 		File dir = new File(RTD_DIRETCTORY);
 		File[] files_list = dir.listFiles();

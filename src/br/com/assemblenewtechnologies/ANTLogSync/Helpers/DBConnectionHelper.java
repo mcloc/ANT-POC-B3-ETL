@@ -1,5 +1,6 @@
 package br.com.assemblenewtechnologies.ANTLogSync.Helpers;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.slf4j.Logger;
@@ -15,7 +16,7 @@ public class DBConnectionHelper {
 
 	private Logger LOGGER = LoggerFactory.getLogger(DBConnectionHelper.class);
 	private GlobalProperties globalProperties = new GlobalProperties();
-	private JDBCConnection jdbcConnection;
+	private static JDBCConnection jdbcConnection;
 
 
 	public DBConnectionHelper() throws Exception {
@@ -35,12 +36,21 @@ public class DBConnectionHelper {
 
 		return dbInstance;
 	}
+	
 
+	public static synchronized Connection getConn() throws Exception {
+		if (dbInstance == null)
+			throw new Exception("No instance of DBConnectionHelper found");
+
+		return jdbcConnection.getConn();
+	}
+	
+	
 	public static synchronized void close() throws Exception {
 		if (dbInstance == null)
-			return;
-
-		dbInstance.jdbcConnection.connClose();
+			throw new Exception("No instance of DBConnectionHelper found");
+		
+		jdbcConnection.connClose();
 	}
 
 	/**

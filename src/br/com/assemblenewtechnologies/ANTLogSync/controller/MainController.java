@@ -99,7 +99,6 @@ public class MainController {
 		for (Integer processment_seq : processment_map.keySet()) {
 			String class_name = getClassName(processment_map.get(processment_seq).getProcessment_group());
 			class_name = "br.com.assemblenewtechnologies.ANTLogSync.rotines." + class_name;
-			LOGGER.info("Processment Sequence: " + processment_seq);
 			Class<?> c;
 			try {
 				c = Class.forName(class_name);
@@ -110,14 +109,10 @@ public class MainController {
 			} catch (ClassNotFoundException e) {
 				LOGGER.error("ANTController class not found error: " + class_name);
 				LOGGER.error(e.getMessage());
-				ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, globalProperties.getProcessmentMode(), null,
-						MainController.class.getName());
 			} catch (NoSuchMethodException e) {
 				LOGGER.error(
 						"ANTController NoSuchMethodException error: " + processment_map.get(processment_seq).getName());
 				LOGGER.error(e.getMessage());
-				ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, globalProperties.getProcessmentMode(), null,
-						MainController.class.getName());
 			} catch (SecurityException e) {
 				LOGGER.error("ANTController processment error");
 				LOGGER.error(e.getMessage());
