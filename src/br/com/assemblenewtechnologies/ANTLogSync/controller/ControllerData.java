@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -26,7 +25,6 @@ public class ControllerData {
 	private Map<Integer, ProcessmentRotine> processment_rotines = new LinkedHashMap<Integer, ProcessmentRotine>();
 
 	public ControllerData() throws Exception {
-
 		try {
 			jdbcConnection = new JDBCConnection(globalProperties);
 			connection = jdbcConnection.getConn();
@@ -39,12 +37,30 @@ public class ControllerData {
 		load_errors();
 		load_rotines();
 
+		closeConnection();
+	}
+	
+	public void reload() throws Exception {
+		try {
+			jdbcConnection = new JDBCConnection(globalProperties);
+			connection = jdbcConnection.getConn();
+			connection.setAutoCommit(false);
+		} catch (SQLException e) {
+			LOGGER.error(e.getMessage());
+			throw new Exception("No database connection...");
+		}
+		errors = new LinkedHashMap<Integer, ProcessmentError>();
+		processment_rotines = new LinkedHashMap<Integer, ProcessmentRotine>();
+		
+		load_errors();
+		load_rotines();
 
+		closeConnection();
 	}
 	
 	
 	private void load_rotines() throws Exception {
-		LOGGER.info("Fetching processment_rotines:");
+		LOGGER.info("Fetching processment_rotines for mode: " + globalProperties.getPROCESSMENT_MODE());
 		Statement stmt;
 		try {
 			stmt = connection.createStatement();
@@ -68,7 +84,7 @@ public class ControllerData {
 			throw new Exception(e1);
 		}
 
-		
+		LOGGER.info("Fetched "+processment_rotines.size()+" processment_rotines for mode: " + globalProperties.getPROCESSMENT_MODE());
 	}
 
 
@@ -94,17 +110,19 @@ public class ControllerData {
 			LOGGER.error(e1.getMessage());
 			throw new Exception(e1);
 		}
+		LOGGER.info("Fetched "+errors.size()+" in errors_map");
 	}
 	
 	
 
 
-	public void closeConnection() {
+	public void closeConnection() throws Exception {
 		try {
 			connection.close();
 			jdbcConnection.connClose();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
+			throw new Exception(e);
 		}
 	}
 
