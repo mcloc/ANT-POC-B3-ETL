@@ -3,7 +3,7 @@ package br.com.assemblenewtechnologies.ANTLogSync.rotines;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Csv {
+public class Csv extends Rotine {
 	private static Logger LOGGER = LoggerFactory.getLogger(Csv.class);
 	
 	public void csv_wating() throws Exception{

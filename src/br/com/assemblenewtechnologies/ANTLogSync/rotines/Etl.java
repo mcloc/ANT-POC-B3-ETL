@@ -3,7 +3,7 @@ package br.com.assemblenewtechnologies.ANTLogSync.rotines;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Etl {
+public class Etl extends Rotine {
 	private static Logger LOGGER = LoggerFactory.getLogger(Etl.class);
 	
 	public void etl0_sanity_check() throws Exception{

@@ -20,7 +20,7 @@ public class ControllerData {
 	private GlobalProperties globalProperties = new GlobalProperties();
 	private JDBCConnection jdbcConnection;
 	private Connection connection;
-	
+
 	private Map<Integer, ProcessmentError> errors = new LinkedHashMap<Integer, ProcessmentError>();
 	private Map<Integer, ProcessmentRotine> processment_rotines = new LinkedHashMap<Integer, ProcessmentRotine>();
 
@@ -33,13 +33,13 @@ public class ControllerData {
 			LOGGER.error(e.getMessage());
 			throw new Exception("No database connection...");
 		}
-		
+
 		load_errors();
 		load_rotines();
 
 		closeConnection();
 	}
-	
+
 	public void reload() throws Exception {
 		try {
 			jdbcConnection = new JDBCConnection(globalProperties);
@@ -51,23 +51,21 @@ public class ControllerData {
 		}
 		errors = new LinkedHashMap<Integer, ProcessmentError>();
 		processment_rotines = new LinkedHashMap<Integer, ProcessmentRotine>();
-		
+
 		load_errors();
 		load_rotines();
 
 		closeConnection();
 	}
-	
-	
+
 	private void load_rotines() throws Exception {
-		LOGGER.info("Fetching processment_rotines for mode: " + globalProperties.getPROCESSMENT_MODE());
+		LOGGER.info("Fetching processment_rotines for mode: " + globalProperties.getProcessmentMode());
 		Statement stmt;
 		try {
 			stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.processment_rotines "+
-					"WHERE processment_mode = '"+globalProperties.getPROCESSMENT_MODE()+"' " +
-					"AND active_status = true " +
-					"ORDER BY processment_seq");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.processment_rotines "
+					+ "WHERE processment_mode = '" + globalProperties.getProcessmentMode() + "' "
+					+ "AND active_status = true " + "ORDER BY processment_seq");
 			while (rs.next()) {
 				ProcessmentRotine rotine;
 				try {
@@ -77,24 +75,23 @@ public class ControllerData {
 					LOGGER.error(e.getMessage());
 					throw new Exception(e);
 				}
-				
+
 			}
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
 			throw new Exception(e1);
 		}
 
-		LOGGER.info("Fetched "+processment_rotines.size()+" processment_rotines for mode: " + globalProperties.getPROCESSMENT_MODE());
+		LOGGER.info("Fetched " + processment_rotines.size() + " processment_rotines for mode: "
+				+ globalProperties.getProcessmentMode());
 	}
-
 
 	private void load_errors() throws Exception {
 		LOGGER.info("Fetching Errors Map:");
 		Statement stmt;
 		try {
 			stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.processment_errors "+
-					"ORDER BY error_code");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.processment_errors " + "ORDER BY error_code");
 			while (rs.next()) {
 				ProcessmentError error;
 				try {
@@ -104,17 +101,14 @@ public class ControllerData {
 					LOGGER.error(e.getMessage());
 					throw new Exception(e);
 				}
-				
+
 			}
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
 			throw new Exception(e1);
 		}
-		LOGGER.info("Fetched "+errors.size()+" in errors_map");
+		LOGGER.info("Fetched " + errors.size() + " in errors_map");
 	}
-	
-	
-
 
 	public void closeConnection() throws Exception {
 		try {
@@ -168,14 +162,12 @@ public class ControllerData {
 		this.connection = connection;
 	}
 
-
 	/**
 	 * @return the errors
 	 */
 	public Map<Integer, ProcessmentError> getErrors() {
 		return errors;
 	}
-
 
 	/**
 	 * @param errors the errors to set
@@ -184,14 +176,12 @@ public class ControllerData {
 		this.errors = errors;
 	}
 
-
 	/**
 	 * @return the processment_rotines
 	 */
 	public Map<Integer, ProcessmentRotine> getProcessment_rotines() {
 		return processment_rotines;
 	}
-
 
 	/**
 	 * @param processment_rotines the processment_rotines to set
@@ -200,6 +190,4 @@ public class ControllerData {
 		this.processment_rotines = processment_rotines;
 	}
 
-	
-	
 }

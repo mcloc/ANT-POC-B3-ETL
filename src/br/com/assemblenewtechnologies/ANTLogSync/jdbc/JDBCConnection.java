@@ -39,17 +39,17 @@ public class JDBCConnection {
 		globalProperties = _globalProperties;
 		globalProperties = _globalProperties;
 		Properties connectionProps = new Properties();
-		connectionProps.put("user", globalProperties.getDB_USER());
-		connectionProps.put("password", globalProperties.getDB_PASSWORD());
+		connectionProps.put("user", globalProperties.getDbUser());
+		connectionProps.put("password", globalProperties.getDbPassword());
 		connectionProps.put("reWriteBatchedInserts", true);
 
 
 
 		if (globalProperties.getDbms().equals("postgres")) {
-			String url = "jdbc:postgresql://" + globalProperties.getDB_HOST() + "/"
-					+ globalProperties.getDB_DATABASE_NAME();
+			String url = "jdbc:postgresql://" + globalProperties.getDbHost() + "/"
+					+ globalProperties.getDbDatabaseName();
 			
-			LOGGER.info("Trying to connect to database: " + globalProperties.getDB_DATABASE_NAME());
+			LOGGER.info("Trying to connect to database: " + globalProperties.getDbDatabaseName());
 			conn = DriverManager.getConnection(url, connectionProps);
 		} else {
 			LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
