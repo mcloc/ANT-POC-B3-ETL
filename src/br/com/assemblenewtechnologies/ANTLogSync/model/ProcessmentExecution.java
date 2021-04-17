@@ -1,8 +1,6 @@
 package br.com.assemblenewtechnologies.ANTLogSync.model;
 
 import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

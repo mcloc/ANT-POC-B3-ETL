@@ -29,10 +29,10 @@ public class Main {
 	private static Connection connection;
 	private static long start_time;
 	private static long timer1;
-	private static long timer2;
-	private static long timer3;
-	private static long timer4;
-	private static long timer5;
+//	private static long timer2;
+//	private static long timer3;
+//	private static long timer4;
+//	private static long timer5;
 
 	private static int files_processed = 0;
 	private static int directories_processed = 0;

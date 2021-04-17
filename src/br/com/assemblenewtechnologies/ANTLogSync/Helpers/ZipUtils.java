@@ -12,8 +12,6 @@ import java.util.zip.ZipOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import br.com.assemblenewtechnologies.ANTLogSync.Main;
-
 public class ZipUtils {
 	private static Logger LOGGER = LoggerFactory.getLogger(ZipUtils.class);
 	private List<String> fileList;
