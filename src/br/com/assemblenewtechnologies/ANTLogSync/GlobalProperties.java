@@ -2,6 +2,9 @@ package br.com.assemblenewtechnologies.ANTLogSync;
 
 public class GlobalProperties {
 
+	private String PROCESSMENT_MODE = "batch_process";
+	
+	
 	private String DB_HOST = "localhost";
 	private int DB_PORT = 5432;
 	private String DB_USER = "ANTOption";
@@ -12,6 +15,11 @@ public class GlobalProperties {
 	private String DB_EXPERTSYSTEM_SCHEMA = "B3Log";
 	private String DB_AUDIT_LOG_SCHEMA = "B3Log";
 	private String dbms = "postgres";
+	
+	
+	private  String RTD_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/data_load/";
+	private  String ARCHIVE_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive/";
+	private  String ARCHIVE_BUFFER_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive_buffer/";
 
 	// TODO: getAllFrom database with rest request to web_admin
 	private String SHM_ADDRESS_READ = "/dev/shm/serial2arduinoRead";
@@ -242,4 +250,62 @@ public class GlobalProperties {
 		REST_MODULE_SLEEP = rEST_MODULE_SLEEP;
 	}
 
+	/**
+	 * @return the pROCESSMENT_MODE
+	 */
+	public String getPROCESSMENT_MODE() {
+		return PROCESSMENT_MODE;
+	}
+
+	/**
+	 * @param pROCESSMENT_MODE the pROCESSMENT_MODE to set
+	 */
+	public void setPROCESSMENT_MODE(String pROCESSMENT_MODE) {
+		PROCESSMENT_MODE = pROCESSMENT_MODE;
+	}
+
+	/**
+	 * @return the rTD_DIRETCTORY
+	 */
+	public String getRTD_DIRETCTORY() {
+		return RTD_DIRETCTORY;
+	}
+
+	/**
+	 * @param rTD_DIRETCTORY the rTD_DIRETCTORY to set
+	 */
+	public void setRTD_DIRETCTORY(String rTD_DIRETCTORY) {
+		RTD_DIRETCTORY = rTD_DIRETCTORY;
+	}
+
+	/**
+	 * @return the aRCHIVE_DIRETCTORY
+	 */
+	public String getARCHIVE_DIRETCTORY() {
+		return ARCHIVE_DIRETCTORY;
+	}
+
+	/**
+	 * @param aRCHIVE_DIRETCTORY the aRCHIVE_DIRETCTORY to set
+	 */
+	public void setARCHIVE_DIRETCTORY(String aRCHIVE_DIRETCTORY) {
+		ARCHIVE_DIRETCTORY = aRCHIVE_DIRETCTORY;
+	}
+
+	/**
+	 * @return the aRCHIVE_BUFFER_DIRETCTORY
+	 */
+	public String getARCHIVE_BUFFER_DIRETCTORY() {
+		return ARCHIVE_BUFFER_DIRETCTORY;
+	}
+
+	/**
+	 * @param aRCHIVE_BUFFER_DIRETCTORY the aRCHIVE_BUFFER_DIRETCTORY to set
+	 */
+	public void setARCHIVE_BUFFER_DIRETCTORY(String aRCHIVE_BUFFER_DIRETCTORY) {
+		ARCHIVE_BUFFER_DIRETCTORY = aRCHIVE_BUFFER_DIRETCTORY;
+	}
+
+	
+	
 }
