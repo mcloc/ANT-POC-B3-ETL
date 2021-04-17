@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
+import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentError;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentRotine;
 
 public class MainController {
@@ -21,6 +22,7 @@ public class MainController {
 	private static long timer5;
 	private static ControllerData controller_data;
 	private static Map<Integer, ProcessmentRotine> processment_map;
+	private static Map<Integer, ProcessmentError> errors_map;
 	
 	
 	public static void main(String[] args) {
@@ -29,8 +31,8 @@ public class MainController {
 		
 		try {
 			controller_data = new ControllerData();
-			controller_data.closeConnection();
 			processment_map = controller_data.getProcessment_rotines();
+			errors_map = controller_data.getErrors();
 			LOGGER.info("Processments:");
 			for (Integer processment_seq: processment_map.keySet()) {
 				LOGGER.info("processment_seq: " + processment_seq);
@@ -38,6 +40,13 @@ public class MainController {
 				LOGGER.info("processment_group: " + processment_map.get(processment_seq).getProcessment_group());
 				LOGGER.info("processment_mode: " + processment_map.get(processment_seq).getProcessment_mode());
 			}
+			
+			for (Integer error_code: errors_map.keySet()) {
+				LOGGER.info("error_code: " + error_code);
+				LOGGER.info("error_name: " + errors_map.get(error_code).getName());
+				LOGGER.info("error_description: " + errors_map.get(error_code).getDescription());
+			}
+			
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
 		}

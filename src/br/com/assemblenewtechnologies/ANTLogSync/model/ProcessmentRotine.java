@@ -17,7 +17,7 @@ public class ProcessmentRotine {
 	private String processment_mode;
 	private boolean new_thread;
 	
-	private Logger LOGGER = LoggerFactory.getLogger(ControllerData.class);
+	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentRotine.class);
 	
 	public ProcessmentRotine(ResultSet rs) throws Exception {
 		try {

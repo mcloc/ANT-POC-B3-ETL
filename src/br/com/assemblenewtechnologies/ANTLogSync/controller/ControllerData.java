@@ -22,7 +22,7 @@ public class ControllerData {
 	private JDBCConnection jdbcConnection;
 	private Connection connection;
 	
-	private Map<Integer, ProcessmentError> errors = new HashMap<Integer, ProcessmentError>();
+	private Map<Integer, ProcessmentError> errors = new LinkedHashMap<Integer, ProcessmentError>();
 	private Map<Integer, ProcessmentRotine> processment_rotines = new LinkedHashMap<Integer, ProcessmentRotine>();
 
 	public ControllerData() throws Exception {
@@ -58,8 +58,8 @@ public class ControllerData {
 					rotine = new ProcessmentRotine(rs);
 					processment_rotines.put(rotine.getProcessment_seq(), rotine);
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOGGER.error(e.getMessage());
+					throw new Exception(e);
 				}
 				
 			}
@@ -72,9 +72,28 @@ public class ControllerData {
 	}
 
 
-	private void load_errors() {
-		// TODO Auto-generated method stub
-		
+	private void load_errors() throws Exception {
+		LOGGER.info("Fetching Errors Map:");
+		Statement stmt;
+		try {
+			stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.processment_errors "+
+					"ORDER BY error_code");
+			while (rs.next()) {
+				ProcessmentError error;
+				try {
+					error = new ProcessmentError(rs);
+					errors.put(error.getError_code(), error);
+				} catch (Exception e) {
+					LOGGER.error(e.getMessage());
+					throw new Exception(e);
+				}
+				
+			}
+		} catch (SQLException e1) {
+			LOGGER.error(e1.getMessage());
+			throw new Exception(e1);
+		}
 	}
 	
 	
