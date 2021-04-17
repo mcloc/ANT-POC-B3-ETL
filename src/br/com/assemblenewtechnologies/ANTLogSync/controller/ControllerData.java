@@ -11,8 +11,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
+import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentError;
+import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentRotine;
 
 public class ControllerData {
@@ -25,37 +28,26 @@ public class ControllerData {
 	private Map<Integer, ProcessmentRotine> processment_rotines = new LinkedHashMap<Integer, ProcessmentRotine>();
 
 	public ControllerData() throws Exception {
-		try {
-			jdbcConnection = new JDBCConnection(globalProperties);
-			connection = jdbcConnection.getConn();
-			connection.setAutoCommit(false);
-		} catch (SQLException e) {
-			LOGGER.error(e.getMessage());
-			throw new Exception("No database connection...");
-		}
+
+		DBConnectionHelper connHelper = DBConnectionHelper.getInstance();
+		jdbcConnection = connHelper.getJdbcConnection();
+		connection = jdbcConnection.getConn();
+		connection.setAutoCommit(false);
 
 		load_errors();
 		load_rotines();
 
-		closeConnection();
+		connection.close();
 	}
 
 	public void reload() throws Exception {
-		try {
-			jdbcConnection = new JDBCConnection(globalProperties);
-			connection = jdbcConnection.getConn();
-			connection.setAutoCommit(false);
-		} catch (SQLException e) {
-			LOGGER.error(e.getMessage());
-			throw new Exception("No database connection...");
-		}
 		errors = new LinkedHashMap<Integer, ProcessmentError>();
 		processment_rotines = new LinkedHashMap<Integer, ProcessmentRotine>();
 
 		load_errors();
 		load_rotines();
 
-		closeConnection();
+		connection.close();
 	}
 
 	private void load_rotines() throws Exception {
@@ -73,12 +65,16 @@ public class ControllerData {
 					processment_rotines.put(rotine.getProcessment_seq(), rotine);
 				} catch (Exception e) {
 					LOGGER.error(e.getMessage());
+					ProcessmentErrorLog.logError(ErrorCodes.STARTUP_ERROR, globalProperties.getProcessmentMode(), null,
+							this.getClass().getName());
 					throw new Exception(e);
 				}
 
 			}
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
+			ProcessmentErrorLog.logError(ErrorCodes.DB_EXCEPTION_ERROR, globalProperties.getProcessmentMode(), null,
+					this.getClass().getName());
 			throw new Exception(e1);
 		}
 
@@ -99,25 +95,19 @@ public class ControllerData {
 					errors.put(error.getError_code(), error);
 				} catch (Exception e) {
 					LOGGER.error(e.getMessage());
+					ProcessmentErrorLog.logError(ErrorCodes.STARTUP_ERROR, globalProperties.getProcessmentMode(), null,
+							this.getClass().getName());
 					throw new Exception(e);
 				}
 
 			}
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
+			ProcessmentErrorLog.logError(ErrorCodes.DB_EXCEPTION_ERROR, globalProperties.getProcessmentMode(), null,
+					this.getClass().getName());
 			throw new Exception(e1);
 		}
 		LOGGER.info("Fetched " + errors.size() + " in errors_map");
-	}
-
-	public void closeConnection() throws Exception {
-		try {
-			connection.close();
-			jdbcConnection.connClose();
-		} catch (SQLException e) {
-			LOGGER.error(e.getMessage());
-			throw new Exception(e);
-		}
 	}
 
 	/**

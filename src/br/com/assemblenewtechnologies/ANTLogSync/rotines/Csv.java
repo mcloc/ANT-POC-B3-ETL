@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
 
@@ -49,14 +50,17 @@ public class Csv extends Rotine {
 		LOGGER.info("[CSV] csv_load_start...");
 		start_time = System.currentTimeMillis();
 
+		DBConnectionHelper connHelper;
 		try {
-			jdbcConnection = new JDBCConnection(globalProperties);
+			connHelper = DBConnectionHelper.getInstance();
+			jdbcConnection = connHelper.getJdbcConnection();
 			connection = jdbcConnection.getConn();
 			connection.setAutoCommit(true);
-		} catch (SQLException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
 			throw new Exception("No database connection...");
 		}
+
 
 		File dir = new File(RTD_DIRETCTORY);
 		File[] files_list = dir.listFiles();
@@ -64,7 +68,6 @@ public class Csv extends Rotine {
 		if(files_list.length == 0) {
 			LOGGER.info("[CSV] no CSV files found...");			
 			connection.close();
-			jdbcConnection.connClose();
 			return;
 		}
 		
@@ -72,7 +75,6 @@ public class Csv extends Rotine {
 		processFiles(files_list);
 
 		connection.close();
-		jdbcConnection.connClose();
 	}
 
 	public void csv_archive_start() throws Exception {

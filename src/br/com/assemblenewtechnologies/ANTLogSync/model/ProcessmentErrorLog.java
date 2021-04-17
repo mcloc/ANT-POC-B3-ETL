@@ -10,7 +10,7 @@ import java.sql.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
 
 public class ProcessmentErrorLog {
@@ -21,31 +21,33 @@ public class ProcessmentErrorLog {
 	private String processment_mode;
 	private BigDecimal processment_id;
 	private BigDecimal processment_errors_id;
+	private String java_class;
 
 	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentErrorLog.class);
-	private GlobalProperties globalProperties = new GlobalProperties();
 	private JDBCConnection jdbcConnection;
 	private Connection connection;
 
 	public static void logError(int _error_code, String processment_group, String processment_mode,
-			BigDecimal processment_id) throws Exception {
+			BigDecimal processment_id, String _java_class) throws Exception {
 
 		ProcessmentErrorLog error_log = new ProcessmentErrorLog(_error_code);
 		error_log.processment_group = processment_group;
 		error_log.processment_mode = processment_mode;
 		error_log.processment_id = processment_id;
+		error_log.java_class = _java_class;
 
 		error_log.save();
 	}
 	
 	
 	public static void logError(int _error_code, String processment_mode,
-			BigDecimal processment_id) throws Exception {
+			BigDecimal processment_id, String _java_class) throws Exception {
 
 		ProcessmentErrorLog error_log = new ProcessmentErrorLog(_error_code);
 		error_log.processment_group = error_log.getProcessment_group();
 		error_log.processment_mode = processment_mode;
 		error_log.processment_id = processment_id;
+		error_log.java_class = _java_class;
 
 		error_log.save();
 	}
@@ -93,7 +95,7 @@ public class ProcessmentErrorLog {
 
 		String compiledQuery = "INSERT INTO  Intellect.processment_errors_log("
 				+ "name, description, error_code, processment_group, processment_mode, "
-				+ "processment_id, processment_errors_id, created_at) VALUES " + "(?, ?, ?, ?, ?, ?, ?, ?)";
+				+ "processment_id, processment_errors_id, java_class, created_at) VALUES " + "(?, ?, ?, ?, ?, ?, ?, ?)";
 		PreparedStatement preparedStatement;
 		try {
 			preparedStatement = connection.prepareStatement(compiledQuery);
@@ -104,7 +106,8 @@ public class ProcessmentErrorLog {
 			preparedStatement.setString(5, processment_mode);
 			preparedStatement.setBigDecimal(6, processment_id);
 			preparedStatement.setBigDecimal(7, processment_errors_id);
-			preparedStatement.setLong(8, System.currentTimeMillis());
+			preparedStatement.setString(8, java_class);
+			preparedStatement.setLong(9, System.currentTimeMillis());
 			preparedStatement.execute();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
@@ -112,7 +115,6 @@ public class ProcessmentErrorLog {
 		}
 
 		connection.close();
-		jdbcConnection.connClose();
 	}
 
 	private ResultSet getErrorById(BigDecimal error_id) throws Exception {
@@ -141,12 +143,14 @@ public class ProcessmentErrorLog {
 	}
 
 	private void getConnection() throws Exception {
+		DBConnectionHelper connHelper;
 		try {
-			jdbcConnection = new JDBCConnection(globalProperties);
+			connHelper = DBConnectionHelper.getInstance();
+			jdbcConnection = connHelper.getJdbcConnection();
 			connection = jdbcConnection.getConn();
 			connection.setAutoCommit(true);
-		} catch (SQLException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
 			throw new Exception("No database connection...");
 		}
 
