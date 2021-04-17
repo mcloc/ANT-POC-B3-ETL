@@ -38,11 +38,11 @@ public class DBConnectionHelper {
 	}
 	
 
-	public static synchronized Connection getConn() throws Exception {
+	public static Connection getNewConn() throws Exception {
 		if (dbInstance == null)
 			throw new Exception("No instance of DBConnectionHelper found");
 
-		return jdbcConnection.getConn();
+		return jdbcConnection.getNewConn();
 	}
 	
 	

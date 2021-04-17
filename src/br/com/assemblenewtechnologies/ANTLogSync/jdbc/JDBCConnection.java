@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
+import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
+import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
 
 /**
  * @author mcloc
@@ -56,6 +58,33 @@ public class JDBCConnection {
 			throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 		}
 		LOGGER.debug("Connected to database");
+	}
+	
+	
+	public Connection getNewConn() throws Exception {
+		Properties connectionProps = new Properties();
+		connectionProps.put("user", globalProperties.getDbUser());
+		connectionProps.put("password", globalProperties.getDbPassword());
+		connectionProps.put("reWriteBatchedInserts", true);
+		Connection _conn;
+		if (globalProperties.getDbms().equals("postgres")) {
+			String url = "jdbc:postgresql://" + globalProperties.getDbHost() + "/"
+					+ globalProperties.getDbDatabaseName();
+			
+			LOGGER.debug("Trying to connect to database: " + globalProperties.getDbDatabaseName());
+			try {
+				_conn = DriverManager.getConnection(url, connectionProps);
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage());
+				throw new Exception("No database connection...");
+			}
+		} else {
+			LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+			throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+		}
+		LOGGER.debug("Connected to database");
+		
+		return _conn;
 	}
 
 	public ResultSet executeQuery(String sql) throws SQLException {

@@ -28,7 +28,7 @@ public class ControllerData {
 
 	public ControllerData() throws Exception {
 
-		connection = DBConnectionHelper.getConn();
+		connection = DBConnectionHelper.getNewConn();
 		connection.setAutoCommit(false);
 
 		load_errors();

@@ -50,7 +50,7 @@ public class Csv extends Rotine {
 		LOGGER.info("[CSV] csv_load_start...");
 		start_time = System.currentTimeMillis();
 		
-		connection = DBConnectionHelper.getConn();
+		connection = DBConnectionHelper.getNewConn();
 		connection.setAutoCommit(true);
 
 		File dir = new File(RTD_DIRETCTORY);
