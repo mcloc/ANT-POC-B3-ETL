@@ -49,13 +49,13 @@ public class JDBCConnection {
 			String url = "jdbc:postgresql://" + globalProperties.getDbHost() + "/"
 					+ globalProperties.getDbDatabaseName();
 			
-			LOGGER.info("Trying to connect to database: " + globalProperties.getDbDatabaseName());
+			LOGGER.debug("Trying to connect to database: " + globalProperties.getDbDatabaseName());
 			conn = DriverManager.getConnection(url, connectionProps);
 		} else {
 			LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 			throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 		}
-		LOGGER.info("Connected to database");
+		LOGGER.debug("Connected to database");
 	}
 
 	public ResultSet executeQuery(String sql) throws SQLException {

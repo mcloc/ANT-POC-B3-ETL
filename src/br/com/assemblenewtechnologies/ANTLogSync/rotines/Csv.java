@@ -48,21 +48,31 @@ public class Csv extends Rotine {
 	public void csv_load_start() throws Exception {
 		LOGGER.info("[CSV] csv_load_start...");
 		start_time = System.currentTimeMillis();
-		
+
 		try {
 			jdbcConnection = new JDBCConnection(globalProperties);
+			connection = jdbcConnection.getConn();
+			connection.setAutoCommit(true);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("No database connection...");
 		}
 
-		connection = jdbcConnection.getConn();
-		connection.setAutoCommit(true);
-
 		File dir = new File(RTD_DIRETCTORY);
 		File[] files_list = dir.listFiles();
+		
+		if(files_list.length == 0) {
+			LOGGER.info("[CSV] no CSV files found...");			
+			connection.close();
+			jdbcConnection.connClose();
+			return;
+		}
+		
 		Arrays.sort(files_list);
 		processFiles(files_list);
+
+		connection.close();
+		jdbcConnection.connClose();
 	}
 
 	public void csv_archive_start() throws Exception {
@@ -112,7 +122,7 @@ public class Csv extends Rotine {
 							+ "VOV," + "vencimento," + "validade," + "contratos_abertos," + "estado_atual," + "relogio"
 							+ ") " + "FROM STDIN (FORMAT csv, HEADER true, DELIMITER ',')",
 					new BufferedReader(new FileReader(file.getAbsoluteFile())));
-//		    LOGGER.info("File: " + absolutePath + " LOADED: " + rowsInserted + " rows");
+		    LOGGER.info("File: " + file.getAbsoluteFile() + " LOADED: " + rowsInserted + " rows");
 			rows_processed += rowsInserted;
 			archiveFile(file);
 		} catch (SQLException e) {
@@ -128,8 +138,8 @@ public class Csv extends Rotine {
 	}
 
 	private void archiveFile(File file) throws IOException {
-		LOGGER.error("Archiving File: " + file.getAbsoluteFile());
-		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + globalProperties.getFileSeparator() +current_directory;
+		LOGGER.info("Archiving File: " + file.getAbsoluteFile());
+		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + globalProperties.getFileSeparator() + current_directory;
 		File f = new File(archive_path);
 		if (!f.exists()) {
 			f.mkdir();
