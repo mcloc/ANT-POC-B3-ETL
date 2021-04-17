@@ -1,23 +1,133 @@
 package br.com.assemblenewtechnologies.ANTLogSync.model;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
+import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
+
 public class ProcessmentErrorLog {
-	private String name; 
+	private String name;
 	private String description;
 	private int error_code;
-	private String processment_group; 
+	private String processment_group;
 	private String processment_mode;
-	private BigDecimal processment_id; 
+	private BigDecimal processment_id;
 	private BigDecimal processment_errors_id;
-	
+
 	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentErrorLog.class);
-	
-	public ProcessmentErrorLog() throws Exception {
+	private GlobalProperties globalProperties = new GlobalProperties();
+	private JDBCConnection jdbcConnection;
+	private Connection connection;
+
+	public ProcessmentErrorLog(int _error_code) throws Exception {
+		getConnection();
+		ResultSet rs = getErrorByCode(_error_code);
+		int i = 0;
+		while (rs.next()) {
+			if (i > 0) {
+				throw new Exception("more then one erro found with this error_code: " + _error_code);
+			}
+
+			name = rs.getString("name");
+			description = rs.getString("description");
+			error_code = rs.getInt("error_code");
+			processment_errors_id = rs.getBigDecimal("id");
+			i++;
+		}
+	}
+
+	public ProcessmentErrorLog(BigDecimal error_id) throws Exception {
+		getConnection();
+		ResultSet rs = getErrorById(error_id);
+		int i = 0;
+		while (rs.next()) {
+			if (i > 0) {
+				throw new Exception("more then one erro found with this error_id: " + error_id);
+			}
+
+			name = rs.getString("name");
+			description = rs.getString("description");
+			error_code = rs.getInt("error_code");
+			processment_errors_id = rs.getBigDecimal("id");
+			i++;
+		}
+	}
+
+	public void save() throws Exception {
+		if( name == null || name.equals("") ||                      
+			description == null || description.equals("") ||
+			error_code == 0  ||        
+			processment_group == null || processment_group.equals("") ||
+			processment_mode == null || processment_mode.equals("") ||
+			processment_id == null || 
+			processment_errors_id == null ) {
+			throw new Exception("ProcessmentErrorLog not saved, missing attributes values");
+		}
 		
+		String compiledQuery = "INSERT INTO  Intellect.processment_errors_log(" +
+				"name, description, error_code, processment_group, processment_mode, " +
+				"processment_id, processment_errors_id) VALUES " + 
+				"(?, ?, ?, ?, ?, ?, ?, ?)";
+		PreparedStatement preparedStatement;
+		try {
+			preparedStatement = connection.prepareStatement(compiledQuery);
+			preparedStatement.setString(1, name);
+			preparedStatement.setString(2, description);
+			preparedStatement.setInt(3, error_code);
+			preparedStatement.setString(4, processment_group);
+			preparedStatement.setString(5, processment_mode);
+			preparedStatement.setBigDecimal(6, processment_id);
+			preparedStatement.setBigDecimal(7, processment_errors_id);
+			preparedStatement.execute();
+		} catch (SQLException e) {
+			LOGGER.error(e.getMessage());
+			throw new Exception(e.getMessage(),e);
+		}
+	}
+
+	private ResultSet getErrorById(BigDecimal error_id) throws Exception {
+		Statement stmt;
+		try {
+			stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.processment_errors " + "WHERE id = " + error_id);
+			return rs;
+		} catch (SQLException e1) {
+			LOGGER.error(e1.getMessage());
+			throw new Exception(e1);
+		}
+	}
+
+	private ResultSet getErrorByCode(int error_code) throws Exception {
+		Statement stmt;
+		try {
+			stmt = connection.createStatement();
+			ResultSet rs = stmt
+					.executeQuery("SELECT * FROM Intellect.processment_errors " + "WHERE error_code = " + error_code);
+			return rs;
+		} catch (SQLException e1) {
+			LOGGER.error(e1.getMessage());
+			throw new Exception(e1);
+		}
+	}
+
+	private void getConnection() throws Exception {
+		try {
+			jdbcConnection = new JDBCConnection(globalProperties);
+			connection = jdbcConnection.getConn();
+			connection.setAutoCommit(true);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new Exception("No database connection...");
+		}
+
 	}
 
 	/**
@@ -117,8 +227,5 @@ public class ProcessmentErrorLog {
 	public void setProcessment_errors_id(BigDecimal processment_errors_id) {
 		this.processment_errors_id = processment_errors_id;
 	}
-	
-	
-	
-	
+
 }

@@ -24,6 +24,7 @@ public class MainController {
 	private static ControllerData controller_data;
 	private static Map<Integer, ProcessmentRotine> processment_map;
 	private static Map<Integer, ProcessmentError> errors_map;
+	private static boolean need_to_update = false;
 	
 	
 	public static void main(String[] args) throws Exception {
@@ -43,6 +44,10 @@ public class MainController {
 			try {
 				process();
 				Thread.sleep(1000);
+				
+				if(need_to_update)
+					update();
+				
 			} catch (Exception e) {
 				LOGGER.error("ANTController processment error");
 				LOGGER.error(e.getMessage());
@@ -53,6 +58,20 @@ public class MainController {
 		
 		end_time = System.currentTimeMillis() - start_time;
 		LOGGER.info("ANTController execution time: "  + end_time);
+	}
+
+
+	// check: this will change machine state behavior - must be used with care
+	private static void update() {
+		try {
+			controller_data.reload();
+			processment_map = controller_data.getProcessment_rotines();
+			errors_map = controller_data.getErrors();
+		} catch (Exception e) {
+			LOGGER.error("ANTController update() contrller_data error: ");
+			LOGGER.error(e.getMessage(),e);
+		}
+
 	}
 
 
