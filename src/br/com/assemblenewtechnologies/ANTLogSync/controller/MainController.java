@@ -88,9 +88,8 @@ public class MainController {
 				LOGGER.error(e.getMessage());
 			} catch (InvocationTargetException e) {
 				LOGGER.error("ANTController InvocationTargetException error: " + class_name + "." +processment_map.get(processment_seq).getName() );
-				LOGGER.error(e.getMessage());
+				LOGGER.error(e.getMessage(),e);
 			}
-
 		}
 	}
 
