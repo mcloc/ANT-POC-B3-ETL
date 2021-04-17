@@ -8,12 +8,16 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
+import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentError;
+import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentRotine;
 import br.com.assemblenewtechnologies.ANTLogSync.rotines.Rotine;
 
 public class MainController {
 	private static Logger LOGGER = LoggerFactory.getLogger(MainController.class);
+	private static GlobalProperties globalProperties = new GlobalProperties();
 	private static long start_time;
 	private static long end_time;
 //	private static long timer1;
@@ -37,6 +41,7 @@ public class MainController {
 			errors_map = controller_data.getErrors();
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
+			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, globalProperties.getProcessmentMode(), null);
 			throw new Exception(e);
 		}
 		

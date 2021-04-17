@@ -1,7 +1,8 @@
 package br.com.assemblenewtechnologies.ANTLogSync.constants;
 
 public class ErrorCodes {
-	public static final int STARTUP_ERROR = 0;
+	public static final int STARTUP_ERROR = 001;
+	public static final int RUNTIME_ERROR = 002;
 	public static final int GET_MACHINESTATE_ERROR = 010;
 	public static final int RECOVER_MACHINESTATE_ERROR = 020;
 	public static final int CSV_LOAD_PATH_ERROR = 100;

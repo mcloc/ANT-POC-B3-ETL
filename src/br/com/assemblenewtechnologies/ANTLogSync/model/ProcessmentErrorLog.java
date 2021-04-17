@@ -27,7 +27,30 @@ public class ProcessmentErrorLog {
 	private JDBCConnection jdbcConnection;
 	private Connection connection;
 
-	public ProcessmentErrorLog(int _error_code) throws Exception {
+	public static void logError(int _error_code, String processment_group, String processment_mode,
+			BigDecimal processment_id) throws Exception {
+
+		ProcessmentErrorLog error_log = new ProcessmentErrorLog(_error_code);
+		error_log.processment_group = processment_group;
+		error_log.processment_mode = processment_mode;
+		error_log.processment_id = processment_id;
+
+		error_log.save();
+	}
+	
+	
+	public static void logError(int _error_code, String processment_mode,
+			BigDecimal processment_id) throws Exception {
+
+		ProcessmentErrorLog error_log = new ProcessmentErrorLog(_error_code);
+		error_log.processment_group = error_log.getProcessment_group();
+		error_log.processment_mode = processment_mode;
+		error_log.processment_id = processment_id;
+
+		error_log.save();
+	}
+
+	private ProcessmentErrorLog(int _error_code) throws Exception {
 		getConnection();
 		ResultSet rs = getErrorByCode(_error_code);
 		int i = 0;
@@ -44,7 +67,7 @@ public class ProcessmentErrorLog {
 		}
 	}
 
-	public ProcessmentErrorLog(BigDecimal error_id) throws Exception {
+	private ProcessmentErrorLog(BigDecimal error_id) throws Exception {
 		getConnection();
 		ResultSet rs = getErrorById(error_id);
 		int i = 0;
@@ -61,21 +84,16 @@ public class ProcessmentErrorLog {
 		}
 	}
 
-	public void save() throws Exception {
-		if( name == null || name.equals("") ||                      
-			description == null || description.equals("") ||
-			error_code == 0  ||        
-			processment_group == null || processment_group.equals("") ||
-			processment_mode == null || processment_mode.equals("") ||
-			processment_id == null || 
-			processment_errors_id == null ) {
+	private void save() throws Exception {
+		if (name == null || name.equals("") || description == null || description.equals("") || error_code == 0
+				|| processment_group == null || processment_group.equals("") || processment_mode == null
+				|| processment_mode.equals("") || processment_id == null || processment_errors_id == null) {
 			throw new Exception("ProcessmentErrorLog not saved, missing attributes values");
 		}
-		
-		String compiledQuery = "INSERT INTO  Intellect.processment_errors_log(" +
-				"name, description, error_code, processment_group, processment_mode, " +
-				"processment_id, processment_errors_id) VALUES " + 
-				"(?, ?, ?, ?, ?, ?, ?, ?)";
+
+		String compiledQuery = "INSERT INTO  Intellect.processment_errors_log("
+				+ "name, description, error_code, processment_group, processment_mode, "
+				+ "processment_id, processment_errors_id, created_at) VALUES " + "(?, ?, ?, ?, ?, ?, ?, ?)";
 		PreparedStatement preparedStatement;
 		try {
 			preparedStatement = connection.prepareStatement(compiledQuery);
@@ -86,11 +104,15 @@ public class ProcessmentErrorLog {
 			preparedStatement.setString(5, processment_mode);
 			preparedStatement.setBigDecimal(6, processment_id);
 			preparedStatement.setBigDecimal(7, processment_errors_id);
+			preparedStatement.setLong(8, System.currentTimeMillis());
 			preparedStatement.execute();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
-			throw new Exception(e.getMessage(),e);
+			throw new Exception(e.getMessage(), e);
 		}
+
+		connection.close();
+		jdbcConnection.connClose();
 	}
 
 	private ResultSet getErrorById(BigDecimal error_id) throws Exception {
