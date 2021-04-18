@@ -13,14 +13,12 @@ import org.slf4j.LoggerFactory;
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
-import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentError;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentRotine;
 
 public class ControllerData {
 	private static Logger LOGGER = LoggerFactory.getLogger(ControllerData.class);
-	private GlobalProperties globalProperties = new GlobalProperties();
 	private Connection connection;
 
 	private Map<Integer, ProcessmentError> errors = new LinkedHashMap<Integer, ProcessmentError>();
@@ -33,7 +31,7 @@ public class ControllerData {
 
 		load_errors();
 		load_rotines();
-
+//		connection.commit(); // no need
 		connection.close();
 	}
 
@@ -43,17 +41,17 @@ public class ControllerData {
 
 		load_errors();
 		load_rotines();
-
+//		connection.commit(); // no need
 		connection.close();
 	}
 
 	private void load_rotines() throws Exception {
-		LOGGER.info("Fetching processment_rotines for mode: " + globalProperties.getProcessmentMode());
+		LOGGER.info("Fetching processment_rotines for mode: " + GlobalProperties.getInstance().getProcessmentMode());
 		Statement stmt;
 		try {
 			stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.processment_rotines "
-					+ "WHERE processment_mode = '" + globalProperties.getProcessmentMode() + "' "
+					+ "WHERE processment_mode = '" + GlobalProperties.getInstance().getProcessmentMode() + "' "
 					+ "AND active_status = true " + "ORDER BY processment_seq");
 			while (rs.next()) {
 				ProcessmentRotine rotine;
@@ -62,7 +60,7 @@ public class ControllerData {
 					processment_rotines.put(rotine.getProcessment_seq(), rotine);
 				} catch (Exception e) {
 					LOGGER.error(e.getMessage());
-					ProcessmentErrorLog.logError(ErrorCodes.STARTUP_ERROR, globalProperties.getProcessmentMode(), null,
+					ProcessmentErrorLog.logError(ErrorCodes.STARTUP_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
 							this.getClass().getName());
 					throw new Exception(e);
 				}
@@ -70,13 +68,13 @@ public class ControllerData {
 			}
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
-			ProcessmentErrorLog.logError(ErrorCodes.DB_EXCEPTION_ERROR, globalProperties.getProcessmentMode(), null,
+			ProcessmentErrorLog.logError(ErrorCodes.DB_EXCEPTION_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
 					this.getClass().getName());
 			throw new Exception(e1);
 		}
 
 		LOGGER.info("Fetched " + processment_rotines.size() + " processment_rotines for mode: "
-				+ globalProperties.getProcessmentMode());
+				+ GlobalProperties.getInstance().getProcessmentMode());
 	}
 
 	private void load_errors() throws Exception {
@@ -92,7 +90,7 @@ public class ControllerData {
 					errors.put(error.getError_code(), error);
 				} catch (Exception e) {
 					LOGGER.error(e.getMessage());
-					ProcessmentErrorLog.logError(ErrorCodes.STARTUP_ERROR, globalProperties.getProcessmentMode(), null,
+					ProcessmentErrorLog.logError(ErrorCodes.STARTUP_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
 							this.getClass().getName());
 					throw new Exception(e);
 				}
@@ -100,39 +98,11 @@ public class ControllerData {
 			}
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
-			ProcessmentErrorLog.logError(ErrorCodes.DB_EXCEPTION_ERROR, globalProperties.getProcessmentMode(), null,
+			ProcessmentErrorLog.logError(ErrorCodes.DB_EXCEPTION_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
 					this.getClass().getName());
 			throw new Exception(e1);
 		}
 		LOGGER.info("Fetched " + errors.size() + " in errors_map");
-	}
-
-	/**
-	 * @return the globalProperties
-	 */
-	public GlobalProperties getGlobalProperties() {
-		return globalProperties;
-	}
-
-	/**
-	 * @param globalProperties the globalProperties to set
-	 */
-	public void setGlobalProperties(GlobalProperties globalProperties) {
-		this.globalProperties = globalProperties;
-	}
-
-	/**
-	 * @return the connection
-	 */
-	public Connection getConnection() {
-		return connection;
-	}
-
-	/**
-	 * @param connection the connection to set
-	 */
-	public void setConnection(Connection connection) {
-		this.connection = connection;
 	}
 
 	/**
@@ -143,24 +113,10 @@ public class ControllerData {
 	}
 
 	/**
-	 * @param errors the errors to set
-	 */
-	public void setErrors(Map<Integer, ProcessmentError> errors) {
-		this.errors = errors;
-	}
-
-	/**
 	 * @return the processment_rotines
 	 */
 	public Map<Integer, ProcessmentRotine> getProcessment_rotines() {
 		return processment_rotines;
-	}
-
-	/**
-	 * @param processment_rotines the processment_rotines to set
-	 */
-	public void setProcessment_rotines(Map<Integer, ProcessmentRotine> processment_rotines) {
-		this.processment_rotines = processment_rotines;
 	}
 
 }

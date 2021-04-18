@@ -21,6 +21,19 @@ public class GlobalProperties {
 	private final String RTD_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/data_load/";
 	private final String ARCHIVE_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive/";
 	private final String ARCHIVE_BUFFER_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive_buffer/";
+	
+	
+	private static GlobalProperties instance;
+
+	private GlobalProperties() {
+	}
+	
+	public static synchronized GlobalProperties getInstance(){
+		if (instance == null)
+			instance = new GlobalProperties();
+
+		return instance;
+	}
 
 	/**
 	 * @return the processmentMode

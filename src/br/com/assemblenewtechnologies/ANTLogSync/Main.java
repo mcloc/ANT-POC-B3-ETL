@@ -24,7 +24,6 @@ public class Main {
 	private final static String ARCHIVE_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive/";
 	private final static String ARCHIVE_BUFFER_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive_buffer/";
 	private static Logger LOGGER = LoggerFactory.getLogger(Main.class);
-	private static GlobalProperties globalProperties = new GlobalProperties();
 	private static JDBCConnector jdbcConnection;
 	private static Connection connection;
 	private static long start_time;
@@ -48,13 +47,13 @@ public class Main {
 		LOGGER.info("Directory to search RTD files: ." + RTD_DIRETCTORY);
 
 		try {
-			jdbcConnection = new JDBCConnector(globalProperties);
+			jdbcConnection = new JDBCConnector();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("No database connection...");
 		}
 
-		connection = jdbcConnection.getConn();
+		connection = jdbcConnection.getNewConn();
 		connection.setAutoCommit(true);
 
 		start_time = System.currentTimeMillis();
@@ -66,7 +65,7 @@ public class Main {
 		timer1 = System.currentTimeMillis();
 		long total_time = (timer1 - start_time) / 1000;
 
-		jdbcConnection.connClose();
+		connection.close();
 		LOGGER.info("Total time to process: " + total_time + " seconds");
 		LOGGER.info("Total directories processed: " + directories_processed);
 		LOGGER.info("Total files processed on all directories: " + files_processed);

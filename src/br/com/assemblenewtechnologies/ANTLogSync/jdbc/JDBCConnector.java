@@ -24,18 +24,16 @@ import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
 public class JDBCConnector {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JDBCConnector.class);
 
-	private GlobalProperties globalProperties = new GlobalProperties();
-
 	/**
 	 * Create JDBC Connection using GlobalProperties FIXME: GlobalProperties must be
 	 * hydrated by .ini file It's hard coded in the class at this moment
 	 * 
-	 * @param _globalProperties
+	 * @param _GlobalProperties.getInstance()
 	 * @return
 	 * @throws SQLException
 	 */
 	public JDBCConnector() throws SQLException {
-		if (!globalProperties.getDbms().equals("postgres")) {
+		if (!GlobalProperties.getInstance().getDbms().equals("postgres")) {
 			LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 			throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 		}
@@ -49,15 +47,15 @@ public class JDBCConnector {
 	 */
 	public Connection getNewConn() throws Exception {
 		Properties connectionProps = new Properties();
-		connectionProps.put("user", globalProperties.getDbUser());
-		connectionProps.put("password", globalProperties.getDbPassword());
+		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
+		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
 		connectionProps.put("reWriteBatchedInserts", true);
 		Connection _conn;
-		if (globalProperties.getDbms().equals("postgres")) {
-			String url = "jdbc:postgresql://" + globalProperties.getDbHost() + "/"
-					+ globalProperties.getDbDatabaseName();
+		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
+			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
+					+ GlobalProperties.getInstance().getDbDatabaseName();
 
-			LOGGER.debug("Trying to connect to database: " + globalProperties.getDbDatabaseName());
+			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
 			try {
 				_conn =  DriverManager.getConnection(url, connectionProps);
 				_conn.setAutoCommit(false);

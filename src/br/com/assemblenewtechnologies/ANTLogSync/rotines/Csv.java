@@ -22,12 +22,11 @@ import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
 import br.com.assemblenewtechnologies.ANTLogSync.process_handlers.CSVHandler;
 
-public class Csv extends Rotine {
+public class Csv extends AbstractRotine {
 	private static Logger LOGGER = LoggerFactory.getLogger(Csv.class);
 	private String RTD_DIRETCTORY;
 	private String ARCHIVE_DIRETCTORY;
 	private String ARCHIVE_BUFFER_DIRETCTORY;
-	private GlobalProperties globalProperties = new GlobalProperties();
 	private String current_directory;
 	private int files_processed = 0;
 	private int directories_processed = 0;
@@ -41,20 +40,22 @@ public class Csv extends Rotine {
 	private File[] files_list;
 
 	public Csv() {
-		RTD_DIRETCTORY = globalProperties.getRtdDiretctory();
-		ARCHIVE_DIRETCTORY = globalProperties.getArchiveDiretctory();
-		ARCHIVE_BUFFER_DIRETCTORY = globalProperties.getArchiveBufferDiretctory();
+		RTD_DIRETCTORY = GlobalProperties.getInstance().getRtdDiretctory();
+		ARCHIVE_DIRETCTORY = GlobalProperties.getInstance().getArchiveDiretctory();
+		ARCHIVE_BUFFER_DIRETCTORY = GlobalProperties.getInstance().getArchiveBufferDiretctory();
 	}
-
-	public void csv_handler_start() {
+	
+	@Override
+	public void handler_start() throws Exception {
 		runnable = new CSVHandler(this);
 		thread = new Thread(runnable, "CSV HANDLER");
 		thread.start();
 //		System.out.println(thread.getName());
 //		Thread.currentThread().interrupt();
 	}
-	
-	public void csv_handler_finish() {
+
+	@Override
+	public void handler_finish() throws Exception {
 		thread.interrupt();
 	}
 
@@ -114,7 +115,7 @@ public class Csv extends Rotine {
 			}
 
 			if (in_root_dir) {
-				File index = new File(RTD_DIRETCTORY + globalProperties.getFileSeparator() + last_directory);
+				File index = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + last_directory);
 				if (index.exists())
 					index.delete();
 				zipArchive(last_directory);
@@ -149,18 +150,18 @@ public class Csv extends Rotine {
 
 	private void archiveFile(File file) throws IOException {
 		LOGGER.info("Archiving File: " + file.getAbsoluteFile());
-		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + globalProperties.getFileSeparator() + current_directory;
+		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory;
 		File f = new File(archive_path);
 		if (!f.exists()) {
 			f.mkdir();
 		}
 
-		file.renameTo(new File(ARCHIVE_DIRETCTORY + globalProperties.getFileSeparator() + current_directory
-				+ globalProperties.getFileSeparator() + file.getName()));
+		file.renameTo(new File(ARCHIVE_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory
+				+ GlobalProperties.getInstance().getFileSeparator() + file.getName()));
 
 		try {
 			Files.move(Paths.get(file.getAbsolutePath()),
-					Paths.get(archive_path + globalProperties.getFileSeparator() + file.getName()),
+					Paths.get(archive_path + GlobalProperties.getInstance().getFileSeparator() + file.getName()),
 					StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
 			LOGGER.error("Error IO Archiving File: " + file.getAbsoluteFile());
@@ -179,4 +180,6 @@ public class Csv extends Rotine {
 		appZip.zipIt(zip_file);
 
 	}
+
+	
 }

@@ -10,7 +10,6 @@ import br.com.assemblenewtechnologies.ANTLogSync.rotines.Csv;
 public class CSVHandler implements Runnable {
 
 	private static Logger LOGGER = LoggerFactory.getLogger(MainController.class);
-	private static GlobalProperties globalProperties = new GlobalProperties();
 	private Csv csv_rotine;
 
 	public CSVHandler(Csv csv) {

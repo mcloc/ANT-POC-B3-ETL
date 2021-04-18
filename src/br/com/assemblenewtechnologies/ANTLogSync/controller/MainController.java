@@ -15,11 +15,10 @@ import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentError;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentRotine;
-import br.com.assemblenewtechnologies.ANTLogSync.rotines.Rotine;
+import br.com.assemblenewtechnologies.ANTLogSync.rotines.RotineInterface;
 
 public class MainController {
 	private static Logger LOGGER = LoggerFactory.getLogger(MainController.class);
-	private static GlobalProperties globalProperties = new GlobalProperties();
 	private static long start_time;
 	private static long end_time;
 //	private static long timer1;
@@ -52,7 +51,7 @@ public class MainController {
 			errors_map = controller_data.getErrors();
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
-			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, globalProperties.getProcessmentMode(), null,
+			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
 					MainController.class.getName());
 			end_time = (System.currentTimeMillis() - start_time) / 60;
 			LOGGER.info("ANTController execution time: " + end_time + " minutes");
@@ -81,7 +80,7 @@ public class MainController {
 			} catch (Exception e) {
 				LOGGER.error("ANTController processment error");
 				LOGGER.error(e.getMessage());
-				ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, globalProperties.getProcessmentMode(), null,
+				ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
 						MainController.class.getName());
 				break; //RUNTIME ERROR
 			}
@@ -101,7 +100,7 @@ public class MainController {
 			errors_map = controller_data.getErrors();
 		} catch (Exception e) {
 			LOGGER.error("ANTController update() contrller_data error: ");
-			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, globalProperties.getProcessmentMode(), null,
+			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
 					MainController.class.getName());
 			LOGGER.error(e.getMessage(), e);
 			throw new Exception("Error on updating MainController execution rotines map");
@@ -133,7 +132,7 @@ public class MainController {
 				c = Class.forName(class_name);
 				Method method = c.getDeclaredMethod(processment_map.get(processment_seq).getName());
 				Constructor<?> l_constructor = c.getConstructor();
-				Rotine _rotine = (Rotine) l_constructor.newInstance();
+				RotineInterface _rotine = (RotineInterface) l_constructor.newInstance();
 				method.invoke(_rotine);
 			} catch (ClassNotFoundException e) {
 				LOGGER.error("ANTController class not found error: " + class_name);

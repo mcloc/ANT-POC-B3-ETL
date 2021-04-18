@@ -3,7 +3,7 @@ package br.com.assemblenewtechnologies.ANTLogSync.rotines;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Etl extends Rotine {
+public class Etl extends AbstractRotine {
 	private static Logger LOGGER = LoggerFactory.getLogger(Etl.class);
 	
 	public void etl0_sanity_check() throws Exception{
@@ -20,5 +20,15 @@ public class Etl extends Rotine {
 	}
 	public void etl2_black_scholes() throws Exception{
 		LOGGER.info("[ETL]etl2_black_scholes ...");
+	}
+	@Override
+	public void handler_start() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void handler_finish() throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 }
