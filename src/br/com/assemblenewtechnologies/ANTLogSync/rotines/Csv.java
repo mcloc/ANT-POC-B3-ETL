@@ -19,7 +19,8 @@ import org.slf4j.LoggerFactory;
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
-import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
+import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
+import br.com.assemblenewtechnologies.ANTLogSync.process_handlers.CSVHandler;
 
 public class Csv extends Rotine {
 	private static Logger LOGGER = LoggerFactory.getLogger(Csv.class);
@@ -31,10 +32,13 @@ public class Csv extends Rotine {
 	private int files_processed = 0;
 	private int directories_processed = 0;
 	private long rows_processed = 0;
-	private JDBCConnection jdbcConnection;
+	private JDBCConnector jdbcConnection;
 	private Connection connection;
 	private long start_time;
 	private long timer1;
+	private CSVHandler runnable;
+	private Thread thread;
+	private File[] files_list;
 
 	public Csv() {
 		RTD_DIRETCTORY = globalProperties.getRtdDiretctory();
@@ -42,26 +46,39 @@ public class Csv extends Rotine {
 		ARCHIVE_BUFFER_DIRETCTORY = globalProperties.getArchiveBufferDiretctory();
 	}
 
-	public void csv_wating() throws Exception {
-		LOGGER.info("[CSV] csv_wating...");
+	public void csv_handler_start() {
+		runnable = new CSVHandler(this);
+		thread = new Thread(runnable, "CSV HANDLER");
+		thread.start();
+//		System.out.println(thread.getName());
+//		Thread.currentThread().interrupt();
+	}
+	
+	public void csv_handler_finish() {
+		thread.interrupt();
+	}
+
+	public void csv_check_for_files() throws Exception {
+		LOGGER.info("[CSV] checking for files...");
+
+		File dir = new File(RTD_DIRETCTORY);
+		files_list = dir.listFiles();
+
+		if (files_list.length == 0) {
+			LOGGER.info("[CSV] no CSV files found...");
+			return;
+		}
+		
+		csv_load_start();
 	}
 
 	public void csv_load_start() throws Exception {
 		LOGGER.info("[CSV] csv_load_start...");
 		start_time = System.currentTimeMillis();
-		
+
 		connection = DBConnectionHelper.getNewConn();
 		connection.setAutoCommit(true);
 
-		File dir = new File(RTD_DIRETCTORY);
-		File[] files_list = dir.listFiles();
-		
-		if(files_list.length == 0) {
-			LOGGER.info("[CSV] no CSV files found...");			
-			connection.close();
-			return;
-		}
-		
 		Arrays.sort(files_list);
 		processFiles(files_list);
 
@@ -115,7 +132,7 @@ public class Csv extends Rotine {
 							+ "VOV," + "vencimento," + "validade," + "contratos_abertos," + "estado_atual," + "relogio"
 							+ ") " + "FROM STDIN (FORMAT csv, HEADER true, DELIMITER ',')",
 					new BufferedReader(new FileReader(file.getAbsoluteFile())));
-		    LOGGER.info("File: " + file.getAbsoluteFile() + " LOADED: " + rowsInserted + " rows");
+			LOGGER.info("File: " + file.getAbsoluteFile() + " LOADED: " + rowsInserted + " rows");
 			rows_processed += rowsInserted;
 			archiveFile(file);
 		} catch (SQLException e) {

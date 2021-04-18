@@ -74,6 +74,7 @@ public class ProcessmentErrorLog {
 		int i = 0;
 		while (rs.next()) {
 			if (i > 0) {
+				connection.rollback();
 				connection.close();
 				throw new Exception("more then one erro found with this error_id: " + error_id);
 			}
@@ -90,6 +91,7 @@ public class ProcessmentErrorLog {
 		if (name == null || name.equals("") || description == null || description.equals("") || error_code == 0
 				|| processment_group == null || processment_group.equals("") || processment_mode == null
 				|| processment_mode.equals("") || processment_id == null || processment_errors_id == null) {
+			connection.rollback();
 			connection.close();
 			throw new Exception("ProcessmentErrorLog not saved, missing attributes values");
 		}
@@ -112,10 +114,12 @@ public class ProcessmentErrorLog {
 			preparedStatement.execute();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
+			connection.rollback();
 			connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
 
+		connection.commit();
 		connection.close();
 	}
 
@@ -127,6 +131,7 @@ public class ProcessmentErrorLog {
 			return rs;
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
+			connection.rollback();
 			connection.close();
 			throw new Exception(e1);
 		}
@@ -141,6 +146,7 @@ public class ProcessmentErrorLog {
 			return rs;
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
+			connection.rollback();
 			connection.close();
 			throw new Exception(e1);
 		}

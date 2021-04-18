@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
-import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
+import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
 
 public class DBConnectionHelper {
@@ -16,12 +16,13 @@ public class DBConnectionHelper {
 
 	private Logger LOGGER = LoggerFactory.getLogger(DBConnectionHelper.class);
 	private GlobalProperties globalProperties = new GlobalProperties();
-	private static JDBCConnection jdbcConnection;
+	
+	private static JDBCConnector jdbcConnector;
 
 
 	public DBConnectionHelper() throws Exception {
 		try {
-			jdbcConnection = new JDBCConnection(globalProperties);
+			jdbcConnector = new JDBCConnector();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
 			ProcessmentErrorLog.logError(ErrorCodes.DB_CONNECT_ERROR, globalProperties.getProcessmentMode(), null,
@@ -38,27 +39,16 @@ public class DBConnectionHelper {
 	}
 	
 
+	/**
+	 * It's mandatory to developer on the other hand manage and CLOSE this connection
+	 * @return
+	 * @throws Exception
+	 */
 	public static Connection getNewConn() throws Exception {
 		if (dbInstance == null)
 			throw new Exception("No instance of DBConnectionHelper found");
 
-		return jdbcConnection.getNewConn();
+		return jdbcConnector.getNewConn();
 	}
-	
-	
-	public static synchronized void close() throws Exception {
-		if (dbInstance == null)
-			throw new Exception("No instance of DBConnectionHelper found");
-		
-		jdbcConnection.connClose();
-	}
-
-	/**
-	 * @return the jdbcConnection
-	 */
-	public JDBCConnection getJdbcConnection() {
-		return jdbcConnection;
-	}
-
 
 }

@@ -31,6 +31,8 @@ public class MainController {
 	private static Map<Integer, ProcessmentRotine> processment_map;
 	private static Map<Integer, ProcessmentError> errors_map;
 	private static boolean need_to_update = false;
+	
+	private static int actual_processment = 0;
 
 	public static void main(String[] args) throws Exception {
 		start_time = System.currentTimeMillis();
@@ -41,7 +43,7 @@ public class MainController {
 			DBConnectionHelper.getInstance();
 		} catch (Exception e1) {
 			LOGGER.error(e1.getMessage());
-			throw new Exception(e1);
+			throw new Exception(e1); // no DB we need to throw Exeception runtime Error
 		}
 
 		try {
@@ -52,17 +54,27 @@ public class MainController {
 			LOGGER.error(e.getMessage());
 			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, globalProperties.getProcessmentMode(), null,
 					MainController.class.getName());
-			DBConnectionHelper.close();
 			end_time = (System.currentTimeMillis() - start_time) / 60;
 			LOGGER.info("ANTController execution time: " + end_time + " minutes");
-			throw new Exception(e);
+			throw new Exception(e); // no Controller Data need to throw Exception RUNTIME ERROR
 		}
+		
+		//TODO: register execution_log
 
+		/**
+		 * PROCESSMENT WHILE(1)
+		 * CRASH RECOVERY AND SIGNAL LISTENERS
+		 */
 		while (true) {
 			try {
-				process();
+				//TODO: CHECK FOR INCOMPLETE PROCESSMENTS - RECOVERY
+				//TODO: SIGNAL LISTENER THREADS
+				
+				
+				process(); // PROCESS ROUTINE EXECUTION MAP
 				Thread.sleep(1000);
 
+				//UPDATE THE CONTROLLER MAIN EXEUCTION MAP AND ROTINES
 				if (need_to_update)
 					update();
 
@@ -71,11 +83,12 @@ public class MainController {
 				LOGGER.error(e.getMessage());
 				ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, globalProperties.getProcessmentMode(), null,
 						MainController.class.getName());
-				break;
+				break; //RUNTIME ERROR
 			}
 		}
-
-		DBConnectionHelper.close();
+		//TODO: exit() rotine, send signals to all modules and watchdog
+		//TODO: register end of execution_log
+		
 		end_time = System.currentTimeMillis() - start_time;
 		LOGGER.info("ANTController execution time: " + end_time);
 	}
@@ -91,12 +104,28 @@ public class MainController {
 			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, globalProperties.getProcessmentMode(), null,
 					MainController.class.getName());
 			LOGGER.error(e.getMessage(), e);
+			throw new Exception("Error on updating MainController execution rotines map");
 		}
 
 	}
 
+	/**
+	 * FIXME: this method should call routine handlers. A refactoring is needed so
+	 * processsment_rotines should be HandlersRotines and not EXECUTION rotines
+	 * wich should be inside the Handlers. Another refactoring should be that
+	 * threads which has already started should not be started again
+	 * a Static MAP of Threads on execution must be implemented
+	 * and this processs() method should handle them
+	 * @throws Exception
+	 */
 	private static void process() throws Exception {
+		
+		//For each rotine on processment_rotine table order by processment_seq
+		//TODO: make distinct execution for distinc routines_group, p.e. DB_MANAGEMENT or processment_seq > X
+		//may run on other threads or momments for now we don't have this distinction
+		//FIXME: make execution distinct of groups of rotines
 		for (Integer processment_seq : processment_map.keySet()) {
+			actual_processment = processment_seq;
 			String class_name = getClassName(processment_map.get(processment_seq).getProcessment_group());
 			class_name = "br.com.assemblenewtechnologies.ANTLogSync.rotines." + class_name;
 			Class<?> c;

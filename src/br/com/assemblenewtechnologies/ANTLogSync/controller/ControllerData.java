@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
-import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
+import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentError;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentRotine;

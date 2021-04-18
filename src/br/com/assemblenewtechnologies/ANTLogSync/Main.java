@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
-import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnection;
+import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
 
 public class Main {
 	private final static String RTD_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/data_load/";
@@ -25,7 +25,7 @@ public class Main {
 	private final static String ARCHIVE_BUFFER_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive_buffer/";
 	private static Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	private static GlobalProperties globalProperties = new GlobalProperties();
-	private static JDBCConnection jdbcConnection;
+	private static JDBCConnector jdbcConnection;
 	private static Connection connection;
 	private static long start_time;
 	private static long timer1;
@@ -48,7 +48,7 @@ public class Main {
 		LOGGER.info("Directory to search RTD files: ." + RTD_DIRETCTORY);
 
 		try {
-			jdbcConnection = new JDBCConnection(globalProperties);
+			jdbcConnection = new JDBCConnector(globalProperties);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("No database connection...");
