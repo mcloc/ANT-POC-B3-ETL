@@ -17,6 +17,7 @@ public class ProcessmentRotine {
 	private String processment_group; 
 	private String processment_mode;
 	private boolean new_thread;
+	private String thread_name;
 	
 	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentRotine.class);
 	
@@ -119,6 +120,18 @@ public class ProcessmentRotine {
 	 */
 	public void setNew_thread(boolean new_thread) {
 		this.new_thread = new_thread;
+	}
+	/**
+	 * @return the thread_name
+	 */
+	public String getThread_name() {
+		return thread_name;
+	}
+	/**
+	 * @param thread_name the thread_name to set
+	 */
+	public void setThread_name(String thread_name) {
+		this.thread_name = thread_name;
 	}
 	
 	

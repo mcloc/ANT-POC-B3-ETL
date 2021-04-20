@@ -38,6 +38,7 @@ public class Csv extends AbstractRotine {
 	private CSVHandler runnable;
 	private Thread thread;
 	private File[] files_list;
+	private String thread_name = "CSV_HANDLER";
 
 	public Csv() {
 		RTD_DIRETCTORY = GlobalProperties.getInstance().getRtdDiretctory();
@@ -48,7 +49,7 @@ public class Csv extends AbstractRotine {
 	@Override
 	public void handler_start() throws Exception {
 		runnable = new CSVHandler(this);
-		thread = new Thread(runnable, "CSV HANDLER");
+		thread = new Thread(runnable, thread_name );
 		thread.start();
 //		System.out.println(thread.getName());
 //		Thread.currentThread().interrupt();

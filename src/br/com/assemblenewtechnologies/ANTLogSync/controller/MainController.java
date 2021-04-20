@@ -4,12 +4,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
-import br.com.assemblenewtechnologies.ANTLogSync.Main;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentError;
@@ -29,6 +29,8 @@ public class MainController {
 	private static ControllerData controller_data;
 	private static Map<Integer, ProcessmentRotine> processment_map;
 	private static Map<Integer, ProcessmentError> errors_map;
+	private static Map<String, Object> execution_threads;
+	private static Map<Integer, String> execution_processment_threads;
 	private static boolean need_to_update = false;
 	
 	private static int actual_processment = 0;
@@ -69,7 +71,6 @@ public class MainController {
 				//TODO: CHECK FOR INCOMPLETE PROCESSMENTS - RECOVERY
 				//TODO: SIGNAL LISTENER THREADS
 				
-				
 				process(); // PROCESS ROUTINE EXECUTION MAP
 				Thread.sleep(1000);
 
@@ -87,6 +88,13 @@ public class MainController {
 		}
 		//TODO: exit() rotine, send signals to all modules and watchdog
 		//TODO: register end of execution_log
+		
+		
+		//Interrupt all threads
+		Set<Thread> threads = Thread.getAllStackTraces().keySet();
+		for (Thread t : threads) {
+			t.interrupt();
+		}
 		
 		end_time = System.currentTimeMillis() - start_time;
 		LOGGER.info("ANTController execution time: " + end_time);
@@ -118,13 +126,35 @@ public class MainController {
 	 * @throws Exception
 	 */
 	private static void process() throws Exception {
-		
 		//For each rotine on processment_rotine table order by processment_seq
 		//TODO: make distinct execution for distinc routines_group, p.e. DB_MANAGEMENT or processment_seq > X
 		//may run on other threads or momments for now we don't have this distinction
 		//FIXME: make execution distinct of groups of rotines
 		for (Integer processment_seq : processment_map.keySet()) {
+			boolean already_in_execution = false;
 			actual_processment = processment_seq;
+			
+			Set<Thread> threads = Thread.getAllStackTraces().keySet();
+			 
+			for (Thread t : threads) {
+			    String name = t.getName();
+			    if(execution_processment_threads.containsValue(name)) {
+			    	already_in_execution = true;
+			    	break;
+			    } else { 
+			    	already_in_execution = false;
+			    }
+//			    Thread.State state = t.getState();
+//			    int priority = t.getPriority();
+//			    String type = t.isDaemon() ? "Daemon" : "Normal";
+//			    System.out.printf("%-20s \t %s \t %d \t %s\n", name, state, priority, type);
+			}
+			
+			if(already_in_execution) {
+				LOGGER.debug("Thread already in execution: " + processment_map.get(processment_seq).getThread_name());
+				continue;
+			}
+			
 			String class_name = getClassName(processment_map.get(processment_seq).getProcessment_group());
 			class_name = "br.com.assemblenewtechnologies.ANTLogSync.rotines." + class_name;
 			Class<?> c;
@@ -174,5 +204,6 @@ public class MainController {
 		}
 		return className;
 	}
+	
 
 }

@@ -24,13 +24,14 @@ public class CSVHandler implements Runnable {
 				try {
 					csv_rotine.csv_check_for_files();
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
+					LOGGER.info("CSV Thread Error");
+					LOGGER.error(e.getMessage());
 					e.printStackTrace();
 				}
-				Thread.sleep(2000);
+				Thread.sleep(1000);
 			}
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+			LOGGER.error(e.getMessage());
 			e.printStackTrace();
 		}
 
