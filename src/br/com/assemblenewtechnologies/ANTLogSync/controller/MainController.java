@@ -154,10 +154,10 @@ public class MainController {
 			    } else { 
 			    	already_in_execution = false;
 			    }
-			    Thread.State state = t.getState();
-			    int priority = t.getPriority();
-			    String type = t.isDaemon() ? "Daemon" : "Normal";
-			    System.out.printf("%-20s \t %s \t %d \t %s\n", name, state, priority, type);
+//			    Thread.State state = t.getState();
+//			    int priority = t.getPriority();
+//			    String type = t.isDaemon() ? "Daemon" : "Normal";
+//			    System.out.printf("%-20s \t %s \t %d \t %s\n", name, state, priority, type);
 			}
 			
 			if(already_in_execution) {

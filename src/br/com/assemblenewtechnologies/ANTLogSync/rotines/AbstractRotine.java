@@ -5,6 +5,7 @@ import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 abstract class AbstractRotine implements RotineInterface {
 
 	protected AbstractRotine runnable;
+	private boolean executing = false;
 	protected MainController mainController;
 	/**
 	 * @return the mainController
@@ -18,6 +19,19 @@ abstract class AbstractRotine implements RotineInterface {
 	public void setMainController(MainController mainController) {
 		this.mainController = mainController;
 	}
+	/**
+	 * @return the executing
+	 */
+	public boolean isExecuting() {
+		return executing;
+	}
+	/**
+	 * @param executing the executing to set
+	 */
+	public void setExecuting(boolean executing) {
+		this.executing = executing;
+	}
+	
 	
 	
 	

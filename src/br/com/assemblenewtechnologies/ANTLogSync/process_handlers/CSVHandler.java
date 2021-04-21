@@ -3,7 +3,6 @@ package br.com.assemblenewtechnologies.ANTLogSync.process_handlers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 import br.com.assemblenewtechnologies.ANTLogSync.rotines.Csv;
 
@@ -22,7 +21,9 @@ public class CSVHandler implements Runnable {
 			LOGGER.info("CSV Thread Starting...");
 			while (true) {
 				try {
+					csv_rotine.setExecuting(true);
 					csv_rotine.csv_check_for_files();
+					csv_rotine.setExecuting(false);
 				} catch (Exception e) {
 					LOGGER.info("CSV Thread Error");
 					LOGGER.error(e.getMessage());

@@ -10,6 +10,8 @@ import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -39,6 +41,8 @@ public class Csv extends AbstractRotine {
 	private Thread thread;
 	private File[] files_list;
 	private String thread_name = "CSV_HANDLER";
+	
+	private Map<String, Integer> lot_errors = new LinkedHashMap<String, Integer>();
 
 	public Csv() {
 		RTD_DIRETCTORY = GlobalProperties.getInstance().getRtdDiretctory();
@@ -59,13 +63,13 @@ public class Csv extends AbstractRotine {
 	}
 
 	public void csv_check_for_files() throws Exception {
-		LOGGER.info("[CSV] checking for files...");
+		LOGGER.debug("[CSV] checking for files...");
 
 		File dir = new File(RTD_DIRETCTORY);
 		files_list = dir.listFiles();
 
 		if (files_list.length == 0) {
-			LOGGER.info("[CSV] no CSV files found...");
+			LOGGER.debug("[CSV] no CSV files found...");
 			return;
 		}
 		
@@ -73,6 +77,10 @@ public class Csv extends AbstractRotine {
 	}
 
 	public void csv_load_start() throws Exception {
+		rows_processed = 0;
+		directories_processed = 0;
+		files_processed = 0;
+		
 		LOGGER.info("[CSV] csv_load_start...");
 		start_time = System.currentTimeMillis();
 
@@ -81,6 +89,17 @@ public class Csv extends AbstractRotine {
 
 		Arrays.sort(files_list);
 		processFiles(files_list);
+		
+		if(files_processed > 0){
+			long timer1 = System.currentTimeMillis();
+			long total_time = (timer1 - start_time) / 1000;
+			LOGGER.info("[CSV] total rows_processed inserted: " + rows_processed);
+			LOGGER.info("[CSV] total directories processed: " + directories_processed);
+			LOGGER.info("[CSV] total files processed: " + files_processed);
+			LOGGER.info("[CSV] total time to process CSV lots: " + total_time + " seconds");
+			LOGGER.info("[CSV] total files per sec: " + files_processed/total_time + " seconds");
+			LOGGER.info("[CSV] total rows per sec: " + rows_processed/total_time + " seconds");
+		}
 
 		connection.close();
 	}
@@ -91,11 +110,20 @@ public class Csv extends AbstractRotine {
 
 	private void processFiles(File[] files_list) throws Exception {
 		String last_directory = null;
-		boolean in_root_dir = true;
+		boolean in_root_dir = false;
+		int i = 0;
 		for (File file : files_list) {
 			if (file.isDirectory()) {
+				i++;
+				
 				current_directory = file.getName();
+				if(!lot_errors.containsKey(current_directory))
+					lot_errors.put(current_directory, 0);
+
 				if (last_directory != null && last_directory != current_directory) {
+					File index = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + last_directory);
+					if (index.exists())
+						index.delete();
 					zipArchive(last_directory);
 				}
 
@@ -110,18 +138,23 @@ public class Csv extends AbstractRotine {
 				in_root_dir = false;
 				files_processed++;
 //                LOGGER.info("Loading File: " + file.getAbsolutePath());
-				loadCSV(file);
+				try {
+					loadCSV(file);
+				} catch (Exception e) {
+					lot_errors.put(current_directory, lot_errors.get(current_directory) + 1);
+//					throw e;
+				}
 			}
-
-			if (in_root_dir) {
+			
+			if (i >= files_list.length) {
 				File index = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + last_directory);
 				if (index.exists())
 					index.delete();
 				zipArchive(last_directory);
 			}
-			long timer1 = System.currentTimeMillis();
-			long total_time = (timer1 - start_time) / 1000;
 		}
+
+
 	}
 
 	private void loadCSV(File file) throws Exception {
@@ -132,23 +165,24 @@ public class Csv extends AbstractRotine {
 							+ "VOV," + "vencimento," + "validade," + "contratos_abertos," + "estado_atual," + "relogio"
 							+ ") " + "FROM STDIN (FORMAT csv, HEADER true, DELIMITER ',')",
 					new BufferedReader(new FileReader(file.getAbsoluteFile())));
-			LOGGER.info("File: " + file.getAbsoluteFile() + " LOADED: " + rowsInserted + " rows");
+			LOGGER.debug("File: " + file.getAbsoluteFile() + " LOADED: " + rowsInserted + " rows");
 			rows_processed += rowsInserted;
 			archiveFile(file);
 		} catch (SQLException e) {
-			LOGGER.error("Database Error Loading File: " + file.getAbsoluteFile());
-			LOGGER.error(e.getMessage());
+			LOGGER.debug("Database Error Loading File: " + file.getAbsoluteFile());
+			LOGGER.debug(e.getMessage());
 //			LOGGER.error(e.getMessage(), e);
 			archiveFile(file);
-			// throw e;
+			throw new Exception(e.getMessage());
 		} catch (IOException e) {
-			LOGGER.error("Error IO Loading File: " + file.getAbsoluteFile());
-			LOGGER.error(e.getMessage());
+			LOGGER.debug("Error IO Loading File: " + file.getAbsoluteFile());
+			LOGGER.debug(e.getMessage());
+			throw new Exception(e.getMessage());
 		}
 	}
 
 	private void archiveFile(File file) throws IOException {
-		LOGGER.info("Archiving File: " + file.getAbsoluteFile());
+		LOGGER.debug("Archiving File: " + file.getAbsoluteFile());
 		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory;
 		File f = new File(archive_path);
 		if (!f.exists()) {
@@ -170,6 +204,8 @@ public class Csv extends AbstractRotine {
 	}
 
 	private void zipArchive(String last_directory) {
+		LOGGER.info("Total load errors on this lot: " + lot_errors.get(last_directory));
+		lot_errors.remove(last_directory);
 		String zip_archive_path = ARCHIVE_BUFFER_DIRETCTORY + last_directory;
 		String zip_file = ARCHIVE_DIRETCTORY + last_directory + ".zip";
 		ZipUtils appZip = new ZipUtils();

@@ -78,7 +78,6 @@ public class ControllerData {
 	}
 
 	private void load_errors() throws Exception {
-		LOGGER.info("Fetching Errors Map:");
 		Statement stmt;
 		try {
 			stmt = connection.createStatement();
