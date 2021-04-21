@@ -30,6 +30,7 @@ public class ProcessmentRotine {
 			processment_group = rs.getString("processment_group");
 			processment_mode = rs.getString("processment_mode");
 			new_thread = rs.getBoolean("new_thread");
+			thread_name = rs.getString("thread_name");
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
 			ProcessmentErrorLog.logError(ErrorCodes.DB_EXCEPTION_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,

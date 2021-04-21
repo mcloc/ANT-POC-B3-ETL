@@ -51,8 +51,6 @@ public class Csv extends AbstractRotine {
 		runnable = new CSVHandler(this);
 		thread = new Thread(runnable, thread_name );
 		thread.start();
-//		System.out.println(thread.getName());
-//		Thread.currentThread().interrupt();
 	}
 
 	@Override

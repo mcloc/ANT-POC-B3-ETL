@@ -19,7 +19,7 @@ public class CSVHandler implements Runnable {
 	@Override
 	public void run() {
 		try {
-			LOGGER.info("CSV Thread Running");
+			LOGGER.info("CSV Thread Starting...");
 			while (true) {
 				try {
 					csv_rotine.csv_check_for_files();
