@@ -52,8 +52,8 @@ public class ProcessmentExecution {
 			preparedStatement = connection.prepareStatement(compiledQuery,
                     Statement.RETURN_GENERATED_KEYS);
 			preparedStatement.setString(1, processment_mode);
-			preparedStatement.setLong(2, _now);
-			preparedStatement.setLong(3, _now);
+			preparedStatement.setTimestamp(2, new Timestamp(_now));
+			preparedStatement.setTimestamp(3, new Timestamp(_now));
 			preparedStatement.execute();
 			
 		} catch (SQLException e) {
