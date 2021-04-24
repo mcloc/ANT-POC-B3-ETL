@@ -22,6 +22,7 @@ import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
+import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadRegistry;
 import br.com.assemblenewtechnologies.ANTLogSync.process_handlers.CSVHandler;
 
 public class Csv extends AbstractRotine {
@@ -43,6 +44,7 @@ public class Csv extends AbstractRotine {
 	private String thread_name = "CSV_HANDLER";
 	
 	private Map<String, Integer> lot_errors = new LinkedHashMap<String, Integer>();
+	private CsvLoadRegistry csv_db_registry;
 
 	public Csv() {
 		RTD_DIRETCTORY = GlobalProperties.getInstance().getRtdDiretctory();
@@ -159,6 +161,7 @@ public class Csv extends AbstractRotine {
 
 	private void loadCSV(File file) throws Exception {
 		try {
+			csv_db_registry = CsvLoadRegistry.registerCSV(current_directory, file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_LOADING);
 			long rowsInserted = new CopyManager((BaseConnection) connection).copyIn(
 					"COPY B3Log.B3SignalLogger " + "( " + "asset," + "data," + "hora," + "ultimo," + "strike,"
 							+ "negocios," + "quantidade," + "volume," + "oferta_compra," + "oferta_venda," + "VOC,"
@@ -166,13 +169,15 @@ public class Csv extends AbstractRotine {
 							+ ") " + "FROM STDIN (FORMAT csv, HEADER true, DELIMITER ',')",
 					new BufferedReader(new FileReader(file.getAbsoluteFile())));
 			LOGGER.debug("File: " + file.getAbsoluteFile() + " LOADED: " + rowsInserted + " rows");
+			if(rowsInserted > 0)
+				csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_LOADED);
+			
+			archiveFile(file, CsvLoadRegistry.STATUS_LOADED_ARCHIVED);
 			rows_processed += rowsInserted;
-			archiveFile(file);
 		} catch (SQLException e) {
 			LOGGER.debug("Database Error Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
-//			LOGGER.error(e.getMessage(), e);
-			archiveFile(file);
+			archiveFile(file, CsvLoadRegistry.STATUS_ERROR_ARCHIVED);
 			throw new Exception(e.getMessage());
 		} catch (IOException e) {
 			LOGGER.debug("Error IO Loading File: " + file.getAbsoluteFile());
@@ -181,7 +186,7 @@ public class Csv extends AbstractRotine {
 		}
 	}
 
-	private void archiveFile(File file) throws IOException {
+	private void archiveFile(File file, int file_status) throws Exception {
 		LOGGER.debug("Archiving File: " + file.getAbsoluteFile());
 		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory;
 		File f = new File(archive_path);
@@ -196,9 +201,11 @@ public class Csv extends AbstractRotine {
 			Files.move(Paths.get(file.getAbsolutePath()),
 					Paths.get(archive_path + GlobalProperties.getInstance().getFileSeparator() + file.getName()),
 					StandardCopyOption.REPLACE_EXISTING);
+			csv_db_registry.changeStatus(file_status);
 		} catch (IOException e) {
 			LOGGER.error("Error IO Archiving File: " + file.getAbsoluteFile());
 			LOGGER.error(e.getMessage());
+			csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_ERROR_NOT_ARCHIVED);
 			throw e;
 		}
 	}
@@ -213,7 +220,6 @@ public class Csv extends AbstractRotine {
 		appZip.setSOURCE_FOLDER(zip_archive_path);
 		appZip.generateFileList(new File(zip_archive_path));
 		appZip.zipIt(zip_file);
-
 	}
 
 	

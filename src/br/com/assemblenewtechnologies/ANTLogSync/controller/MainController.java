@@ -221,6 +221,14 @@ public class MainController {
 		}
 		return className;
 	}
+
+	/**
+	 * @return the processmentExecution
+	 */
+	public static ProcessmentExecution getProcessmentExecution() {
+		return processmentExecution;
+	}
+
 	
 
 }

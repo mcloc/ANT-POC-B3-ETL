@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
+import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 
 public class ProcessmentErrorLog {
 	private String name;
@@ -22,7 +23,7 @@ public class ProcessmentErrorLog {
 	private BigDecimal processment_errors_id;
 	private String java_class;
 
-	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentErrorLog.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(ProcessmentErrorLog.class);
 	private Connection connection;
 
 	
@@ -36,13 +37,12 @@ public class ProcessmentErrorLog {
 	 * @param _java_class
 	 * @throws Exception
 	 */
-	public static void logError(int _error_code, String processment_group, String processment_mode,
-			BigDecimal processment_id, String _java_class) throws Exception {
+	public static void logError(int _error_code, String processment_group, String _java_class) throws Exception {
 
 		ProcessmentErrorLog error_log = new ProcessmentErrorLog(_error_code);
 		error_log.processment_group = processment_group;
-		error_log.processment_mode = processment_mode;
-		error_log.processment_id = processment_id;
+		error_log.processment_mode = MainController.getProcessmentExecution().getProcessment_mode();
+		error_log.processment_id = MainController.getProcessmentExecution().getId();
 		error_log.java_class = _java_class;
 
 		error_log.save();

@@ -19,7 +19,7 @@ public class ProcessmentRotine {
 	private boolean new_thread;
 	private String thread_name;
 	
-	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentRotine.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(ProcessmentRotine.class);
 	
 	public ProcessmentRotine(ResultSet rs) throws Exception {
 		try {
@@ -33,7 +33,7 @@ public class ProcessmentRotine {
 			thread_name = rs.getString("thread_name");
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
-			ProcessmentErrorLog.logError(ErrorCodes.DB_EXCEPTION_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
+			ProcessmentErrorLog.logError(ErrorCodes.DB_EXCEPTION_ERROR, processment_group,
 					this.getClass().getName());
 			throw new Exception(e);
 		}

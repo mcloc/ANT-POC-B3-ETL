@@ -19,7 +19,7 @@ public class ProcessmentExecution {
 	private Timestamp created_at;
 	private Timestamp updated_at;
 	
-	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentExecution.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(ProcessmentExecution.class);
 	private Connection connection;
 	
 	/**
