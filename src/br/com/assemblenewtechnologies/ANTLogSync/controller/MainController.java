@@ -15,6 +15,7 @@ import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentError;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
+import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentExecution;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentRotine;
 import br.com.assemblenewtechnologies.ANTLogSync.rotines.RotineInterface;
 
@@ -33,40 +34,17 @@ public class MainController {
 	private static Map<String, Object> execution_threads;
 	private static Map<Integer, String> execution_processment_threads = new HashMap<Integer, String>();
 	private static boolean need_to_update = false;
-	
+	private static ProcessmentExecution processmentExecution;
 	private static int actual_processment = 0;
 
 	public static void main(String[] args) throws Exception {
 		start_time = System.currentTimeMillis();
 		LOGGER.info("Initializing ANTController...");
 
-		// Singleton DBConnection, load Singleton
-		try {
-			DBConnectionHelper.getInstance();
-		} catch (Exception e1) {
-			LOGGER.error(e1.getMessage());
-			//Interrupt all threads
-			closeAllThreads();
-			throw new Exception(e1); // no DB we need to throw Exeception runtime Error
-		}
-
-		try {
-			controller_data = new ControllerData();
-			processment_map = controller_data.getProcessment_rotines();
-			errors_map = controller_data.getErrors();
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
-			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
-					MainController.class.getName());
-			end_time = (System.currentTimeMillis() - start_time) / 60;
-			LOGGER.info("ANTController execution time: " + end_time + " minutes");
-			//Interrupt all threads
-			closeAllThreads();
-			throw new Exception(e); // no Controller Data need to throw Exception RUNTIME ERROR
-		}
+		initController();
 		
-		//TODO: register execution_log
-
+		processmentExecution = new ProcessmentExecution(GlobalProperties.getInstance().getProcessmentMode());
+		
 		/**
 		 * PROCESSMENT WHILE(1)
 		 * CRASH RECOVERY AND SIGNAL LISTENERS
@@ -101,6 +79,33 @@ public class MainController {
 		
 		end_time = System.currentTimeMillis() - start_time;
 		LOGGER.info("ANTController execution time: " + end_time);
+	}
+
+	private static void initController() throws Exception {
+		// Singleton DBConnection, load Singleton
+		try {
+			DBConnectionHelper.getInstance();
+		} catch (Exception e1) {
+			LOGGER.error(e1.getMessage());
+			//Interrupt all threads
+			closeAllThreads();
+			throw new Exception(e1); // no DB we need to throw Exeception runtime Error
+		}
+
+		try {
+			controller_data = new ControllerData();
+			processment_map = controller_data.getProcessment_rotines();
+			errors_map = controller_data.getErrors();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
+					MainController.class.getName());
+			end_time = (System.currentTimeMillis() - start_time) / 60;
+			LOGGER.info("ANTController execution time: " + end_time + " minutes");
+			//Interrupt all threads
+			closeAllThreads();
+			throw new Exception(e); // no Controller Data need to throw Exception RUNTIME ERROR
+		}
 	}
 
 	private static void closeAllThreads() {

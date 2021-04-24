@@ -1,100 +1,99 @@
 package br.com.assemblenewtechnologies.ANTLogSync.model;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
+
 public class ProcessmentExecution {
-	private String name; 
-	private String description;
-	private BigDecimal processment_id;
-	private int processment_seq;
-	private String processment_group; 
+	private BigDecimal id; 
 	private String processment_mode;
-	private boolean new_thread;
+	private Timestamp created_at;
+	private Timestamp updated_at;
 	
 	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentExecution.class);
+	private Connection connection;
 	
-	public ProcessmentExecution(String name, String description, BigDecimal processment_id, int processment_seq,
-			String processment_group, String processment_mode, boolean new_thread) {
-		this.name = name;
-		this.description = description;
-		this.processment_id = processment_id;
-		this.processment_seq = processment_seq;
-		this.processment_group = processment_group;
+	/**
+	 * Create and save on database
+	 * 
+	 * @param processment_mode
+	 * @throws Exception 
+	 */
+	public ProcessmentExecution(String processment_mode) throws Exception {
 		this.processment_mode = processment_mode;
-		this.new_thread = new_thread;
+		this.save();
+	}
+	
+	
+	private void save() throws Exception {
+		if (processment_mode.equals("")) {
+			connection.rollback();
+			connection.close();
+			throw new Exception("ProcessmentErrorLog not saved, missing attributes values");
+		}
+		
+		connection = DBConnectionHelper.getNewConn();
+
+		String compiledQuery = "INSERT INTO  Intellect.processment_errors_log("
+				+ "processment_mode, created_at, updated_at) VALUES " + "(?, ?, ?)";
+		PreparedStatement preparedStatement;
+		long _now;
+		try {
+			_now = System.currentTimeMillis();
+			preparedStatement = connection.prepareStatement(compiledQuery,
+                    Statement.RETURN_GENERATED_KEYS);
+			preparedStatement.setString(1, processment_mode);
+			preparedStatement.setLong(2, _now);
+			preparedStatement.setLong(3, _now);
+			preparedStatement.execute();
+			
+		} catch (SQLException e) {
+			LOGGER.error(e.getMessage());
+			connection.rollback();
+			connection.close();
+			throw new Exception(e.getMessage(), e);
+		}
+
+		connection.commit();
+		ResultSet rs = preparedStatement.getGeneratedKeys();
+		int i = 0;
+		if (rs.next()) {
+			if(i > 0) {
+				connection.close();
+				throw new Exception("ProcessmentExecetion.save() error: more then one inserted ID returned...");
+			}
+		    id = rs.getBigDecimal(1);
+		    created_at = new Timestamp(_now);
+		    updated_at = new Timestamp(_now);
+		    i++;
+		}
+		
+		connection.close();
+	}
+	
+	
+
+	/**
+	 * @return the id
+	 */
+	public BigDecimal getId() {
+		return id;
 	}
 
 	/**
-	 * @return the name
+	 * @param id the id to set
 	 */
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * @param name the name to set
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	/**
-	 * @return the description
-	 */
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * @param description the description to set
-	 */
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	/**
-	 * @return the processment_id
-	 */
-	public BigDecimal getProcessment_id() {
-		return processment_id;
-	}
-
-	/**
-	 * @param processment_id the processment_id to set
-	 */
-	public void setProcessment_id(BigDecimal processment_id) {
-		this.processment_id = processment_id;
-	}
-
-	/**
-	 * @return the processment_seq
-	 */
-	public int getProcessment_seq() {
-		return processment_seq;
-	}
-
-	/**
-	 * @param processment_seq the processment_seq to set
-	 */
-	public void setProcessment_seq(int processment_seq) {
-		this.processment_seq = processment_seq;
-	}
-
-	/**
-	 * @return the processment_group
-	 */
-	public String getProcessment_group() {
-		return processment_group;
-	}
-
-	/**
-	 * @param processment_group the processment_group to set
-	 */
-	public void setProcessment_group(String processment_group) {
-		this.processment_group = processment_group;
+	public void setId(BigDecimal id) {
+		this.id = id;
 	}
 
 	/**
@@ -111,18 +110,39 @@ public class ProcessmentExecution {
 		this.processment_mode = processment_mode;
 	}
 
-	/**
-	 * @return the new_thread
-	 */
-	public boolean isNew_thread() {
-		return new_thread;
-	}
 
 	/**
-	 * @param new_thread the new_thread to set
+	 * @return the created_at
 	 */
-	public void setNew_thread(boolean new_thread) {
-		this.new_thread = new_thread;
+	public Timestamp getCreated_at() {
+		return created_at;
 	}
+
+
+	/**
+	 * @param created_at the created_at to set
+	 */
+	public void setCreated_at(Timestamp created_at) {
+		this.created_at = created_at;
+	}
+
+
+	/**
+	 * @return the updated_at
+	 */
+	public Timestamp getUpdated_at() {
+		return updated_at;
+	}
+
+
+	/**
+	 * @param updated_at the updated_at to set
+	 */
+	public void setUpdated_at(Timestamp updated_at) {
+		this.updated_at = updated_at;
+	}
+
+	
+	
 	
 }

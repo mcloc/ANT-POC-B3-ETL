@@ -25,6 +25,17 @@ public class ProcessmentErrorLog {
 	private Logger LOGGER = LoggerFactory.getLogger(ProcessmentErrorLog.class);
 	private Connection connection;
 
+	
+	/**
+	 * Save Error on database
+	 * 
+	 * @param _error_code
+	 * @param processment_group
+	 * @param processment_mode
+	 * @param processment_id
+	 * @param _java_class
+	 * @throws Exception
+	 */
 	public static void logError(int _error_code, String processment_group, String processment_mode,
 			BigDecimal processment_id, String _java_class) throws Exception {
 
@@ -66,6 +77,7 @@ public class ProcessmentErrorLog {
 			processment_errors_id = rs.getBigDecimal("id");
 			i++;
 		}
+		connection.close();
 	}
 
 	private ProcessmentErrorLog(BigDecimal error_id) throws Exception {
@@ -85,17 +97,16 @@ public class ProcessmentErrorLog {
 			processment_errors_id = rs.getBigDecimal("id");
 			i++;
 		}
+		connection.close();
 	}
 
 	private void save() throws Exception {
 		if (name == null || name.equals("") || description == null || description.equals("") || error_code == 0
 				|| processment_group == null || processment_group.equals("") || processment_mode == null
 				|| processment_mode.equals("") || processment_id == null || processment_errors_id == null) {
-			connection.rollback();
-			connection.close();
 			throw new Exception("ProcessmentErrorLog not saved, missing attributes values");
 		}
-
+		connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "INSERT INTO  Intellect.processment_errors_log("
 				+ "name, description, error_code, processment_group, processment_mode, "
 				+ "processment_id, processment_errors_id, java_class, created_at) VALUES " + "(?, ?, ?, ?, ?, ?, ?, ?)";
@@ -135,6 +146,7 @@ public class ProcessmentErrorLog {
 			connection.close();
 			throw new Exception(e1);
 		}
+		
 	}
 
 	private ResultSet getErrorByCode(int error_code) throws Exception {
@@ -150,6 +162,10 @@ public class ProcessmentErrorLog {
 			connection.close();
 			throw new Exception(e1);
 		}
+	}
+	
+	public void finalize() {
+		
 	}
 
 	/**
