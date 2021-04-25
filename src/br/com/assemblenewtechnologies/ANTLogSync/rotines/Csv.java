@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
+import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
 import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadRegistry;
 import br.com.assemblenewtechnologies.ANTLogSync.process_handlers.CSVHandler;
@@ -116,9 +117,31 @@ public class Csv extends AbstractRotine {
 		int i = 0;
 		for (File file : files_list) {
 			if (file.isDirectory()) {
+				current_directory = file.getName();
+				
+				if(CsvLoadRegistry.checkIfLotAlreadyProcessed(current_directory)) {
+					LOGGER.warn("Directory: " + current_directory + " already processed, skipping...");
+					String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory;
+					
+					File index = new File(archive_path);
+					if (index.exists())
+						index.delete();
+					
+					Files.move(Paths.get(file.getAbsolutePath()),
+							Paths.get(archive_path),StandardCopyOption.REPLACE_EXISTING);
+					zipArchive(current_directory);
+					
+					continue;
+				}
+				
+				//CHECK Processment Mode
+				if(MainController.getProcessmentExecution().getProcessment_mode().equals("batch_process") &&
+						current_directory.equals("LIVE_DATA")) {
+					continue;
+				}
 				i++;
 				
-				current_directory = file.getName();
+				
 				if(!lot_errors.containsKey(current_directory))
 					lot_errors.put(current_directory, 0);
 
@@ -159,7 +182,7 @@ public class Csv extends AbstractRotine {
 
 	}
 
-	private void loadCSV(File file) throws Exception {
+	private void loadCSV(File file) throws Exception  {
 		try {
 			csv_db_registry = CsvLoadRegistry.registerCSV(current_directory, file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_LOADING);
 			long rowsInserted = new CopyManager((BaseConnection) connection).copyIn(
@@ -183,6 +206,10 @@ public class Csv extends AbstractRotine {
 			LOGGER.debug("Error IO Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
 			throw new Exception(e.getMessage());
+		} catch (Exception e) {
+			LOGGER.debug("Error Loading File: " + file.getAbsoluteFile());
+			LOGGER.debug(e.getMessage());
+			throw new Exception(e.getMessage());
 		}
 	}
 
@@ -194,8 +221,8 @@ public class Csv extends AbstractRotine {
 			f.mkdir();
 		}
 
-		file.renameTo(new File(ARCHIVE_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory
-				+ GlobalProperties.getInstance().getFileSeparator() + file.getName()));
+//		file.renameTo(new File(ARCHIVE_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory
+//				+ GlobalProperties.getInstance().getFileSeparator() + file.getName()));
 
 		try {
 			Files.move(Paths.get(file.getAbsolutePath()),

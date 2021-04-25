@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 
 import org.slf4j.Logger;
@@ -77,16 +78,20 @@ public class CsvLoadRegistry {
 				+ "created_at, updated_at) VALUES " + "(?, ?, ?, ?, ?, ?, ?)";
 		PreparedStatement preparedStatement;
 		long _now;
+		Timestamp _updated_at;
+		Timestamp _created_at;
 		try {
 			_now = System.currentTimeMillis();
-			preparedStatement = connection.prepareStatement(compiledQuery);
+			_created_at = new Timestamp(_now);
+			_updated_at = new Timestamp(_now);
+			preparedStatement = connection.prepareStatement(compiledQuery,Statement.RETURN_GENERATED_KEYS);
 			preparedStatement.setString(1, lot_name);
 			preparedStatement.setString(2, file_name);
 			preparedStatement.setString(3, load_path);
 			preparedStatement.setInt(4, status);
 			preparedStatement.setBigDecimal(5, processment_execution_id);
-			preparedStatement.setLong(6, _now);
-			preparedStatement.setLong(7, _now);
+			preparedStatement.setTimestamp(6, _created_at);
+			preparedStatement.setTimestamp(7, _updated_at);
 			preparedStatement.execute();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
@@ -94,51 +99,110 @@ public class CsvLoadRegistry {
 			connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
-		connection.commit();
-		ResultSet rs = preparedStatement.getGeneratedKeys();
+		
+		ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
 		int i = 0;
-		if (rs.next()) {
+		if (generatedKeys.next()) {
 			if (i > 0) {
 				connection.close();
 				throw new Exception("ProcessmentExecetion.save() error: more then one inserted ID returned...");
 			}
-			id = rs.getBigDecimal(1);
+			id = generatedKeys.getBigDecimal(1);
 			created_at = new Timestamp(_now);
 			updated_at = new Timestamp(_now);
 			i++;
 		}
+		connection.commit();
 		connection.close();
 	}
 	
 	
-	public void changeStatus(int statusArchiving) throws Exception {
-		status = statusArchiving;
+	public void changeStatus(int _status) throws Exception {
+		status = _status;
 		update();
 	}
 
 	private void update() throws Exception {
 		connection = DBConnectionHelper.getNewConn();
-		String compiledQuery = "UPDATE Intellect.csv_load_registry("
+		String compiledQuery = "UPDATE Intellect.csv_load_registry ("
 				+ "lot_name, file_name, load_path, status, "
-				+ "updated_at) VALUES " + "(?, ?, ?, ?, ?)";
+				+ "updated_at) VALUES (?, ?, ?, ?, ?) "
+				+ "where id = " + id;
 		PreparedStatement preparedStatement;
 		long _now;
+		Timestamp _updated_at;
 		try {
 			_now = System.currentTimeMillis();
+			_updated_at = new Timestamp(_now);
 			preparedStatement = connection.prepareStatement(compiledQuery);
 			preparedStatement.setString(1, lot_name);
 			preparedStatement.setString(2, file_name);
 			preparedStatement.setString(3, load_path);
 			preparedStatement.setInt(4, status);
-			preparedStatement.setLong(5, _now);
-			preparedStatement.execute();
+			preparedStatement.setTimestamp(5, _updated_at);
+			preparedStatement.executeUpdate();
 		} catch (SQLException e) {
+			LOGGER.error("Error update() CsvLoadRegistry");
 			LOGGER.error(e.getMessage());
 			connection.rollback();
 			connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
 		connection.commit();
+		connection.close();
+	}
+	
+	public static boolean checkIfLotAlreadyProcessed(String lot) throws Exception {
+		Connection _connection = DBConnectionHelper.getNewConn();
+		Statement stmt;
+		try {
+			stmt = _connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_registry " + "WHERE lot_name = '" + lot+"'");
+			int i = 0;
+			while (rs.next()) {
+				if (i >= 1) {
+					_connection.close();
+					return true;
+				}
+				i++;
+			}
+		} catch (SQLException e1) {
+			LOGGER.error(e1.getMessage());
+			_connection.close();
+			throw new Exception(e1);
+		}
+		_connection.close();
+		return false;
+	}
+	
+	
+	/**
+	 * too much overhead 
+	 * @param file_name
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean checkIfCSVAlreadyProcessed(String file_name) throws Exception {
+		Connection _connection = DBConnectionHelper.getNewConn();
+		Statement stmt;
+		try {
+			stmt = _connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_registry " + "WHERE file_name = '" + file_name+"'");
+			int i = 0;
+			while (rs.next()) {
+				if (i >= 1) {
+					_connection.close();
+					return true;
+				}
+				i++;
+			}
+		} catch (SQLException e1) {
+			LOGGER.error(e1.getMessage());
+			_connection.close();
+			throw new Exception(e1);
+		}
+		_connection.close();
+		return false;
 	}
 
 	/**

@@ -35,6 +35,7 @@ public class MainController {
 	private static Map<Integer, String> execution_processment_threads = new HashMap<Integer, String>();
 	private static boolean need_to_update = false;
 	private static ProcessmentExecution processmentExecution;
+	private static Integer processmentStatus;
 	private static int actual_processment = 0;
 
 	public static void main(String[] args) throws Exception {
@@ -42,41 +43,59 @@ public class MainController {
 		LOGGER.info("Initializing ANTController...");
 
 		initController();
-		
+
 		processmentExecution = new ProcessmentExecution(GlobalProperties.getInstance().getProcessmentMode());
-		
+
 		/**
-		 * PROCESSMENT WHILE(1)
-		 * CRASH RECOVERY AND SIGNAL LISTENERS
+		 * Shutdown Hook to capture SIG KILL and CTRL-C interrupts
+		 */
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				try {
+					if(MainController.processmentStatus != null && MainController.processmentStatus < 0)
+						processmentExecution.updateStatus(MainController.processmentStatus);
+					else
+						processmentExecution.updateStatus(ProcessmentExecution.STATUS_FINISHED_INTERRUPTED);
+					MainController.closeAllThreads();
+				} catch (Exception e) {
+					LOGGER.error("ANTController processment shutdown error");
+					LOGGER.error(e.getMessage(),e);
+				}
+			}
+		});
+
+		/**
+		 * PROCESSMENT WHILE(1) CRASH RECOVERY AND SIGNAL LISTENERS
 		 */
 		while (true) {
 			try {
-				//TODO: CHECK FOR INCOMPLETE PROCESSMENTS - RECOVERY
-				//TODO: SIGNAL LISTENER THREADS
-				
+				// TODO: CHECK FOR INCOMPLETE PROCESSMENTS - RECOVERY
+				// TODO: SIGNAL LISTENER THREADS
+
 				process(); // PROCESS ROUTINE EXECUTION MAP
 				Thread.sleep(1000);
 
-				//UPDATE THE CONTROLLER MAIN EXEUCTION MAP AND ROTINES
+				// UPDATE THE CONTROLLER MAIN EXEUCTION MAP AND ROTINES
 				if (need_to_update)
 					update();
 
 			} catch (Exception e) {
 				LOGGER.error("ANTController processment error");
 				LOGGER.error(e.getMessage());
+				processmentExecution.updateStatus(ProcessmentExecution.STATUS_FINISHED_ERRORS);
+				processmentStatus = ProcessmentExecution.STATUS_FINISHED_ERRORS;
 //				ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
 //						MainController.class.getName());
-				//Interrupt all threads
-				break; //RUNTIME ERROR
+				// Interrupt all threads
+				break; // RUNTIME ERROR
 			}
 		}
-		//TODO: exit() rotine, send signals to all modules and watchdog
-		//TODO: register end of execution_log
-		
-		
-		//Interrupt all threads
+		// TODO: exit() rotine, send signals to all modules and watchdog
+		// TODO: register end of execution_log
+
+		// Interrupt all threads
 		closeAllThreads();
-		
+
 		end_time = System.currentTimeMillis() - start_time;
 		LOGGER.info("ANTController execution time: " + end_time);
 	}
@@ -87,7 +106,7 @@ public class MainController {
 			DBConnectionHelper.getInstance();
 		} catch (Exception e1) {
 			LOGGER.error(e1.getMessage());
-			//Interrupt all threads
+			// Interrupt all threads
 			closeAllThreads();
 			throw new Exception(e1); // no DB we need to throw Exeception runtime Error
 		}
@@ -98,11 +117,11 @@ public class MainController {
 			errors_map = controller_data.getErrors();
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
-			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
-					MainController.class.getName());
+			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(),
+					null, MainController.class.getName());
 			end_time = (System.currentTimeMillis() - start_time) / 60;
 			LOGGER.info("ANTController execution time: " + end_time + " minutes");
-			//Interrupt all threads
+			// Interrupt all threads
 			closeAllThreads();
 			throw new Exception(e); // no Controller Data need to throw Exception RUNTIME ERROR
 		}
@@ -123,8 +142,8 @@ public class MainController {
 			errors_map = controller_data.getErrors();
 		} catch (Exception e) {
 			LOGGER.error("ANTController update() contrller_data error: ");
-			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
-					MainController.class.getName());
+			ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(),
+					null, MainController.class.getName());
 			LOGGER.error(e.getMessage(), e);
 			throw new Exception("Error on updating MainController execution rotines map");
 		}
@@ -133,55 +152,59 @@ public class MainController {
 
 	/**
 	 * FIXME: this method should call routine handlers. A refactoring is needed so
-	 * processsment_rotines should be HandlersRotines and not EXECUTION rotines
-	 * wich should be inside the Handlers. Another refactoring should be that
-	 * threads which has already started should not be started again
-	 * a Static MAP of Threads on execution must be implemented
-	 * and this processs() method should handle them
+	 * processsment_rotines should be HandlersRotines and not EXECUTION rotines wich
+	 * should be inside the Handlers. Another refactoring should be that threads
+	 * which has already started should not be started again a Static MAP of Threads
+	 * on execution must be implemented and this processs() method should handle
+	 * them
+	 * 
 	 * @throws Exception
 	 */
-	private static void process()  {
-		//For each rotine on processment_rotine table order by processment_seq
-		//TODO: make distinct execution for distinc routines_group, p.e. DB_MANAGEMENT or processment_seq > X
-		//may run on other threads or momments for now we don't have this distinction
-		//FIXME: make execution distinct of groups of rotines
+	private static void process() {
+		// For each rotine on processment_rotine table order by processment_seq
+		// TODO: make distinct execution for distinc routines_group, p.e. DB_MANAGEMENT
+		// or processment_seq > X
+		// may run on other threads or momments for now we don't have this distinction
+		// FIXME: make execution distinct of groups of rotines
 		for (Integer processment_seq : processment_map.keySet()) {
 			boolean already_in_execution = false;
 			actual_processment = processment_seq;
-			
+
 			Set<Thread> threads = Thread.getAllStackTraces().keySet();
-			 
+
 			for (Thread t : threads) {
-			    String name = t.getName();
-			    if(execution_processment_threads.containsValue(name)) {
-			    	already_in_execution = true;
-			    	break;
-			    } else { 
-			    	already_in_execution = false;
-			    }
+				String name = t.getName();
+				if (execution_processment_threads.containsValue(name)) {
+					already_in_execution = true;
+					break;
+				} else {
+					already_in_execution = false;
+				}
 //			    Thread.State state = t.getState();
 //			    int priority = t.getPriority();
 //			    String type = t.isDaemon() ? "Daemon" : "Normal";
 //			    System.out.printf("%-20s \t %s \t %d \t %s\n", name, state, priority, type);
 			}
-			
-			if(already_in_execution) {
+
+			if (already_in_execution) {
 				LOGGER.debug("Thread already in execution: " + processment_map.get(processment_seq).getThread_name());
 				continue;
 			}
-			
+
 			String class_name = getClassName(processment_map.get(processment_seq).getProcessment_group());
 			class_name = "br.com.assemblenewtechnologies.ANTLogSync.rotines." + class_name;
 			Class<?> c;
 			try {
 				c = Class.forName(class_name);
 				Method method = c.getDeclaredMethod(processment_map.get(processment_seq).getName());
-				//TODO: pass the controller fields like execution_processment_threads to Rotine so they 
-				//can communicate each other
+				// TODO: pass the controller fields like execution_processment_threads to Rotine
+				// so they
+				// can communicate each other
 				Constructor<?> l_constructor = c.getConstructor();
 				RotineInterface _rotine = (RotineInterface) l_constructor.newInstance();
 				method.invoke(_rotine);
-				execution_processment_threads.put(processment_seq, processment_map.get(processment_seq).getThread_name());
+				execution_processment_threads.put(processment_seq,
+						processment_map.get(processment_seq).getThread_name());
 			} catch (ClassNotFoundException e) {
 				LOGGER.error("ANTController class not found error: " + class_name);
 				LOGGER.error(e.getMessage());
@@ -193,7 +216,8 @@ public class MainController {
 				LOGGER.error("ANTController reflaction SecurityException processment error");
 				LOGGER.error(e.getMessage());
 			} catch (InstantiationException e) {
-				LOGGER.error("ANTController reflaction InstantiationException error to instantiate class: " + class_name);
+				LOGGER.error(
+						"ANTController reflaction InstantiationException error to instantiate class: " + class_name);
 				LOGGER.error(e.getMessage());
 			} catch (IllegalAccessException e) {
 				LOGGER.error(e.getMessage());
@@ -228,7 +252,5 @@ public class MainController {
 	public static ProcessmentExecution getProcessmentExecution() {
 		return processmentExecution;
 	}
-
-	
 
 }
