@@ -23,6 +23,7 @@ import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
 import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
+import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadLot;
 import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadRegistry;
 import br.com.assemblenewtechnologies.ANTLogSync.process_handlers.CSVHandler;
 
@@ -44,8 +45,8 @@ public class Csv extends AbstractRotine {
 	private File[] files_list;
 	private String thread_name = "CSV_HANDLER";
 	
-	private Map<String, Integer> lot_errors = new LinkedHashMap<String, Integer>();
 	private CsvLoadRegistry csv_db_registry;
+	private CsvLoadLot csv_load_lot;
 
 	public Csv() {
 		RTD_DIRETCTORY = GlobalProperties.getInstance().getRtdDiretctory();
@@ -119,10 +120,14 @@ public class Csv extends AbstractRotine {
 			if (file.isDirectory()) {
 				current_directory = file.getName();
 				
-				if(CsvLoadRegistry.checkIfLotAlreadyProcessed(current_directory)) {
+				if(CsvLoadLot.checkIfLotAlreadyProcessed(current_directory)) {
 					LOGGER.warn("Directory: " + current_directory + " already processed, skipping...");
 					String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory;
 					
+					
+					//FIXME: replace gives:
+					//ERROR CSVHandler [CSV_HANDLER] /data_load/RTD_20210414 -> /archive_buffer/RTD_20210414: Diretório não vazio
+
 					File index = new File(archive_path);
 					if (index.exists())
 						index.delete();
@@ -132,7 +137,11 @@ public class Csv extends AbstractRotine {
 					zipArchive(current_directory);
 					
 					continue;
+				} else {
+					csv_load_lot = CsvLoadLot.registerCSVLot(current_directory,  GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING);
 				}
+				
+				
 				
 				//CHECK Processment Mode
 				if(MainController.getProcessmentExecution().getProcessment_mode().equals("batch_process") &&
@@ -141,10 +150,6 @@ public class Csv extends AbstractRotine {
 				}
 				i++;
 				
-				
-				if(!lot_errors.containsKey(current_directory))
-					lot_errors.put(current_directory, 0);
-
 				if (last_directory != null && last_directory != current_directory) {
 					File index = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + last_directory);
 					if (index.exists())
@@ -166,7 +171,7 @@ public class Csv extends AbstractRotine {
 				try {
 					loadCSV(file);
 				} catch (Exception e) {
-					lot_errors.put(current_directory, lot_errors.get(current_directory) + 1);
+					LOGGER.debug(e.getMessage());
 //					throw e;
 				}
 			}
@@ -192,21 +197,28 @@ public class Csv extends AbstractRotine {
 							+ ") " + "FROM STDIN (FORMAT csv, HEADER true, DELIMITER ',')",
 					new BufferedReader(new FileReader(file.getAbsoluteFile())));
 			LOGGER.debug("File: " + file.getAbsoluteFile() + " LOADED: " + rowsInserted + " rows");
-			if(rowsInserted > 0)
+			if(rowsInserted > 0) {
 				csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_LOADED);
+				csv_load_lot.incrementFilesLoaded();
+			}
 			
 			archiveFile(file, CsvLoadRegistry.STATUS_LOADED_ARCHIVED);
 			rows_processed += rowsInserted;
 		} catch (SQLException e) {
 			LOGGER.debug("Database Error Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
+			csv_load_lot.incrementFilesErrorNotLoaded();
 			archiveFile(file, CsvLoadRegistry.STATUS_ERROR_ARCHIVED);
 			throw new Exception(e.getMessage());
 		} catch (IOException e) {
+			csv_load_lot.incrementFilesErrorNotLoaded();
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOT_ARCHIVED);
 			LOGGER.debug("Error IO Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
 			throw new Exception(e.getMessage());
 		} catch (Exception e) {
+			csv_load_lot.incrementFilesErrorNotLoaded();
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOT_ARCHIVED);
 			LOGGER.debug("Error Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
 			throw new Exception(e.getMessage());
@@ -237,16 +249,35 @@ public class Csv extends AbstractRotine {
 		}
 	}
 
-	private void zipArchive(String last_directory) {
-		LOGGER.info("Total load errors on this lot: " + lot_errors.get(last_directory));
-		lot_errors.remove(last_directory);
+	private void zipArchive(String last_directory) throws Exception {
+		LOGGER.info("Total load errors on this lot: " + csv_load_lot.getFiles_error_not_loaded());
 		String zip_archive_path = ARCHIVE_BUFFER_DIRETCTORY + last_directory;
 		String zip_file = ARCHIVE_DIRETCTORY + last_directory + ".zip";
 		ZipUtils appZip = new ZipUtils();
 		appZip.setOUTPUT_ZIP_FILE(zip_file);
 		appZip.setSOURCE_FOLDER(zip_archive_path);
 		appZip.generateFileList(new File(zip_archive_path));
-		appZip.zipIt(zip_file);
+		try {
+			appZip.zipIt(zip_file);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOT_ARCHIVED);
+			throw new Exception (e);
+		}
+		
+		if(csv_load_lot.getFiles_error_not_loaded() > 0 && csv_load_lot.getFiles_loaded() > 0) { 
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_LOADED_WITH_ERRORS_ARCHIVED);
+			return;
+		}
+		
+		if(csv_load_lot.getFiles_loaded() > 0 && csv_load_lot.getFiles_error_not_loaded() == 0 ) {
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_LOADED_ARCHIVED);
+			return;
+		}
+		
+		csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_ARCHIVED);
+		
+		return;
 	}
 
 	

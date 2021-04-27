@@ -22,7 +22,7 @@ public class ZipUtils {
 		fileList = new ArrayList<String>();
 	}
 
-	public void zipIt(String zipFile) {
+	public void zipIt(String zipFile) throws Exception {
 		byte[] buffer = new byte[1024];
 		String source = new File(SOURCE_FOLDER).getName();
 		LOGGER.info("archive SOURCE FOLDER: " + source);
@@ -59,14 +59,15 @@ public class ZipUtils {
 //			ex.printStackTrace();
 			LOGGER.error("Archiving error: " + source);
 			LOGGER.error(ex.getMessage());
+			throw new Exception (ex);
 		} finally {
 			try {
 				zos.close();
 				File dir_buffer = new File(source);
 				dir_buffer.delete();
 			} catch (IOException e) {
-//				e.printStackTrace();
 				LOGGER.error(e.getMessage());
+				throw new Exception (e);
 			}
 		}
 	}

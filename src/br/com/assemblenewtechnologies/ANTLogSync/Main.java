@@ -108,7 +108,7 @@ public class Main {
 		}
 	}
 
-	private static void zipArchive(String last_directory) {
+	private static void zipArchive(String last_directory) throws Exception {
 		String zip_archive_path = ARCHIVE_BUFFER_DIRETCTORY + last_directory;
 		String zip_file = ARCHIVE_DIRETCTORY+ last_directory + ".zip";
 		ZipUtils appZip = new ZipUtils();
