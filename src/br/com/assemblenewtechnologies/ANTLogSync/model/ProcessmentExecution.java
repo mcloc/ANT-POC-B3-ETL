@@ -43,8 +43,8 @@ public class ProcessmentExecution {
 	
 	public void updateStatus(Integer status) throws Exception {
 		connection = DBConnectionHelper.getNewConn();
-		String compiledQuery = "UPDATE Intellect.processment_execution("
-				+ "status, updated_at) VALUES " + "(?, ?) WHERE id = "+this.id;
+		String compiledQuery = "UPDATE Intellect.processment_execution SET "
+				+ "status = ?, updated_at = ?  WHERE id = "+this.id;
 		PreparedStatement preparedStatement;
 		long _now;
 		Timestamp _updated_at;

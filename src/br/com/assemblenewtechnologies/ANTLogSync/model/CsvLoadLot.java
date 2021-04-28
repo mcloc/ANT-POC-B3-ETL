@@ -22,7 +22,7 @@ public class CsvLoadLot {
 	private Timestamp created_at;
 	private Timestamp updated_at;
 	private BigDecimal processment_execution_id;
-	
+
 	private int files_loaded = 0;
 	private int files_error_not_loaded = 0;
 
@@ -57,15 +57,19 @@ public class CsvLoadLot {
 		save();
 	}
 
+	private CsvLoadLot() {
+		// TODO Auto-generated constructor stub
+	}
+
 	private void save() throws Exception {
-		if (lot_name == null || lot_name.equals("") || load_path == null
-				|| load_path.equals("") || processment_execution_id == null) {
+		if (lot_name == null || lot_name.equals("") || load_path == null || load_path.equals("")
+				|| processment_execution_id == null) {
 			throw new Exception("CsvLoadLot not saved, missing attributes values");
 		}
 		connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "INSERT INTO  Intellect.csv_load_lot("
-				+ "lot_name, load_path, status, processment_execution_id, "
-				+ "created_at, updated_at) VALUES " + "(?, ?, ?, ?, ?, ?)";
+				+ "lot_name, load_path, status, processment_execution_id, " + "created_at, updated_at) VALUES "
+				+ "(?, ?, ?, ?, ?, ?)";
 		PreparedStatement preparedStatement;
 		long _now;
 		Timestamp _updated_at;
@@ -112,8 +116,10 @@ public class CsvLoadLot {
 
 	private void update() throws Exception {
 		connection = DBConnectionHelper.getNewConn();
-		String compiledQuery = "UPDATE Intellect.csv_load_lot(" + "lot_name, load_path, status, "
-				+ "files_loaded, files_error_not_loaded, updated_at) VALUES (?, ?, ?, ?, ?, ?) " + "where id = " + id;
+		String compiledQuery = "UPDATE Intellect.csv_load_lot SET " 
+				+ "lot_name = ?, load_path, status = ?, "
+				+ "files_loaded = ?, files_error_not_loaded = ?, updated_at = ? "
+				+ "where id = " + id;
 		PreparedStatement preparedStatement;
 		long _now;
 		Timestamp _updated_at;
@@ -162,11 +168,40 @@ public class CsvLoadLot {
 		_connection.close();
 		return false;
 	}
-	
+
+	public static CsvLoadLot getLotByLotName(String lot) throws Exception {
+		Connection _connection = DBConnectionHelper.getNewConn();
+		Statement stmt;
+		try {
+			stmt = _connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot " + "WHERE lot_name = '" + lot
+					+ "' order by updated_at DESC limit 1");
+			CsvLoadLot csv_lot = null;
+			while (rs.next()) {
+				csv_lot = new CsvLoadLot();
+				csv_lot.id = rs.getBigDecimal("id");
+				csv_lot.lot_name = rs.getString("lot_name");
+				csv_lot.load_path = rs.getString("load_path");
+				csv_lot.status = rs.getInt("status");
+				csv_lot.files_loaded = rs.getInt("files_loaded");
+				csv_lot.files_error_not_loaded = rs.getInt("files_error_not_loaded");
+				csv_lot.created_at = rs.getTimestamp("created_at");
+				csv_lot.updated_at = rs.getTimestamp("updated_at");
+			}
+			_connection.close();
+			return csv_lot;
+		} catch (SQLException e1) {
+			LOGGER.error(e1.getMessage());
+			//TODO: check if connection.close() get calls on finally before the throw
+			_connection.close();
+			throw new Exception(e1);
+		} 
+	}
+
 	public void incrementFilesLoaded() {
 		files_loaded++;
 	}
-	
+
 	public void incrementFilesErrorNotLoaded() {
 		files_error_not_loaded++;
 	}
@@ -296,6 +331,5 @@ public class CsvLoadLot {
 	public void setFiles_error_not_loaded(int files_error_not_loaded) {
 		this.files_error_not_loaded = files_error_not_loaded;
 	}
-	
-	
+
 }
