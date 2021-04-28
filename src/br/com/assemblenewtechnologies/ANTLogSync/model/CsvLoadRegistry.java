@@ -22,6 +22,7 @@ public class CsvLoadRegistry {
 	private String file_name;
 	private String load_path;
 	private int status;
+	private String error_msg;
 	private Timestamp created_at;
 	private Timestamp updated_at;
 	private BigDecimal processment_execution_id;
@@ -129,7 +130,7 @@ public class CsvLoadRegistry {
 	private void update() throws Exception {
 		connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "UPDATE Intellect.csv_load_registry SET "
-				+ "lot_name = ?, lot_id = ?, file_name = ?, load_path = ?, status = ?, "
+				+ "lot_name = ?, lot_id = ?, file_name = ?, load_path = ?, status = ?, error_msg = ?, "
 				+ "updated_at = ? "
 				+ "where id = " + id;
 		PreparedStatement preparedStatement;
@@ -144,7 +145,8 @@ public class CsvLoadRegistry {
 			preparedStatement.setString(3, file_name);
 			preparedStatement.setString(4, load_path);
 			preparedStatement.setInt(5, status);
-			preparedStatement.setTimestamp(6, _updated_at);
+			preparedStatement.setString(6, error_msg);
+			preparedStatement.setTimestamp(7, _updated_at);
 			preparedStatement.executeUpdate();
 		} catch (SQLException e) {
 			LOGGER.error("Error update() CsvLoadRegistry");
@@ -334,6 +336,20 @@ public class CsvLoadRegistry {
 	 */
 	public void setLot_id(BigDecimal lot_id) {
 		this.lot_id = lot_id;
+	}
+
+	/**
+	 * @return the error_msg
+	 */
+	public String getError_msg() {
+		return error_msg;
+	}
+
+	/**
+	 * @param error_msg the error_msg to set
+	 */
+	public void setError_msg(String error_msg) {
+		this.error_msg = error_msg;
 	}
 
 	

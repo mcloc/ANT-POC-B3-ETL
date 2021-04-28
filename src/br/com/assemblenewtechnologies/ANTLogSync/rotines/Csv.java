@@ -212,19 +212,24 @@ public class Csv extends AbstractRotine {
 		} catch (SQLException e) {
 			LOGGER.debug("Database Error Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
+			csv_db_registry.setError_msg(e.getMessage());
 			csv_load_lot.incrementFilesErrorNotLoaded();
 			archiveFile(file, CsvLoadRegistry.STATUS_ERROR_ARCHIVED);
+			
 			throw new Exception(e.getMessage());
 		} catch (IOException e) {
 			csv_load_lot.incrementFilesErrorNotLoaded();
 			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOT_ARCHIVED);
+			csv_db_registry.setError_msg(e.getMessage());
+			csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_ERROR_NOT_ARCHIVED);
 			LOGGER.debug("Error IO Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
 			throw new Exception(e.getMessage());
 		} catch (Exception e) {
 			csv_load_lot.incrementFilesErrorNotLoaded();
 			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOT_ARCHIVED);
-			
+			csv_db_registry.setError_msg(e.getMessage());
+			csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_ERROR_NOT_ARCHIVED);
 			LOGGER.debug("Error Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
 			throw new Exception(e.getMessage());
