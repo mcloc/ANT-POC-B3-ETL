@@ -123,7 +123,7 @@ public class Csv extends AbstractRotine {
 				//Crash Recovery
 				if (CsvLoadLot.checkIfLotAlreadyProcessed(current_directory)) {
 					csv_load_lot = CsvLoadLot.getLotByLotName(current_directory);
-					
+					LOGGER.info(" Resuming processment on Directory: " + current_directory);
 					//Crash Recovery Loading was finished just archive into another zip the contents
 					//TODO: archive into another ZIP the contents
 					if (csv_load_lot.getStatus() != CsvLoadLot.STATUS_LOADING) {

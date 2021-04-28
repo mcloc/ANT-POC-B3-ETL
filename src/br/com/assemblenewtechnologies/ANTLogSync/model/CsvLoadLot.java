@@ -117,7 +117,7 @@ public class CsvLoadLot {
 	private void update() throws Exception {
 		connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "UPDATE Intellect.csv_load_lot SET " 
-				+ "lot_name = ?, load_path, status = ?, "
+				+ "lot_name = ?, load_path = ?, status = ?, "
 				+ "files_loaded = ?, files_error_not_loaded = ?, updated_at = ? "
 				+ "where id = " + id;
 		PreparedStatement preparedStatement;
