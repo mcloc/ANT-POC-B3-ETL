@@ -35,7 +35,6 @@ public class CsvLoadLot {
 	public static final int STATUS_ERROR_NOT_ARCHIVED = -2;
 
 	private static Logger LOGGER = LoggerFactory.getLogger(CsvLoadLot.class);
-	private Connection connection;
 
 	public static CsvLoadLot registerCSVLot(String lot_name, String load_path, int status) throws Exception {
 		CsvLoadLot csv_lot;
@@ -66,7 +65,7 @@ public class CsvLoadLot {
 				|| processment_execution_id == null) {
 			throw new Exception("CsvLoadLot not saved, missing attributes values");
 		}
-		connection = DBConnectionHelper.getNewConn();
+		Connection _connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "INSERT INTO  Intellect.csv_load_lot("
 				+ "lot_name, load_path, status, processment_execution_id, " + "created_at, updated_at) VALUES "
 				+ "(?, ?, ?, ?, ?, ?)";
@@ -78,7 +77,7 @@ public class CsvLoadLot {
 			_now = System.currentTimeMillis();
 			_created_at = new Timestamp(_now);
 			_updated_at = new Timestamp(_now);
-			preparedStatement = connection.prepareStatement(compiledQuery, Statement.RETURN_GENERATED_KEYS);
+			preparedStatement = _connection.prepareStatement(compiledQuery, Statement.RETURN_GENERATED_KEYS);
 			preparedStatement.setString(1, lot_name);
 			preparedStatement.setString(2, load_path);
 			preparedStatement.setInt(3, status);
@@ -88,8 +87,8 @@ public class CsvLoadLot {
 			preparedStatement.execute();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
-			connection.rollback();
-			connection.close();
+			_connection.rollback();
+			_connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
 
@@ -97,7 +96,7 @@ public class CsvLoadLot {
 		int i = 0;
 		if (generatedKeys.next()) {
 			if (i > 0) {
-				connection.close();
+				_connection.close();
 				throw new Exception("CsvLoadLot.save() error: more then one inserted ID returned...");
 			}
 			id = generatedKeys.getBigDecimal(1);
@@ -105,8 +104,8 @@ public class CsvLoadLot {
 			updated_at = new Timestamp(_now);
 			i++;
 		}
-		connection.commit();
-		connection.close();
+		_connection.commit();
+		_connection.close();
 	}
 
 	public void changeStatus(int _status) throws Exception {
@@ -115,7 +114,7 @@ public class CsvLoadLot {
 	}
 
 	private void update() throws Exception {
-		connection = DBConnectionHelper.getNewConn();
+		Connection _connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "UPDATE Intellect.csv_load_lot SET " 
 				+ "lot_name = ?, load_path = ?, status = ?, "
 				+ "files_loaded = ?, files_error_not_loaded = ?, updated_at = ? "
@@ -126,7 +125,7 @@ public class CsvLoadLot {
 		try {
 			_now = System.currentTimeMillis();
 			_updated_at = new Timestamp(_now);
-			preparedStatement = connection.prepareStatement(compiledQuery);
+			preparedStatement = _connection.prepareStatement(compiledQuery);
 			preparedStatement.setString(1, lot_name);
 			preparedStatement.setString(2, load_path);
 			preparedStatement.setInt(3, status);
@@ -137,12 +136,12 @@ public class CsvLoadLot {
 		} catch (SQLException e) {
 			LOGGER.error("Error update() CsvLoadLot");
 			LOGGER.error(e.getMessage());
-			connection.rollback();
-			connection.close();
+			_connection.rollback();
+			_connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
-		connection.commit();
-		connection.close();
+		_connection.commit();
+		_connection.close();
 	}
 
 	public static boolean checkIfLotAlreadyProcessed(String lot) throws Exception {

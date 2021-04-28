@@ -10,9 +10,8 @@ import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.slf4j.Logger;
@@ -87,25 +86,33 @@ public class Csv extends AbstractRotine {
 
 		LOGGER.info("[CSV] csv_load_start...");
 		start_time = System.currentTimeMillis();
+		try {
+			connection = DBConnectionHelper.getNewConn();
+			connection.setAutoCommit(true);
 
-		connection = DBConnectionHelper.getNewConn();
-		connection.setAutoCommit(true);
+			Arrays.sort(files_list);
+			processFiles(files_list);
 
-		Arrays.sort(files_list);
-		processFiles(files_list);
+			if (files_processed > 0) {
+				long timer1 = System.currentTimeMillis();
+				long total_time = (timer1 - start_time) / 1000;
+				LOGGER.info("[CSV] total rows_processed inserted: " + rows_processed);
+				LOGGER.info("[CSV] total directories processed: " + directories_processed);
+				LOGGER.info("[CSV] total files processed: " + files_processed);
+				LOGGER.info("[CSV] total time to process CSV lots: " + total_time + " seconds");
+				LOGGER.info("[CSV] total files per sec: " + files_processed / total_time + " seconds");
+				LOGGER.info("[CSV] total rows per sec: " + rows_processed / total_time + " seconds");
+			}
 
-		if (files_processed > 0) {
-			long timer1 = System.currentTimeMillis();
-			long total_time = (timer1 - start_time) / 1000;
-			LOGGER.info("[CSV] total rows_processed inserted: " + rows_processed);
-			LOGGER.info("[CSV] total directories processed: " + directories_processed);
-			LOGGER.info("[CSV] total files processed: " + files_processed);
-			LOGGER.info("[CSV] total time to process CSV lots: " + total_time + " seconds");
-			LOGGER.info("[CSV] total files per sec: " + files_processed / total_time + " seconds");
-			LOGGER.info("[CSV] total rows per sec: " + rows_processed / total_time + " seconds");
+			connection.close();
+		} catch (Exception e) {
+			LOGGER.debug("csv_load_start() error");
+			LOGGER.debug(e.getMessage());
+			if(connection != null)
+				connection.close();
+//			throw e;
 		}
-
-		connection.close();
+	
 	}
 
 	public void csv_archive_start() throws Exception {
@@ -140,6 +147,7 @@ public class Csv extends AbstractRotine {
 						zipArchive(current_directory);
 						continue;
 					}
+					
 				} else {
 					csv_load_lot = CsvLoadLot.registerCSVLot(current_directory,
 							GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING);
@@ -149,6 +157,10 @@ public class Csv extends AbstractRotine {
 				// CHECK Processment Mode
 				if (MainController.getProcessmentExecution().getProcessment_mode().equals("batch_process")
 						&& current_directory.equals("LIVE_DATA")) {
+					String archive_path = ARCHIVE_BUFFER_DIRETCTORY
+							+ GlobalProperties.getInstance().getFileSeparator() + current_directory;
+					file.renameTo(new File(archive_path));
+					zipArchive(current_directory);
 					continue;
 				}
 				i++;
@@ -268,13 +280,20 @@ public class Csv extends AbstractRotine {
 		ZipUtils appZip = new ZipUtils();
 		appZip.setOUTPUT_ZIP_FILE(zip_file);
 		appZip.setSOURCE_FOLDER(zip_archive_path);
-		appZip.generateFileList(new File(zip_archive_path));
+		File index = new File(zip_archive_path);
+		appZip.generateFileList(index);
 		try {
 			appZip.zipIt(zip_file);
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
 			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOT_ARCHIVED);
 			throw new Exception(e);
+		}
+		
+		
+		if (index.exists()) {
+			LOGGER.info("Removing directory: " + index.getAbsolutePath());
+			FileUtils.deleteDirectory(index);
 		}
 
 		if (csv_load_lot.getFiles_error_not_loaded() > 0 && csv_load_lot.getFiles_loaded() > 0) {
@@ -288,6 +307,8 @@ public class Csv extends AbstractRotine {
 		}
 
 		csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_ARCHIVED);
+		
+		
 
 		return;
 	}
