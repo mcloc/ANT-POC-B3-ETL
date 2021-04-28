@@ -151,14 +151,12 @@ public class CsvLoadLot {
 		try {
 			stmt = _connection.createStatement();
 			ResultSet rs = stmt
-					.executeQuery("SELECT * FROM Intellect.csv_load_lot " + "WHERE lot_name = '" + lot + "'");
+					.executeQuery("SELECT * FROM Intellect.csv_load_lot WHERE lot_name = '" + lot + "' ORDER BY updated_at DESC limit 1");
 			int i = 0;
 			while (rs.next()) {
-				if (i >= 1) {
-					_connection.close();
-					return true;
-				}
-				i++;
+				_connection.close();
+				return true;
+				
 			}
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());

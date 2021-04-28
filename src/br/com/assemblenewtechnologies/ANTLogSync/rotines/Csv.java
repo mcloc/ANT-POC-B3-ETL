@@ -123,7 +123,7 @@ public class Csv extends AbstractRotine {
 				//Crash Recovery
 				if (CsvLoadLot.checkIfLotAlreadyProcessed(current_directory)) {
 					csv_load_lot = CsvLoadLot.getLotByLotName(current_directory);
-					LOGGER.info(" Resuming processment on Directory: " + current_directory);
+					LOGGER.info(" Resuming processment on Directory: " + current_directory+ " lot id: " + csv_load_lot.getId());
 					//Crash Recovery Loading was finished just archive into another zip the contents
 					//TODO: archive into another ZIP the contents
 					if (csv_load_lot.getStatus() != CsvLoadLot.STATUS_LOADING) {
@@ -143,6 +143,7 @@ public class Csv extends AbstractRotine {
 				} else {
 					csv_load_lot = CsvLoadLot.registerCSVLot(current_directory,
 							GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING);
+					LOGGER.info("Processing Directory: " + file.getAbsolutePath() + " lot id: " + csv_load_lot.getId());
 				}
 
 				// CHECK Processment Mode
@@ -161,7 +162,7 @@ public class Csv extends AbstractRotine {
 				}
 
 				directories_processed++;
-				LOGGER.info("Processing Directory: " + file.getAbsolutePath());
+				
 				File[] _list = file.listFiles();
 				Arrays.sort(_list);
 				processFiles(_list); // Calls same method again.
