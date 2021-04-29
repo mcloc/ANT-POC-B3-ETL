@@ -108,11 +108,11 @@ public class Csv extends AbstractRotine {
 		} catch (Exception e) {
 			LOGGER.debug("csv_load_start() error");
 			LOGGER.debug(e.getMessage());
-			if(connection != null)
+			if (connection != null)
 				connection.close();
 //			throw e;
 		}
-	
+
 	}
 
 	public void csv_archive_start() throws Exception {
@@ -125,14 +125,25 @@ public class Csv extends AbstractRotine {
 		int i = 0;
 		for (File file : files_list) {
 			if (file.isDirectory()) {
+
+				if (!file.getName().startsWith("RTD")) {
+					LOGGER.warn("Directory: " + file.getName() + " has no RTD signature skipping");
+					continue;
+				}
 				current_directory = file.getName();
 
-				//Crash Recovery
+				// TODO: verificar se eh LOG_DATA ou REAL_TIME
+				// FIXME: alterar para nova estrutura LOG_DATA e REAL_TIME DENTRO DO DIRETORIO
+				// RTD
+
+				// Crash Recovery
 				if (CsvLoadLot.checkIfLotAlreadyProcessed(current_directory)) {
 					csv_load_lot = CsvLoadLot.getLotByLotName(current_directory);
-					LOGGER.info(" Resuming processment on Directory: " + current_directory+ " lot id: " + csv_load_lot.getId());
-					//Crash Recovery Loading was finished just archive into another zip the contents
-					//TODO: archive into another ZIP the contents
+					LOGGER.info(" Resuming processment on Directory: " + current_directory + " lot id: "
+							+ csv_load_lot.getId());
+					// Crash Recovery Loading was finished just archive into another zip the
+					// contents
+					// TODO: archive into another ZIP the contents
 					if (csv_load_lot.getStatus() != CsvLoadLot.STATUS_LOADING) {
 						LOGGER.warn("Directory: " + current_directory + " already processed, skipping...");
 						String archive_path = ARCHIVE_BUFFER_DIRETCTORY
@@ -147,7 +158,7 @@ public class Csv extends AbstractRotine {
 						zipArchive(current_directory);
 						continue;
 					}
-					
+
 				} else {
 					csv_load_lot = CsvLoadLot.registerCSVLot(current_directory,
 							GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING);
@@ -157,8 +168,8 @@ public class Csv extends AbstractRotine {
 				// CHECK Processment Mode
 				if (MainController.getProcessmentExecution().getProcessment_mode().equals("batch_process")
 						&& current_directory.equals("LIVE_DATA")) {
-					String archive_path = ARCHIVE_BUFFER_DIRETCTORY
-							+ GlobalProperties.getInstance().getFileSeparator() + current_directory;
+					String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
+							+ current_directory;
 					file.renameTo(new File(archive_path));
 					zipArchive(current_directory);
 					continue;
@@ -174,31 +185,42 @@ public class Csv extends AbstractRotine {
 				}
 
 				directories_processed++;
-				
-				File[] _list = file.listFiles();
+
+				File _log_data_dir = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
+						+ current_directory + GlobalProperties.getInstance().getFileSeparator() + "LOG_DATA");
+				File[] _list = _log_data_dir.listFiles();
 				Arrays.sort(_list);
 				processFiles(_list); // Calls same method again.
 				last_directory = current_directory;
 				in_root_dir = true;
-			} else {
-				in_root_dir = false;
-				files_processed++;
-//                LOGGER.info("Loading File: " + file.getAbsolutePath());
-				try {
-					loadCSV(file);
-				} catch (Exception e) {
-					LOGGER.debug(e.getMessage());
-//					throw e;
-				}
-			}
 
-			if (i >= files_list.length) {
+				return;
+			}
+			
+			if (file.getName().equals("fim_de_lote.txt")) {
 				File index = new File(
 						RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + last_directory);
 				if (index.exists())
 					index.delete();
+				
+				csv_load_lot.setFinished(true);
+				archiveFile(file, CsvLoadRegistry.STATUS_END_LOT);
 				zipArchive(last_directory);
+				in_root_dir = false;
+				return;
 			}
+			
+			in_root_dir = false;
+			files_processed++;
+//                LOGGER.info("Loading File: " + file.getAbsolutePath());
+			try {
+				loadCSV(file);
+			} catch (Exception e) {
+				LOGGER.debug(e.getMessage());
+//					throw e;
+			}
+
+
 		}
 
 	}
@@ -227,11 +249,11 @@ public class Csv extends AbstractRotine {
 			csv_db_registry.setError_msg(e.getMessage());
 			csv_load_lot.incrementFilesErrorNotLoaded();
 			archiveFile(file, CsvLoadRegistry.STATUS_ERROR_ARCHIVED);
-			
+
 			throw new Exception(e.getMessage());
 		} catch (IOException e) {
 			csv_load_lot.incrementFilesErrorNotLoaded();
-			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOT_ARCHIVED);
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOTFINISHED_NOTARCHIVED);
 			csv_db_registry.setError_msg(e.getMessage());
 			csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_ERROR_NOT_ARCHIVED);
 			LOGGER.debug("Error IO Loading File: " + file.getAbsoluteFile());
@@ -239,7 +261,7 @@ public class Csv extends AbstractRotine {
 			throw new Exception(e.getMessage());
 		} catch (Exception e) {
 			csv_load_lot.incrementFilesErrorNotLoaded();
-			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOT_ARCHIVED);
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOTFINISHED_NOTARCHIVED);
 			csv_db_registry.setError_msg(e.getMessage());
 			csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_ERROR_NOT_ARCHIVED);
 			LOGGER.debug("Error Loading File: " + file.getAbsoluteFile());
@@ -286,29 +308,31 @@ public class Csv extends AbstractRotine {
 			appZip.zipIt(zip_file);
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
-			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOT_ARCHIVED);
+			if (csv_load_lot.isFinished())
+				csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_NOTARCHIVED);
+			else
+				csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOTFINISHED_NOTARCHIVED);
 			throw new Exception(e);
 		}
-		
-		
+
 		if (index.exists()) {
 			LOGGER.info("Removing directory: " + index.getAbsolutePath());
 			FileUtils.deleteDirectory(index);
 		}
 
-		if (csv_load_lot.getFiles_error_not_loaded() > 0 && csv_load_lot.getFiles_loaded() > 0) {
-			csv_load_lot.changeStatus(CsvLoadLot.STATUS_LOADED_WITH_ERRORS_ARCHIVED);
+		if (csv_load_lot.getFiles_error_not_loaded() > 0 && csv_load_lot.getFiles_loaded() > 0
+				&& csv_load_lot.isFinished()) {
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_ARCHIVED);
 			return;
 		}
 
-		if (csv_load_lot.getFiles_loaded() > 0 && csv_load_lot.getFiles_error_not_loaded() == 0) {
-			csv_load_lot.changeStatus(CsvLoadLot.STATUS_LOADED_ARCHIVED);
+		if (csv_load_lot.getFiles_loaded() > 0 && csv_load_lot.getFiles_error_not_loaded() == 0
+				&& csv_load_lot.isFinished()) {
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_NOERRORS_ARCHIVED);
 			return;
 		}
 
 		csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_ARCHIVED);
-		
-		
 
 		return;
 	}

@@ -22,18 +22,56 @@ public class CsvLoadLot {
 	private Timestamp created_at;
 	private Timestamp updated_at;
 	private BigDecimal processment_execution_id;
+	
+	private boolean finished;
 
 	private int files_loaded = 0;
 	private int files_error_not_loaded = 0;
 
-	public static final int STATUS_LOADING = 0;
-	public static final int STATUS_ARCHIVING = 1;
-	public static final int STATUS_LOADED = 2;
-	public static final int STATUS_LOADED_ARCHIVED = 3;
-	public static final int STATUS_LOADED_WITH_ERRORS_ARCHIVED = 4;
-	public static final int STATUS_ERROR_ARCHIVED = -1;
-	public static final int STATUS_ERROR_NOT_ARCHIVED = -2;
+	/**
+	 * CSV LOT STATUS:
+	 * 
+	 * STATUS_LOADING = 0; STATUS_ARCHIVING = 10;
+	 * 
+	 * // found the "fim_de_lote.txt" file on the lot
+	 * // WIL NOT PROCECESS AGAIN
+	 * STATUS_FINISHED_NOERRORS_ARCHIVED = 30;
+	 * 
+	 * // found the "fim_de_lote.txt" file on the lot
+	 * // WIL NOT PROCECESS AGAIN
+	 * STATUS_FINISHED_WITHERRORS_ARCHIVED = -30;
+	 * 
+	 * // found the "fim_de_lote.txt" file on the lot
+	 * // WIL NOT PROCECESS AGAIN
+	 * STATUS_FINISHED_WITHERRORS_NOTARCHIVED = -31;
+	 * 
+	 * //archive_buffer may be left behind. No "fim_de_lote.txt" found
+	 * // MAY RESUME PROCECESS AGAIN
+	 * STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -2;
+	 * 
+	 * //archived by cleanup process. No "fim_de_lote.txt" found
+	 * // WIL NOT PROCECESS AGAIN
+	 * STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -50;
+	 *
+	 * // load process error on lot, may be executed again for another chance
+	 * // MAY RESUME PROCECESS AGAIN
+	 * STATUS_ERROR_ARCHIVED = -1;
+	 * 
+	 * 
+	 */
 
+	public static final int STATUS_LOADING = 0;
+	public static final int STATUS_ARCHIVING = 10;
+	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED = 30; 
+	public static final int STATUS_FINISHED_WITHERRORS_ARCHIVED = -30;
+	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED = -31;
+	public static final int STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -2; 
+	public static final int STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -50;
+	public static final int STATUS_ERROR_ARCHIVED = -1; 
+	
+	
+	
+	
 	private static Logger LOGGER = LoggerFactory.getLogger(CsvLoadLot.class);
 
 	public static CsvLoadLot registerCSVLot(String lot_name, String load_path, int status) throws Exception {
@@ -115,10 +153,8 @@ public class CsvLoadLot {
 
 	private void update() throws Exception {
 		Connection _connection = DBConnectionHelper.getNewConn();
-		String compiledQuery = "UPDATE Intellect.csv_load_lot SET " 
-				+ "lot_name = ?, load_path = ?, status = ?, "
-				+ "files_loaded = ?, files_error_not_loaded = ?, updated_at = ? "
-				+ "where id = " + id;
+		String compiledQuery = "UPDATE Intellect.csv_load_lot SET " + "lot_name = ?, load_path = ?, status = ?, "
+				+ "files_loaded = ?, files_error_not_loaded = ?, updated_at = ? " + "where id = " + id;
 		PreparedStatement preparedStatement;
 		long _now;
 		Timestamp _updated_at;
@@ -149,13 +185,13 @@ public class CsvLoadLot {
 		Statement stmt;
 		try {
 			stmt = _connection.createStatement();
-			ResultSet rs = stmt
-					.executeQuery("SELECT * FROM Intellect.csv_load_lot WHERE lot_name = '" + lot + "' ORDER BY updated_at DESC limit 1");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot WHERE lot_name = '" + lot
+					+ "' ORDER BY updated_at DESC limit 1");
 			int i = 0;
 			while (rs.next()) {
 				_connection.close();
 				return true;
-				
+
 			}
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
@@ -189,10 +225,10 @@ public class CsvLoadLot {
 			return csv_lot;
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
-			//TODO: check if connection.close() get calls on finally before the throw
+			// TODO: check if connection.close() get calls on finally before the throw
 			_connection.close();
 			throw new Exception(e1);
-		} 
+		}
 	}
 
 	public void incrementFilesLoaded() {
@@ -329,4 +365,19 @@ public class CsvLoadLot {
 		this.files_error_not_loaded = files_error_not_loaded;
 	}
 
+	/**
+	 * @return the finished
+	 */
+	public boolean isFinished() {
+		return finished;
+	}
+
+	/**
+	 * @param finished the finished to set
+	 */
+	public void setFinished(boolean finished) {
+		this.finished = finished;
+	}
+
+	
 }
