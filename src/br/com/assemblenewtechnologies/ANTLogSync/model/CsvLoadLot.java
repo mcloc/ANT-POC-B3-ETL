@@ -31,7 +31,9 @@ public class CsvLoadLot {
 	/**
 	 * CSV LOT STATUS:
 	 * 
-	 * STATUS_LOADING = 0; STATUS_ARCHIVING = 10;
+	 * STATUS_LOADING = 0; 
+	 * 
+	 * STATUS_ARCHIVING = 10;
 	 * 
 	 * // found the "fim_de_lote.txt" file on the lot
 	 * // WIL NOT PROCECESS AGAIN
@@ -46,15 +48,15 @@ public class CsvLoadLot {
 	 * STATUS_FINISHED_WITHERRORS_NOTARCHIVED = -31;
 	 * 
 	 * //archive_buffer may be left behind. No "fim_de_lote.txt" found
-	 * // MAY RESUME PROCECESS AGAIN
-	 * STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -2;
+	 * // **** MAY RESUME PROCECESS AGAIN
+	 * STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -50;
 	 * 
 	 * //archived by cleanup process. No "fim_de_lote.txt" found
 	 * // WIL NOT PROCECESS AGAIN
-	 * STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -50;
+	 * STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -100;
 	 *
 	 * // load process error on lot, may be executed again for another chance
-	 * // MAY RESUME PROCECESS AGAIN
+	 * // **** MAY RESUME PROCECESS AGAIN
 	 * STATUS_ERROR_ARCHIVED = -1;
 	 * 
 	 * 
@@ -65,8 +67,8 @@ public class CsvLoadLot {
 	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED = 30; 
 	public static final int STATUS_FINISHED_WITHERRORS_ARCHIVED = -30;
 	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED = -31;
-	public static final int STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -2; 
-	public static final int STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -50;
+	public static final int STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -50; 
+	public static final int STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -100;
 	public static final int STATUS_ERROR_ARCHIVED = -1; 
 	
 	
@@ -92,6 +94,7 @@ public class CsvLoadLot {
 		this.status = status2;
 		this.processment_execution_id = MainController.getProcessmentExecution().getId();
 		save();
+		setFinishedStatus(this);
 	}
 
 	private CsvLoadLot() {
@@ -185,8 +188,8 @@ public class CsvLoadLot {
 		Statement stmt;
 		try {
 			stmt = _connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot WHERE lot_name = '" + lot
-					+ "' ORDER BY updated_at DESC limit 1");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot WHERE lot_name = '" + lot+ "' "
+				+"ORDER BY updated_at DESC limit 1");
 			int i = 0;
 			while (rs.next()) {
 				_connection.close();
@@ -220,7 +223,9 @@ public class CsvLoadLot {
 				csv_lot.files_error_not_loaded = rs.getInt("files_error_not_loaded");
 				csv_lot.created_at = rs.getTimestamp("created_at");
 				csv_lot.updated_at = rs.getTimestamp("updated_at");
+				
 			}
+			setFinishedStatus(csv_lot);
 			_connection.close();
 			return csv_lot;
 		} catch (SQLException e1) {
@@ -228,6 +233,18 @@ public class CsvLoadLot {
 			// TODO: check if connection.close() get calls on finally before the throw
 			_connection.close();
 			throw new Exception(e1);
+		}
+	}
+
+	private static void setFinishedStatus(CsvLoadLot csv_lot) {
+		switch(csv_lot.status) {
+			case STATUS_FINISHED_NOERRORS_ARCHIVED:
+			case STATUS_FINISHED_WITHERRORS_ARCHIVED:
+			case STATUS_FINISHED_WITHERRORS_NOTARCHIVED:
+				csv_lot.finished = true;
+				break;
+			default:
+				csv_lot.finished = false;
 		}
 	}
 
