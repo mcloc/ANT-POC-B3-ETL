@@ -246,7 +246,7 @@ public class Csv extends AbstractRotine {
 				LOGGER.info("Removing directory: " + index.getAbsolutePath());
 				
 				FileUtils.deleteDirectory(index);
-				zipArchive(last_directory);
+				zipArchive(current_directory);
 				in_root_dir = false;
 				continue;
 			}
@@ -350,12 +350,12 @@ public class Csv extends AbstractRotine {
 
 	private void zipArchive(String _directory) throws Exception {
 		LOGGER.info("Total load errors on this lot: " + csv_load_lot.getFiles_error_not_loaded());
-		String zip_archive_path = ARCHIVE_BUFFER_DIRETCTORY + _directory;
+		String _archive_buffer_path = ARCHIVE_BUFFER_DIRETCTORY + _directory;
 		String zip_file = ARCHIVE_DIRETCTORY + _directory + ".zip";
 		ZipUtils appZip = new ZipUtils();
 		appZip.setOUTPUT_ZIP_FILE(zip_file);
-		appZip.setSOURCE_FOLDER(zip_archive_path);
-		File _directory2zip_obj = new File(zip_archive_path);
+		appZip.setSOURCE_FOLDER(_archive_buffer_path);
+		File _directory2zip_obj = new File(_archive_buffer_path);
 		appZip.generateFileList(_directory2zip_obj);
 		try {
 			appZip.zipIt(zip_file);
