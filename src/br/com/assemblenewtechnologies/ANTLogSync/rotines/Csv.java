@@ -104,13 +104,15 @@ public class Csv extends AbstractRotine {
 				LOGGER.info("[CSV] total rows per sec: " + rows_processed / total_time + " seconds");
 			}
 
-			connection.close();
+			
 		} catch (Exception e) {
 			LOGGER.debug("csv_load_start() error");
-			LOGGER.debug(e.getMessage());
-			if (connection != null)
-				connection.close();
+			LOGGER.error(e.getMessage());
+//			if (connection != null)
+//				connection.close();
 //			throw e;
+		} finally {
+			connection.close();
 		}
 
 	}
