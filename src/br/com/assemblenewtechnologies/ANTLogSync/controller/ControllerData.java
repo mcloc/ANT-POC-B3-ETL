@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
-import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentError;
 import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
@@ -19,30 +18,22 @@ import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentRotine;
 
 public class ControllerData {
 	private static Logger LOGGER = LoggerFactory.getLogger(ControllerData.class);
-	private Connection connection;
+	private static Connection connection;
 
 	private Map<Integer, ProcessmentError> errors = new LinkedHashMap<Integer, ProcessmentError>();
 	private Map<Integer, ProcessmentRotine> processment_rotines = new LinkedHashMap<Integer, ProcessmentRotine>();
 
-	public ControllerData() throws Exception {
-
-		connection = DBConnectionHelper.getNewConn();
-		connection.setAutoCommit(false);
-
+	public ControllerData(Connection connection2) throws Exception {
+		ControllerData.connection = connection2;
 		load_errors();
 		load_rotines();
-//		connection.commit(); // no need
-		connection.close();
 	}
 
 	public void reload() throws Exception {
 		errors = new LinkedHashMap<Integer, ProcessmentError>();
 		processment_rotines = new LinkedHashMap<Integer, ProcessmentRotine>();
-
 		load_errors();
 		load_rotines();
-//		connection.commit(); // no need
-		connection.close();
 	}
 
 	private void load_rotines() throws Exception {

@@ -24,8 +24,8 @@ public class DBConnectionHelper {
 			jdbcConnector = new JDBCConnector();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
-			ProcessmentErrorLog.logError(ErrorCodes.DB_CONNECT_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
-					this.getClass().getName());
+//			ProcessmentErrorLog.logError(ErrorCodes.DB_CONNECT_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
+//					this.getClass().getName());
 			throw new Exception("No database connection...");
 		}
 	}

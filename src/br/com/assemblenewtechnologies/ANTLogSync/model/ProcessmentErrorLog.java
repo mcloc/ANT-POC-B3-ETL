@@ -10,7 +10,6 @@ import java.sql.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 
 public class ProcessmentErrorLog {
@@ -24,7 +23,7 @@ public class ProcessmentErrorLog {
 	private String java_class;
 
 	private static Logger LOGGER = LoggerFactory.getLogger(ProcessmentErrorLog.class);
-	private Connection connection;
+	private static Connection connection;
 
 	
 	/**
@@ -62,12 +61,10 @@ public class ProcessmentErrorLog {
 	}
 
 	private ProcessmentErrorLog(int _error_code) throws Exception {
-		connection = DBConnectionHelper.getNewConn();
 		ResultSet rs = getErrorByCode(_error_code);
 		int i = 0;
 		while (rs.next()) {
 			if (i > 0) {
-				connection.close();
 				throw new Exception("more then one erro found with this error_code: " + _error_code);
 			}
 
@@ -77,17 +74,14 @@ public class ProcessmentErrorLog {
 			processment_errors_id = rs.getBigDecimal("id");
 			i++;
 		}
-		connection.close();
 	}
 
-	private ProcessmentErrorLog(BigDecimal error_id) throws Exception {
-		connection = DBConnectionHelper.getNewConn();
+	private ProcessmentErrorLog(BigDecimal error_id, Connection connection2) throws Exception {
+		ProcessmentErrorLog.connection = connection2;
 		ResultSet rs = getErrorById(error_id);
 		int i = 0;
 		while (rs.next()) {
 			if (i > 0) {
-				connection.rollback();
-				connection.close();
 				throw new Exception("more then one erro found with this error_id: " + error_id);
 			}
 
@@ -97,7 +91,6 @@ public class ProcessmentErrorLog {
 			processment_errors_id = rs.getBigDecimal("id");
 			i++;
 		}
-		connection.close();
 	}
 
 	private void save() throws Exception {
@@ -106,7 +99,6 @@ public class ProcessmentErrorLog {
 				|| processment_mode.equals("") || processment_id == null || processment_errors_id == null) {
 			throw new Exception("ProcessmentErrorLog not saved, missing attributes values");
 		}
-		connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "INSERT INTO  Intellect.processment_errors_log("
 				+ "name, description, error_code, processment_group, processment_mode, "
 				+ "processment_id, processment_errors_id, java_class, created_at) VALUES " + "(?, ?, ?, ?, ?, ?, ?, ?)";
@@ -123,15 +115,12 @@ public class ProcessmentErrorLog {
 			preparedStatement.setString(8, java_class);
 			preparedStatement.setLong(9, System.currentTimeMillis());
 			preparedStatement.execute();
+			if(!connection.getAutoCommit())
+				connection.commit();	
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
-			connection.rollback();
-			connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
-
-		connection.commit();
-		connection.close();
 	}
 
 	private ResultSet getErrorById(BigDecimal error_id) throws Exception {
@@ -142,8 +131,6 @@ public class ProcessmentErrorLog {
 			return rs;
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
-			connection.rollback();
-			connection.close();
 			throw new Exception(e1);
 		}
 		
@@ -158,8 +145,6 @@ public class ProcessmentErrorLog {
 			return rs;
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
-			connection.rollback();
-			connection.close();
 			throw new Exception(e1);
 		}
 	}
@@ -264,6 +249,11 @@ public class ProcessmentErrorLog {
 	 */
 	public void setProcessment_errors_id(BigDecimal processment_errors_id) {
 		this.processment_errors_id = processment_errors_id;
+	}
+
+
+	public static void setConnection(Connection connection2) {
+		connection = connection2;
 	}
 
 }

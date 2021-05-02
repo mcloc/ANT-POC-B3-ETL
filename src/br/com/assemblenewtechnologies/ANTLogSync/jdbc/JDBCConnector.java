@@ -5,8 +5,6 @@ package br.com.assemblenewtechnologies.ANTLogSync.jdbc;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -14,8 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
-import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
-import br.com.assemblenewtechnologies.ANTLogSync.model.ProcessmentErrorLog;
 
 /**
  * @author mcloc

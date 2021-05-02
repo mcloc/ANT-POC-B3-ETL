@@ -119,11 +119,8 @@ public class Csv extends AbstractRotine {
 		} catch (Exception e) {
 			LOGGER.debug("csv_load_start() error");
 			LOGGER.error(e.getMessage());
-//			if (connection != null)
-//				connection.close();
 			throw e;
 		} finally {
-			connection.close();
 			LOGGER.info("[CSV] csv_load_start() completed.");
 		}
 
@@ -276,8 +273,7 @@ public class Csv extends AbstractRotine {
 			} catch (Exception e) {
 				LOGGER.debug(e.getMessage());
 //					throw e;
-			}
-
+			} 
 		}
 
 	}

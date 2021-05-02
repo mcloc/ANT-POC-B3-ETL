@@ -11,8 +11,6 @@ import java.sql.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
-
 public class ProcessmentExecution {
 	private BigDecimal id; 
 	private String processment_mode;
@@ -27,22 +25,24 @@ public class ProcessmentExecution {
 	public static final int STATUS_FINISHED_INTERRUPTED = -2;
 	
 	private static Logger LOGGER = LoggerFactory.getLogger(ProcessmentExecution.class);
-	private Connection connection;
+	private static Connection connection;
 	
 	/**
 	 * Create and save on database
 	 * 
 	 * @param processment_mode
+	 * @param connection2 
 	 * @throws Exception 
 	 */
-	public ProcessmentExecution(String processment_mode) throws Exception {
+	public ProcessmentExecution(String processment_mode, Connection connection2) throws Exception {
+		ProcessmentExecution.connection = connection2;
 		this.processment_mode = processment_mode;
 		this.status = 0;
 		this.save();
 	}
 	
 	public void updateStatus(Integer status) throws Exception {
-		connection = DBConnectionHelper.getNewConn();
+//		connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "UPDATE Intellect.processment_execution SET "
 				+ "status = ?, updated_at = ?  WHERE id = "+this.id;
 		PreparedStatement preparedStatement;
@@ -57,11 +57,12 @@ public class ProcessmentExecution {
 			preparedStatement.executeUpdate();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
-			connection.rollback();
-			connection.close();
+//			connection.rollback();
+//			connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
-		connection.commit();
+		if(!connection.getAutoCommit())
+			connection.commit();	
 		this.status = status;
 		this.updated_at = _updated_at;
 		
@@ -70,12 +71,9 @@ public class ProcessmentExecution {
 	
 	private void save() throws Exception {
 		if (processment_mode.equals("")) {
-			connection.rollback();
-			connection.close();
 			throw new Exception("ProcessmentErrorLog not saved, missing attributes values");
 		}
 		
-		connection = DBConnectionHelper.getNewConn();
 
 		String compiledQuery = "INSERT INTO  Intellect.processment_execution("
 				+ "processment_mode, status, created_at, updated_at) VALUES " + "(?, ?, ?, ?)";
@@ -90,20 +88,18 @@ public class ProcessmentExecution {
 			preparedStatement.setTimestamp(3, new Timestamp(_now));
 			preparedStatement.setTimestamp(4, new Timestamp(_now));
 			preparedStatement.execute();
+			if(!connection.getAutoCommit())
+				connection.commit();	
 			
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
-			connection.rollback();
-			connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
 
-		connection.commit();
 		ResultSet rs = preparedStatement.getGeneratedKeys();
 		int i = 0;
 		if (rs.next()) {
 			if(i > 0) {
-				connection.close();
 				throw new Exception("ProcessmentExecetion.save() error: more then one inserted ID returned...");
 			}
 		    id = rs.getBigDecimal(1);
@@ -112,7 +108,6 @@ public class ProcessmentExecution {
 		    i++;
 		}
 		
-		connection.close();
 	}
 	
 	

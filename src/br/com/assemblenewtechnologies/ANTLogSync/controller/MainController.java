@@ -3,6 +3,7 @@ package br.com.assemblenewtechnologies.ANTLogSync.controller;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -31,12 +32,13 @@ public class MainController {
 	private static ControllerData controller_data;
 	private static Map<Integer, ProcessmentRotine> processment_map;
 	private static Map<Integer, ProcessmentError> errors_map;
-	private static Map<String, Object> execution_threads;
+//	private static Map<String, Object> execution_threads;
 	private static Map<Integer, String> execution_processment_threads = new HashMap<Integer, String>();
 	private static boolean need_to_update = false;
 	private static ProcessmentExecution processmentExecution;
 	private static Integer processmentStatus;
 	private static int actual_processment = 0;
+	private static Connection connection;
 
 	public static void main(String[] args) throws Exception {
 		start_time = System.currentTimeMillis();
@@ -44,7 +46,7 @@ public class MainController {
 
 		initController();
 
-		processmentExecution = new ProcessmentExecution(GlobalProperties.getInstance().getProcessmentMode());
+		processmentExecution = new ProcessmentExecution(GlobalProperties.getInstance().getProcessmentMode(), connection);
 
 		/**
 		 * Shutdown Hook to capture SIG KILL and CTRL-C interrupts
@@ -104,15 +106,18 @@ public class MainController {
 		// Singleton DBConnection, load Singleton
 		try {
 			DBConnectionHelper.getInstance();
+			connection = DBConnectionHelper.getNewConn();
 		} catch (Exception e1) {
 			LOGGER.error(e1.getMessage());
 			// Interrupt all threads
 			closeAllThreads();
 			throw new Exception(e1); // no DB we need to throw Exeception runtime Error
 		}
+		
+		ProcessmentErrorLog.setConnection(connection);
 
 		try {
-			controller_data = new ControllerData();
+			controller_data = new ControllerData(connection);
 			processment_map = controller_data.getProcessment_rotines();
 			errors_map = controller_data.getErrors();
 		} catch (Exception e) {
