@@ -13,6 +13,8 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
+import javax.swing.JFileChooser;
+
 import org.apache.commons.io.FileUtils;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -22,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
-import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
 import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadLot;
 import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadRegistry;
@@ -95,7 +96,7 @@ public class Csv extends AbstractRotine {
 		files_processed = 0;
 
 		LOGGER.info("[CSV] csv_load_start...");
-		start_time = System.currentTimeMillis();
+//		start_time = System.currentTimeMillis();
 		try {
 			connection = DBConnectionHelper.getNewConn();
 			connection.setAutoCommit(true);
@@ -107,28 +108,27 @@ public class Csv extends AbstractRotine {
 			if (directories_processed > 0) {
 				long timer1 = System.currentTimeMillis();
 				long total_time = (timer1 - start_time) / 1000;
-				LOGGER.info("[CSV] total rows_processed inserted: " + rows_processed);
+				LOGGER.info("[CSV] total time to process CSV lots: " + total_time + " seconds");
 				LOGGER.info("[CSV] total directories processed: " + directories_processed);
 				LOGGER.info("[CSV] total files processed: " + files_processed);
-				LOGGER.info("[CSV] total time to process CSV lots: " + total_time + " seconds");
 				LOGGER.info("[CSV] total files per sec: " + files_processed / total_time + " seconds");
+				LOGGER.info("[CSV] total rows_processed inserted: " + rows_processed);
 				LOGGER.info("[CSV] total rows per sec: " + rows_processed / total_time + " seconds");
 			}
-
-			
 		} catch (Exception e) {
-			LOGGER.debug("csv_load_start() error");
+			LOGGER.debug("[CSV]csv_load_start() error");
 			LOGGER.error(e.getMessage());
 			throw e;
 		} finally {
-			LOGGER.info("[CSV] csv_load_start() completed.");
+			connection.close();
+			LOGGER.info("[CSV] csv_load_start() finished.");
 		}
 
 	}
 
-	public void csv_archive_start() throws Exception {
-		LOGGER.info("[CSV] csv_archive_start...");
-	}
+//	public void csv_archive_start() throws Exception {
+//		LOGGER.info("[CSV] csv_archive_start...");
+//	}
 
 	private void processFiles(File[] files_list) throws Exception {
 		String last_directory = null;
@@ -138,7 +138,7 @@ public class Csv extends AbstractRotine {
 			if (_file_pointer.isDirectory()) {
 
 				if (!_file_pointer.getName().startsWith("RTD")) {
-					LOGGER.warn("Directory: " + _file_pointer.getName() + " has no RTD signature skipping");
+					LOGGER.warn("[CSV] Directory: " + _file_pointer.getName() + " has no RTD signature skipping");
 					continue;
 				}
 				current_directory = _file_pointer.getName();
@@ -146,14 +146,14 @@ public class Csv extends AbstractRotine {
 				// Crash Recovery
 				if (CsvLoadLot.checkIfLotAlreadyProcessed(current_directory)) {
 					csv_load_lot = CsvLoadLot.getLotByLotName(current_directory);
-					LOGGER.info(" Resuming processment on Directory: " + current_directory + " lot id: "
-							+ csv_load_lot.getId());
+					LOGGER.info("[CSV] Resuming load processing on Directory: " + current_directory + " lot id: "
+							+ csv_load_lot.getId() + " actual status: " + csv_load_lot.getStatus());
 					// Crash Recovery Loading was finished just archive into another zip the
 					// contents
 					// TODO: archive into another ZIP the contents
 					if (csv_load_lot.isFinished()) {
-						LOGGER.warn("Directory: " + current_directory + " already processed, skipping...");
-						moveDirectory2ArchiveBuffer(_file_pointer);
+						LOGGER.warn("[CSV] This lot is already finished. Archiving : " + current_directory + " without loading.");
+						moveDirLot2ArchiveBuffer(_file_pointer);
 						zipArchive(current_directory);
 						continue;
 					}
@@ -161,8 +161,8 @@ public class Csv extends AbstractRotine {
 				} else {
 					csv_load_lot = CsvLoadLot.registerCSVLot(current_directory,
 							GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING, this.connection);
-					LOGGER.info("Processing Directory: " + _file_pointer.getAbsolutePath() + " lot id: "
-							+ csv_load_lot.getId());
+					LOGGER.info("[CSV] Processing new Lot: " + current_directory + " lot id: "
+							+ csv_load_lot.getId() + " actual sttus: " + csv_load_lot.getStatus());
 				}
 
 				// CHECK Processment Mode
@@ -185,43 +185,44 @@ public class Csv extends AbstractRotine {
 				// But if we do not find the RTD_FIM_DE_LOTE.txt we'll arxchive it and remove it
 				// anyway
 				// IF we got next Directory on DirList remove last one
-				if (last_directory != null && last_directory != current_directory) {
-					File _last_direcotry_fileobj = new File(
-							RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + last_directory);
-
-					// We delete last_directory in RTD_DIRETCTORY because it's suppose to be
-					// already in ARCHIVE_BUFFER_DIRETCTORY
-					if (_last_direcotry_fileobj.exists())
-						FileUtils.deleteDirectory(_last_direcotry_fileobj);
-
-					zipArchive(last_directory);
-				}
+//				if (last_directory != null && last_directory != current_directory) {
+//					File _last_direcotry_fileobj = new File(
+//							RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + last_directory);
+//
+//					// We delete last_directory in RTD_DIRETCTORY because it's suppose to be
+//					// already in ARCHIVE_BUFFER_DIRETCTORY
+//					if (_last_direcotry_fileobj.exists())
+//						FileUtils.deleteDirectory(_last_direcotry_fileobj);
+//
+//					zipArchive(last_directory);
+//				}
 
 				directories_processed++;
 
 				File _log_data_dir = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
 						+ current_directory + GlobalProperties.getInstance().getFileSeparator() + "LOG_DATA");
 
+				
+				//IF LOG_DATA dont exists archive the entire Lot and continue
 				if (!_log_data_dir.exists()) {
 					LOGGER.error(
-							"Directory LOG_DATA not found on :" + current_directory + " finishing and archiving lot");
-					moveDirectory2ArchiveBuffer(_file_pointer);
+							"[CSV] Directory LOG_DATA not found on :" + current_directory + " finishing and archiving lot");
+					moveDirLot2ArchiveBuffer(_file_pointer);
 
 //					LOGGER.info("Removing directory: " + current_directory);
 //					FileUtils.deleteDirectory(_file_pointer);
 					csv_load_lot.setFinished(true);
-
 					zipArchive(_file_pointer.getName());
 					in_root_dir = false;
 					continue;
 				}
-
+				
 				File[] _list = _log_data_dir.listFiles();
 				
 				//DIRECTORY EMPTY
 				if (_list.length == 0) {
-					LOGGER.error("Directory LOG_DATA empty. Archiving and removing: " + _file_pointer.getName());
-					moveDirectory2ArchiveBuffer(_file_pointer);
+					LOGGER.error("[CSV] Directory LOG_DATA empty. Archiving and removing: " + _file_pointer.getName());
+					moveDirLot2ArchiveBuffer(_file_pointer);
 					csv_load_lot.setFinished(true);
 					zipArchive(_file_pointer.getName());
 					continue;
@@ -230,14 +231,14 @@ public class Csv extends AbstractRotine {
 				
 				Arrays.sort(_list);
 				processFiles(_list); // Calls same method again.
-
+				
 				// There should not be any files on LOG_DATA after processFiles() returns
 				_list = _log_data_dir.listFiles();
 				if ( _list != null && _list.length != 0) {
-					LOGGER.error("Directory LOG_DATA not empty but processFiles(" + _log_data_dir.getName()
+					LOGGER.error("[CSV] Directory LOG_DATA not empty but processFiles(" + _log_data_dir.getName()
 							+ ") has already returned");
 					
-					moveDirectory2ArchiveBuffer(_file_pointer);
+					moveDirLot2ArchiveBuffer(_file_pointer);
 					csv_load_lot.setFinished(true);
 					zipArchive(_file_pointer.getName());					
 				}
@@ -258,14 +259,44 @@ public class Csv extends AbstractRotine {
 				moveFile2ArchiveBuffer(_file_pointer, CsvLoadRegistry.STATUS_END_LOT);
 				File index = new File(
 						RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory);
-				LOGGER.info("Removing directory: " + index.getAbsolutePath());
+				LOGGER.info("[CSV] END OF LOT found. Removing directory: " + index.getName() + " lot: " + csv_load_lot.getId()+
+						" setted as finished.");
 				
 				FileUtils.deleteDirectory(index);
 				zipArchive(current_directory);
 				in_root_dir = false;
 				continue;
 			}
+			
+			if (_file_pointer.getName().endsWith(".log")) {
+				csv_db_registry = CsvLoadRegistry.registerCSV(current_directory, csv_load_lot.getId(), _file_pointer.getName(),
+						RTD_DIRETCTORY, CsvLoadRegistry.STATUS_END_LOT, connection);
+				moveFile2ArchiveBuffer(_file_pointer, CsvLoadRegistry.STATUS_RTDLOG_FILE);
+				continue;
+			}
 
+			//in the case a file is not .csv
+			if (!_file_pointer.getName().endsWith(".csv")) {
+				boolean is_csv = false;
+				
+				//check for RTD pattern and if first line has the word 'asset' in the colums name
+				if (_file_pointer.getName().startsWith("RTD") && _file_pointer.getName().endsWith(".txt")) {
+					BufferedReader csvTest = new BufferedReader(new FileReader(_file_pointer.getAbsolutePath()));
+					String first_line = csvTest.readLine();
+					if(first_line.contains("asset")) {
+						is_csv = true;
+					}
+					csvTest.close();
+				}
+				
+				if(!is_csv) {
+					LOGGER.error("File: " + _file_pointer.getAbsoluteFile() + " not supported");
+					moveFile2ArchiveBuffer(_file_pointer, CsvLoadRegistry.STATUS_UNKNOWN_FILE);
+					continue;
+				}
+			}
+			
+			
 			in_root_dir = false;
 			files_processed++;
 			try {
@@ -276,6 +307,16 @@ public class Csv extends AbstractRotine {
 			} 
 		}
 
+	}
+
+	private void checkAndArchiveLiveData() throws IOException {
+		File _live_data_dir = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
+				+ current_directory + GlobalProperties.getInstance().getFileSeparator() + "LIVE_DATA");
+		if (_live_data_dir.exists()) {
+			File _live_data_archive_dir = new File(ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
+					+ current_directory + GlobalProperties.getInstance().getFileSeparator() + "LIVE_DATA");
+			FileUtils.moveDirectory(_live_data_dir, _live_data_archive_dir );
+		}
 	}
 
 	private void loadCSV(File file) throws Exception {
@@ -297,7 +338,7 @@ public class Csv extends AbstractRotine {
 			moveFile2ArchiveBuffer(file, CsvLoadRegistry.STATUS_LOADED_ARCHIVED);
 			rows_processed += rowsInserted;
 		} catch (SQLException e) {
-			LOGGER.debug("Database Error Loading File: " + file.getAbsoluteFile());
+			LOGGER.debug("[CSV] Database Error Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
 			csv_db_registry.setError_msg(e.getMessage());
 			csv_load_lot.incrementFilesErrorNotLoaded();
@@ -309,7 +350,7 @@ public class Csv extends AbstractRotine {
 			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOTFINISHED_NOTARCHIVED);
 			csv_db_registry.setError_msg(e.getMessage());
 			csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_ERROR_NOT_ARCHIVED);
-			LOGGER.debug("Error IO Loading File: " + file.getAbsoluteFile());
+			LOGGER.debug("[CSV] Error IO Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
 			throw new Exception(e.getMessage());
 		} catch (Exception e) {
@@ -317,31 +358,33 @@ public class Csv extends AbstractRotine {
 			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOTFINISHED_NOTARCHIVED);
 			csv_db_registry.setError_msg(e.getMessage());
 			csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_ERROR_NOT_ARCHIVED);
-			LOGGER.debug("Error Loading File: " + file.getAbsoluteFile());
+			LOGGER.debug("[CSV] Error Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
 			throw new Exception(e.getMessage());
 		}
 	}
 
-	private void moveDirectory2ArchiveBuffer(File _file_pointer) throws Exception {
+	private void moveDirLot2ArchiveBuffer(File _file_pointer) throws Exception {
 		if (_file_pointer.exists()) {
 			String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
 					+ _file_pointer.getName();
-			
-			File archive_buffer_dest = new File(archive_path);
-					
-			if(archive_buffer_dest.exists()) {
-				LOGGER.warn("Directory: "+_file_pointer.getName()+" already exsits in archive_buffer zipping it..." );
-				zipArchive(_file_pointer.getName());
-			}
-			
-			FileUtils.moveDirectory(_file_pointer, archive_buffer_dest );
 			
 			//FIXME: this should not happen since the dir already been moved above
 //			if (_file_pointer.exists()) {
 //				LOGGER.info("Removing directory: " + _file_pointer.getAbsolutePath());
 //				FileUtils.deleteDirectory(_file_pointer);
 //			}
+			//This should fix it. Inside zipArchive() we check for older zips, if so the new zip
+			//will have a timestamp suffixed at the end of file name
+			File archive_buffer_dest = new File(archive_path);
+			if(archive_buffer_dest.exists()) {
+				LOGGER.warn("[CSV] Directory: "+_file_pointer.getName()+" already exsits in archive_buffer zipping it..." );
+				zipArchive(_file_pointer.getName());
+			}
+			
+			FileUtils.moveDirectory(_file_pointer, archive_buffer_dest );
+			
+
 			return;
 		}
 
@@ -349,12 +392,14 @@ public class Csv extends AbstractRotine {
 	}
 
 	private void moveFile2ArchiveBuffer(File file, int file_status) throws Exception {
-		LOGGER.debug("Archiving File: " + file.getAbsoluteFile());
+		LOGGER.debug("[CSV] Archiving File: " + file.getAbsoluteFile());
 		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
 				+ current_directory;
 		File f = new File(archive_path);
 		if (!f.exists()) {
 			f.mkdir();
+			//IF LIVE_DATA exists move it to archive_buffer
+			checkAndArchiveLiveData();
 		}
 
 		try {
@@ -363,7 +408,7 @@ public class Csv extends AbstractRotine {
 					StandardCopyOption.REPLACE_EXISTING);
 			csv_db_registry.changeStatus(file_status);
 		} catch (IOException e) {
-			LOGGER.error("Error IO Archiving File: " + file.getAbsoluteFile());
+			LOGGER.error("[CSV] Error IO Archiving File: " + file.getAbsoluteFile());
 			LOGGER.error(e.getMessage());
 			csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_ERROR_NOT_ARCHIVED);
 			throw e;
@@ -371,17 +416,19 @@ public class Csv extends AbstractRotine {
 	}
 
 	private void zipArchive(String _directory) throws Exception {
-		LOGGER.info("Total load errors on this lot: " + csv_load_lot.getFiles_error_not_loaded());
+		LOGGER.info("[CSV] Total load errors on this lot: " + csv_load_lot.getFiles_error_not_loaded());
 		String _archive_buffer_path = ARCHIVE_BUFFER_DIRETCTORY + _directory;
 		String zip_file = ARCHIVE_DIRETCTORY + _directory + ".zip";
 		
+		//we check for older zips, if so the new zip
+		//will have a timestamp suffixed at the end of file name
 		File _zip_file = new File(zip_file);
 		if(_zip_file.exists()) {
 			Timestamp actual_time = new Timestamp(System.currentTimeMillis());
 			String actual_time_formated  = new SimpleDateFormat("yyyyMMdd_HHmmss").format(actual_time);
 			String _zip_name = _directory + "__"+actual_time_formated+".zip";
 			zip_file = ARCHIVE_DIRETCTORY + _zip_name;
-			LOGGER.warn("Archive zip file already exsists: " +_directory+
+			LOGGER.warn("[CSV] Archive zip file already exsists: " +_directory+
 					" zipping with new name: "+ _zip_name);
 		}
 		
@@ -406,7 +453,7 @@ public class Csv extends AbstractRotine {
 
 		// DELETE ARCHIVE_BUFFER
 		if (_directory2zip_obj.exists()) {
-			LOGGER.info("Removing directory: " + _directory2zip_obj.getAbsolutePath());
+			LOGGER.info("[CSV] Cleaning archive buffer directory: " + _directory2zip_obj.getName());
 			FileUtils.deleteDirectory(_directory2zip_obj);
 		}	
 
@@ -425,6 +472,10 @@ public class Csv extends AbstractRotine {
 		csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_ARCHIVED);
 
 		return;
+	}
+
+	public void setStartTime() {
+		this.start_time = System.currentTimeMillis();
 	}
 
 }

@@ -127,8 +127,8 @@ public class CsvLoadLot {
 			preparedStatement.setTimestamp(5, _created_at);
 			preparedStatement.setTimestamp(6, _updated_at);
 			preparedStatement.execute();
-			if(!_connection.getAutoCommit())
-				_connection.commit();	
+//			if (!_connection.getAutoCommit())
+//				_connection.commit();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
 			throw new Exception(e.getMessage(), e);
@@ -170,8 +170,8 @@ public class CsvLoadLot {
 			preparedStatement.setInt(5, files_error_not_loaded);
 			preparedStatement.setTimestamp(6, _updated_at);
 			preparedStatement.executeUpdate();
-			if(!_connection.getAutoCommit())
-				_connection.commit();
+//			if(!_connection.getAutoCommit())
+//				_connection.commit();
 		} catch (SQLException e) {
 			LOGGER.error("Error update() CsvLoadLot");
 			LOGGER.error(e.getMessage());

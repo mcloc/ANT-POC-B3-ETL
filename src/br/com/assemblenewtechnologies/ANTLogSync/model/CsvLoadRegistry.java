@@ -35,6 +35,8 @@ public class CsvLoadRegistry {
 	public static final int STATUS_ERROR_ARCHIVED = -1;
 	public static final int STATUS_ERROR_NOT_ARCHIVED = -2;
 	public static final int STATUS_END_LOT = 10;
+	public static final int STATUS_RTDLOG_FILE = 30;
+	public static final int STATUS_UNKNOWN_FILE = -10;
 
 	private static Logger LOGGER = LoggerFactory.getLogger(CsvLoadRegistry.class);
 
@@ -99,8 +101,8 @@ public class CsvLoadRegistry {
 			preparedStatement.setTimestamp(7, _created_at);
 			preparedStatement.setTimestamp(8, _updated_at);
 			preparedStatement.execute();
-			if(!_connection.getAutoCommit())
-				_connection.commit();	
+//			if(!_connection.getAutoCommit())
+//				_connection.commit();	
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
 			throw new Exception(e.getMessage(), e);
@@ -145,8 +147,8 @@ public class CsvLoadRegistry {
 			preparedStatement.setString(6, error_msg);
 			preparedStatement.setTimestamp(7, _updated_at);
 			preparedStatement.executeUpdate();
-			if(!_connection.getAutoCommit())
-				_connection.commit();	
+//			if(!_connection.getAutoCommit())
+//				_connection.commit();	
 		} catch (SQLException e) {
 			LOGGER.error("Error update() CsvLoadRegistry");
 			LOGGER.error(e.getMessage());

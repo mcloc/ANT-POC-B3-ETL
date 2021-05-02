@@ -17,13 +17,14 @@ public class CSVHandler implements Runnable {
 	@Override
 	public void run() {
 		try {
-			LOGGER.info("CSV Thread Starting...");
+			LOGGER.info("[CSV Thread] Starting...");
 			while (true) {
 				try {
+					csv_rotine.setStartTime();
 					csv_rotine.csv_check_for_files();
 					csv_rotine.setExecuting(false);
 				} catch (Exception e) {
-					LOGGER.info("CSV Thread Error");
+					LOGGER.error("[CSV Thread] Error");
 					LOGGER.error(e.getMessage());
 					e.printStackTrace();
 				}

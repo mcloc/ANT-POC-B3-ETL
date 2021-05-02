@@ -115,8 +115,8 @@ public class ProcessmentErrorLog {
 			preparedStatement.setString(8, java_class);
 			preparedStatement.setLong(9, System.currentTimeMillis());
 			preparedStatement.execute();
-			if(!connection.getAutoCommit())
-				connection.commit();	
+//			if(!connection.getAutoCommit())
+//				connection.commit();	
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
 			throw new Exception(e.getMessage(), e);
