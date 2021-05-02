@@ -9,6 +9,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
@@ -89,7 +91,8 @@ public class Csv extends AbstractRotine {
 		try {
 			connection = DBConnectionHelper.getNewConn();
 			connection.setAutoCommit(true);
-
+			CsvLoadLot.set_connection(connection);
+			CsvLoadRegistry.set_connection(connection);
 			Arrays.sort(files_list);
 			processFiles(files_list);
 
@@ -151,7 +154,7 @@ public class Csv extends AbstractRotine {
 
 				} else {
 					csv_load_lot = CsvLoadLot.registerCSVLot(current_directory,
-							GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING);
+							GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING, this.connection);
 					LOGGER.info("Processing Directory: " + _file_pointer.getAbsolutePath() + " lot id: "
 							+ csv_load_lot.getId());
 				}
@@ -269,7 +272,7 @@ public class Csv extends AbstractRotine {
 	private void loadCSV(File file) throws Exception {
 		try {
 			csv_db_registry = CsvLoadRegistry.registerCSV(current_directory, csv_load_lot.getId(), file.getName(),
-					RTD_DIRETCTORY, CsvLoadRegistry.STATUS_LOADING);
+					RTD_DIRETCTORY, CsvLoadRegistry.STATUS_LOADING, connection);
 			long rowsInserted = new CopyManager((BaseConnection) connection).copyIn(
 					"COPY B3Log.B3SignalLogger " + "( " + "asset," + "data," + "hora," + "ultimo," + "strike,"
 							+ "negocios," + "quantidade," + "volume," + "oferta_compra," + "oferta_venda," + "VOC,"
@@ -315,7 +318,15 @@ public class Csv extends AbstractRotine {
 		if (_file_pointer.exists()) {
 			String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
 					+ _file_pointer.getName();
-			FileUtils.moveDirectory(_file_pointer, new File(archive_path));
+			
+			File archive_buffer_dest = new File(archive_path);
+					
+			if(archive_buffer_dest.exists()) {
+				LOGGER.warn("Directory: "+_file_pointer.getName()+" already exsits in archive_buffer zipping it..." );
+				zipArchive(_file_pointer.getName());
+			}
+			
+			FileUtils.moveDirectory(_file_pointer, archive_buffer_dest );
 			
 			//FIXME: this should not happen since the dir already been moved above
 //			if (_file_pointer.exists()) {
@@ -354,6 +365,20 @@ public class Csv extends AbstractRotine {
 		LOGGER.info("Total load errors on this lot: " + csv_load_lot.getFiles_error_not_loaded());
 		String _archive_buffer_path = ARCHIVE_BUFFER_DIRETCTORY + _directory;
 		String zip_file = ARCHIVE_DIRETCTORY + _directory + ".zip";
+		
+		File _zip_file = new File(zip_file);
+		if(_zip_file.exists()) {
+			Timestamp actual_time = new Timestamp(System.currentTimeMillis());
+			String actual_time_formated  = new SimpleDateFormat("yyyyMMdd_HHmmss").format(actual_time);
+			String _zip_name = _directory + "__"+actual_time_formated+".zip";
+			zip_file = ARCHIVE_DIRETCTORY + _zip_name;
+			LOGGER.warn("Archive zip file already exsists: " +_directory+
+					" zipping with new name: "+ _zip_name);
+		}
+		
+		_zip_file = null;
+
+		
 		ZipUtils appZip = new ZipUtils();
 		appZip.setOUTPUT_ZIP_FILE(zip_file);
 		appZip.setSOURCE_FOLDER(_archive_buffer_path);

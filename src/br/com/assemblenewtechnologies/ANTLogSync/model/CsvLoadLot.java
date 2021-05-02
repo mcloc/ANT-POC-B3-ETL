@@ -24,9 +24,10 @@ public class CsvLoadLot {
 	private BigDecimal processment_execution_id;
 	
 	private boolean finished;
-
 	private int files_loaded = 0;
 	private int files_error_not_loaded = 0;
+	
+	private static Connection _connection;
 
 	/**
 	 * CSV LOT STATUS:
@@ -76,10 +77,10 @@ public class CsvLoadLot {
 	
 	private static Logger LOGGER = LoggerFactory.getLogger(CsvLoadLot.class);
 
-	public static CsvLoadLot registerCSVLot(String lot_name, String load_path, int status) throws Exception {
+	public static CsvLoadLot registerCSVLot(String lot_name, String load_path, int status,Connection _connection) throws Exception {
 		CsvLoadLot csv_lot;
 		try {
-			csv_lot = new CsvLoadLot(lot_name, load_path, status);
+			csv_lot = new CsvLoadLot(lot_name, load_path, status,_connection);
 		} catch (Exception e) {
 			LOGGER.error("Error registering CSV Loading file");
 			throw new Exception(e.getMessage(), e);
@@ -88,7 +89,8 @@ public class CsvLoadLot {
 		return csv_lot;
 	}
 
-	public CsvLoadLot(String lot_name2, String load_path2, int status2) throws Exception {
+	public CsvLoadLot(String lot_name2, String load_path2, int status2,Connection _connection) throws Exception {
+		this._connection = _connection;
 		this.lot_name = lot_name2;
 		this.load_path = load_path2;
 		this.status = status2;
@@ -106,7 +108,7 @@ public class CsvLoadLot {
 				|| processment_execution_id == null) {
 			throw new Exception("CsvLoadLot not saved, missing attributes values");
 		}
-		Connection _connection = DBConnectionHelper.getNewConn();
+//		Connection _connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "INSERT INTO  Intellect.csv_load_lot("
 				+ "lot_name, load_path, status, processment_execution_id, " + "created_at, updated_at) VALUES "
 				+ "(?, ?, ?, ?, ?, ?)";
@@ -128,8 +130,8 @@ public class CsvLoadLot {
 			preparedStatement.execute();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
-			_connection.rollback();
-			_connection.close();
+//			_connection.rollback();
+//			_connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
 
@@ -137,7 +139,7 @@ public class CsvLoadLot {
 		int i = 0;
 		if (generatedKeys.next()) {
 			if (i > 0) {
-				_connection.close();
+//				_connection.close();
 				throw new Exception("CsvLoadLot.save() error: more then one inserted ID returned...");
 			}
 			id = generatedKeys.getBigDecimal(1);
@@ -145,8 +147,8 @@ public class CsvLoadLot {
 			updated_at = new Timestamp(_now);
 			i++;
 		}
-		_connection.commit();
-		_connection.close();
+//		_connection.commit();
+//		_connection.close();
 	}
 
 	public void changeStatus(int _status) throws Exception {
@@ -155,7 +157,7 @@ public class CsvLoadLot {
 	}
 
 	private void update() throws Exception {
-		Connection _connection = DBConnectionHelper.getNewConn();
+//		Connection _connection = DBConnectionHelper.getNewConn();
 		String compiledQuery = "UPDATE Intellect.csv_load_lot SET " + "lot_name = ?, load_path = ?, status = ?, "
 				+ "files_loaded = ?, files_error_not_loaded = ?, updated_at = ? " + "where id = " + id;
 		PreparedStatement preparedStatement;
@@ -175,16 +177,16 @@ public class CsvLoadLot {
 		} catch (SQLException e) {
 			LOGGER.error("Error update() CsvLoadLot");
 			LOGGER.error(e.getMessage());
-			_connection.rollback();
-			_connection.close();
+//			_connection.rollback();
+//			_connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
-		_connection.commit();
-		_connection.close();
+//		_connection.commit();
+//		_connection.close();
 	}
 
 	public static boolean checkIfLotAlreadyProcessed(String lot) throws Exception {
-		Connection _connection = DBConnectionHelper.getNewConn();
+//		Connection _connection = DBConnectionHelper.getNewConn();
 		Statement stmt;
 		try {
 			stmt = _connection.createStatement();
@@ -192,21 +194,21 @@ public class CsvLoadLot {
 				+"ORDER BY updated_at DESC limit 1");
 			int i = 0;
 			while (rs.next()) {
-				_connection.close();
+//				_connection.close();
 				return true;
 
 			}
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
-			_connection.close();
+//			_connection.close();
 			throw new Exception(e1);
 		}
-		_connection.close();
+//		_connection.close();
 		return false;
 	}
 
 	public static CsvLoadLot getLotByLotName(String lot) throws Exception {
-		Connection _connection = DBConnectionHelper.getNewConn();
+//		Connection _connection = DBConnectionHelper.getNewConn();
 		Statement stmt;
 		try {
 			stmt = _connection.createStatement();
@@ -226,12 +228,12 @@ public class CsvLoadLot {
 				
 			}
 			setFinishedStatus(csv_lot);
-			_connection.close();
+//			_connection.close();
 			return csv_lot;
 		} catch (SQLException e1) {
 			LOGGER.error(e1.getMessage());
 			// TODO: check if connection.close() get calls on finally before the throw
-			_connection.close();
+//			_connection.close();
 			throw new Exception(e1);
 		}
 	}
@@ -394,6 +396,20 @@ public class CsvLoadLot {
 	 */
 	public void setFinished(boolean finished) {
 		this.finished = finished;
+	}
+
+	/**
+	 * @return the _connection
+	 */
+	public static Connection get_connection() {
+		return _connection;
+	}
+
+	/**
+	 * @param _connection the _connection to set
+	 */
+	public static void set_connection(Connection _connection) {
+		CsvLoadLot._connection = _connection;
 	}
 
 	
