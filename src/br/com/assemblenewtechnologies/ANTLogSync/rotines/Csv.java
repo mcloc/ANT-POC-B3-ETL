@@ -68,6 +68,14 @@ public class Csv extends AbstractRotine {
 	}
 
 	public void csv_check_for_files() throws Exception {
+		if(isExecuting()) {
+			LOGGER.error("[CSV] checking for files already executing, returning");
+			return;
+		}
+		
+		setExecuting(true);
+		
+		
 		LOGGER.debug("[CSV] checking for files...");
 
 		File dir = new File(RTD_DIRETCTORY);
@@ -96,7 +104,7 @@ public class Csv extends AbstractRotine {
 			Arrays.sort(files_list);
 			processFiles(files_list);
 
-			if (files_processed > 0) {
+			if (directories_processed > 0) {
 				long timer1 = System.currentTimeMillis();
 				long total_time = (timer1 - start_time) / 1000;
 				LOGGER.info("[CSV] total rows_processed inserted: " + rows_processed);
@@ -113,9 +121,10 @@ public class Csv extends AbstractRotine {
 			LOGGER.error(e.getMessage());
 //			if (connection != null)
 //				connection.close();
-//			throw e;
+			throw e;
 		} finally {
 			connection.close();
+			LOGGER.info("[CSV] csv_load_start() completed.");
 		}
 
 	}
@@ -212,11 +221,13 @@ public class Csv extends AbstractRotine {
 
 				File[] _list = _log_data_dir.listFiles();
 				
+				//DIRECTORY EMPTY
 				if (_list.length == 0) {
 					LOGGER.error("Directory LOG_DATA empty. Archiving and removing: " + _file_pointer.getName());
 					moveDirectory2ArchiveBuffer(_file_pointer);
 					csv_load_lot.setFinished(true);
-					zipArchive(_file_pointer.getName());					
+					zipArchive(_file_pointer.getName());
+					continue;
 				}
 				
 				
@@ -225,7 +236,7 @@ public class Csv extends AbstractRotine {
 
 				// There should not be any files on LOG_DATA after processFiles() returns
 				_list = _log_data_dir.listFiles();
-				if (_list.length != 0) {
+				if ( _list != null && _list.length != 0) {
 					LOGGER.error("Directory LOG_DATA not empty but processFiles(" + _log_data_dir.getName()
 							+ ") has already returned");
 					
@@ -245,6 +256,8 @@ public class Csv extends AbstractRotine {
 			if (_file_pointer.getName().equals("RTD_FIM_DE_LOTE.txt")) {
 				
 				csv_load_lot.setFinished(true);
+				csv_db_registry = CsvLoadRegistry.registerCSV(current_directory, csv_load_lot.getId(), _file_pointer.getName(),
+						RTD_DIRETCTORY, CsvLoadRegistry.STATUS_END_LOT, connection);
 				moveFile2ArchiveBuffer(_file_pointer, CsvLoadRegistry.STATUS_END_LOT);
 				File index = new File(
 						RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory);
