@@ -34,7 +34,7 @@ public class Csv extends AbstractRotine {
 	private String RTD_DIRETCTORY;
 	private String ARCHIVE_DIRETCTORY;
 	private String ARCHIVE_BUFFER_DIRETCTORY;
-	private String current_directory;
+	private String current_lot_directory_name;
 	private int files_processed = 0;
 	private int directories_processed = 0;
 	private long rows_processed = 0;
@@ -141,84 +141,49 @@ public class Csv extends AbstractRotine {
 					LOGGER.warn("[CSV] Directory: " + _file_pointer.getName() + " has no RTD signature skipping");
 					continue;
 				}
-				current_directory = _file_pointer.getName();
+				current_lot_directory_name = _file_pointer.getName();
 
 				// Crash Recovery
-				if (CsvLoadLot.checkIfLotAlreadyProcessed(current_directory)) {
-					csv_load_lot = CsvLoadLot.getLotByLotName(current_directory);
-					LOGGER.info("[CSV] Resuming load processing on Directory: " + current_directory + " lot id: "
+				if (CsvLoadLot.checkIfLotAlreadyProcessed(current_lot_directory_name)) {
+					csv_load_lot = CsvLoadLot.getLotByLotName(current_lot_directory_name);
+					LOGGER.info("[CSV] Resuming load processing on Directory: " + current_lot_directory_name + " lot id: "
 							+ csv_load_lot.getId() + " actual status: " + csv_load_lot.getStatus());
 					// Crash Recovery Loading was finished just archive into another zip the
 					// contents
 					// TODO: archive into another ZIP the contents
 					if (csv_load_lot.isFinished()) {
-						LOGGER.warn("[CSV] This lot is already finished. Archiving : " + current_directory + " without loading.");
+						LOGGER.warn("[CSV] This lot is already finished. Archiving : " + current_lot_directory_name + " without loading.");
 						moveDirLot2ArchiveBuffer(_file_pointer);
-						zipArchive(current_directory);
+						zipArchive(current_lot_directory_name);
 						continue;
 					}
 
 				} else {
-					csv_load_lot = CsvLoadLot.registerCSVLot(current_directory,
+					csv_load_lot = CsvLoadLot.registerCSVLot(current_lot_directory_name,
 							GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING, this.connection);
-					LOGGER.info("[CSV] Processing new Lot: " + current_directory + " lot id: "
-							+ csv_load_lot.getId() + " actual sttus: " + csv_load_lot.getStatus());
+					LOGGER.info("[CSV] Processing new Lot: " + current_lot_directory_name + " lot id: "
+							+ csv_load_lot.getId() + " actual status: " + csv_load_lot.getStatus());
 				}
 
-				// CHECK Processment Mode
-//				if (MainController.getProcessmentExecution().getProcessment_mode().equals("batch_process")) {
-//					String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
-//							+ current_directory;
-//					FileUtils.moveDirectory(file, new File(archive_path));
-//					//DELETE from /data_load
-//					if (file.exists()) {
-//						LOGGER.info("Removing directory: " + file.getAbsolutePath());
-//						FileUtils.deleteDirectory(file);
-//					}
-//					zipArchive(current_directory);
-//					continue;
-//				}
 				i++;
-
-				// FIXME: this condition should not happen since the last_directory should
-				// already been removed on the match of RTD_FIM_DE_LOTE.txt
-				// But if we do not find the RTD_FIM_DE_LOTE.txt we'll arxchive it and remove it
-				// anyway
-				// IF we got next Directory on DirList remove last one
-//				if (last_directory != null && last_directory != current_directory) {
-//					File _last_direcotry_fileobj = new File(
-//							RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + last_directory);
-//
-//					// We delete last_directory in RTD_DIRETCTORY because it's suppose to be
-//					// already in ARCHIVE_BUFFER_DIRETCTORY
-//					if (_last_direcotry_fileobj.exists())
-//						FileUtils.deleteDirectory(_last_direcotry_fileobj);
-//
-//					zipArchive(last_directory);
-//				}
-
 				directories_processed++;
 
 				File _log_data_dir = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
-						+ current_directory + GlobalProperties.getInstance().getFileSeparator() + "LOG_DATA");
-
+						+ current_lot_directory_name + GlobalProperties.getInstance().getFileSeparator() + "LOG_DATA");
 				
 				//IF LOG_DATA dont exists archive the entire Lot and continue
 				if (!_log_data_dir.exists()) {
 					LOGGER.error(
-							"[CSV] Directory LOG_DATA not found on :" + current_directory + " finishing and archiving lot");
+							"[CSV] Directory LOG_DATA not found on :" + current_lot_directory_name + " finishing and archiving lot");
 					moveDirLot2ArchiveBuffer(_file_pointer);
-
-//					LOGGER.info("Removing directory: " + current_directory);
-//					FileUtils.deleteDirectory(_file_pointer);
 					csv_load_lot.setFinished(true);
 					zipArchive(_file_pointer.getName());
 					in_root_dir = false;
 					continue;
 				}
 				
+				//GET ALL FILES FROM LOG_DATA DIR on this Lot
 				File[] _list = _log_data_dir.listFiles();
-				
 				//DIRECTORY EMPTY
 				if (_list.length == 0) {
 					LOGGER.error("[CSV] Directory LOG_DATA empty. Archiving and removing: " + _file_pointer.getName());
@@ -230,9 +195,13 @@ public class Csv extends AbstractRotine {
 				
 				
 				Arrays.sort(_list);
-				processFiles(_list); // Calls same method again.
+				// Calls same method again but this time with file on the LOT/LOG_DATA dir
+				// This is a recursive function
+				processFiles(_list); 
 				
 				// There should not be any files on LOG_DATA after processFiles() returns
+				_log_data_dir = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
+						+ current_lot_directory_name + GlobalProperties.getInstance().getFileSeparator() + "LOG_DATA");
 				_list = _log_data_dir.listFiles();
 				if ( _list != null && _list.length != 0) {
 					LOGGER.error("[CSV] Directory LOG_DATA not empty but processFiles(" + _log_data_dir.getName()
@@ -243,40 +212,47 @@ public class Csv extends AbstractRotine {
 					zipArchive(_file_pointer.getName());					
 				}
 
-				last_directory = current_directory;
+				last_directory = current_lot_directory_name;
 				in_root_dir = true;
 				continue;
 			} // END IF IS DIRECTORY
 
+			
+			
 			/**
 			 * FROM THIS POINT IT's a File
 			 */
-			if (_file_pointer.getName().equals("RTD_FIM_DE_LOTE.txt")) {
+			
+			
+			
+			//END OF LOTE SIGNAL
+			if (_file_pointer.getName().toUpperCase().equals("RTD_FIM_DE_LOTE.TXT")) {
 				
 				csv_load_lot.setFinished(true);
-				csv_db_registry = CsvLoadRegistry.registerCSV(current_directory, csv_load_lot.getId(), _file_pointer.getName(),
+				csv_db_registry = CsvLoadRegistry.registerCSV(current_lot_directory_name, csv_load_lot.getId(), _file_pointer.getName(),
 						RTD_DIRETCTORY, CsvLoadRegistry.STATUS_END_LOT, connection);
 				moveFile2ArchiveBuffer(_file_pointer, CsvLoadRegistry.STATUS_END_LOT);
 				File index = new File(
-						RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_directory);
+						RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator() + current_lot_directory_name);
 				LOGGER.info("[CSV] END OF LOT found. Removing directory: " + index.getName() + " lot: " + csv_load_lot.getId()+
 						" setted as finished.");
-				
 				FileUtils.deleteDirectory(index);
-				zipArchive(current_directory);
+				
+				zipArchive(current_lot_directory_name);
 				in_root_dir = false;
-				continue;
+				return; // get out of function NO MORE FILES After FIM_DE_LOTE.txt
 			}
 			
-			if (_file_pointer.getName().endsWith(".log")) {
-				csv_db_registry = CsvLoadRegistry.registerCSV(current_directory, csv_load_lot.getId(), _file_pointer.getName(),
+			//RTD LOG FILES JSUT ARCHIVE IT
+			if (_file_pointer.getName().toUpperCase().endsWith(".LOG")) {
+				csv_db_registry = CsvLoadRegistry.registerCSV(current_lot_directory_name, csv_load_lot.getId(), _file_pointer.getName(),
 						RTD_DIRETCTORY, CsvLoadRegistry.STATUS_END_LOT, connection);
 				moveFile2ArchiveBuffer(_file_pointer, CsvLoadRegistry.STATUS_RTDLOG_FILE);
-				continue;
+				continue; // CONTINUE SEEKING FOR FILES
 			}
 
 			//in the case a file is not .csv
-			if (!_file_pointer.getName().endsWith(".csv")) {
+			if (!_file_pointer.getName().toUpperCase().endsWith(".CSV")) {
 				boolean is_csv = false;
 				
 				//check for RTD pattern and if first line has the word 'asset' in the colums name
@@ -289,6 +265,7 @@ public class Csv extends AbstractRotine {
 					csvTest.close();
 				}
 				
+				//If itś not a CSV NOR a txt head CSV header style just archive it
 				if(!is_csv) {
 					LOGGER.error("File: " + _file_pointer.getAbsoluteFile() + " not supported");
 					moveFile2ArchiveBuffer(_file_pointer, CsvLoadRegistry.STATUS_UNKNOWN_FILE);
@@ -300,28 +277,29 @@ public class Csv extends AbstractRotine {
 			in_root_dir = false;
 			files_processed++;
 			try {
+				//TRY TO EFFECTLY LOAD the file (at this point it should be a valid CSV file
 				loadCSV(_file_pointer);
 			} catch (Exception e) {
 				LOGGER.debug(e.getMessage());
 //					throw e;
 			} 
-		}
+		} // END OF LOOP Files(Dir)List
 
 	}
 
 	private void checkAndArchiveLiveData() throws IOException {
 		File _live_data_dir = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
-				+ current_directory + GlobalProperties.getInstance().getFileSeparator() + "LIVE_DATA");
+				+ current_lot_directory_name + GlobalProperties.getInstance().getFileSeparator() + "LIVE_DATA");
 		if (_live_data_dir.exists()) {
 			File _live_data_archive_dir = new File(ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
-					+ current_directory + GlobalProperties.getInstance().getFileSeparator() + "LIVE_DATA");
+					+ current_lot_directory_name + GlobalProperties.getInstance().getFileSeparator() + "LIVE_DATA");
 			FileUtils.moveDirectory(_live_data_dir, _live_data_archive_dir );
 		}
 	}
 
 	private void loadCSV(File file) throws Exception {
 		try {
-			csv_db_registry = CsvLoadRegistry.registerCSV(current_directory, csv_load_lot.getId(), file.getName(),
+			csv_db_registry = CsvLoadRegistry.registerCSV(current_lot_directory_name, csv_load_lot.getId(), file.getName(),
 					RTD_DIRETCTORY, CsvLoadRegistry.STATUS_LOADING, connection);
 			long rowsInserted = new CopyManager((BaseConnection) connection).copyIn(
 					"COPY B3Log.B3SignalLogger " + "( " + "asset," + "data," + "hora," + "ultimo," + "strike,"
@@ -394,7 +372,7 @@ public class Csv extends AbstractRotine {
 	private void moveFile2ArchiveBuffer(File file, int file_status) throws Exception {
 		LOGGER.debug("[CSV] Archiving File: " + file.getAbsoluteFile());
 		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
-				+ current_directory;
+				+ current_lot_directory_name;
 		File f = new File(archive_path);
 		if (!f.exists()) {
 			f.mkdir();
@@ -469,8 +447,11 @@ public class Csv extends AbstractRotine {
 			return;
 		}
 
-		csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_ARCHIVED);
-
+		if(csv_load_lot.isFinished())
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_ARCHIVED);
+		else
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_ARCHIVED);
+		
 		return;
 	}
 
