@@ -49,6 +49,8 @@ public class Csv extends AbstractRotine {
 
 	private CsvLoadRegistry csv_db_registry;
 	private CsvLoadLot csv_load_lot;
+	
+	private static int CSV_RETRY_LOT_TIMEDELAY = GlobalProperties.getInstance().getCSV_RETRY_LOT_TIMEDELAY();
 
 	public Csv() {
 		RTD_DIRETCTORY = GlobalProperties.getInstance().getRtdDiretctory();
@@ -200,16 +202,40 @@ public class Csv extends AbstractRotine {
 				processFiles(_list); 
 				
 				// There should not be any files on LOG_DATA after processFiles() returns
+				// ps: Need to reopen de File() pointer, if not the  _log_data_dir.listFiles()
+				// keep returning file on the directory even after delete, It's a refresh this reload
+				// of the object
 				_log_data_dir = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
 						+ current_lot_directory_name + GlobalProperties.getInstance().getFileSeparator() + "LOG_DATA");
 				_list = _log_data_dir.listFiles();
 				if ( _list != null && _list.length != 0) {
-					LOGGER.error("[CSV] Directory LOG_DATA not empty but processFiles(" + _log_data_dir.getName()
-							+ ") has already returned");
+					int _i = 1;
 					
-					moveDirLot2ArchiveBuffer(_file_pointer);
-					csv_load_lot.setFinished(true);
-					zipArchive(_file_pointer.getName());					
+					while(_i <= 3) {
+						if(_list == null) {
+							if(_file_pointer.exists()) {
+								moveDirLot2ArchiveBuffer(_file_pointer);
+								csv_load_lot.setFinished(true);
+								zipArchive(_file_pointer.getName());
+							}
+							break;
+						}
+						LOGGER.error("[CSV] Directory LOG_DATA not empty but processFiles(" + _log_data_dir.getName()
+								+ ") has already returned trying " +i + " / 3");
+						processFiles(_list);
+						_i++;
+						Thread.sleep(CSV_RETRY_LOT_TIMEDELAY);
+						_log_data_dir = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
+								+ current_lot_directory_name + GlobalProperties.getInstance().getFileSeparator() + "LOG_DATA");
+						_list = _log_data_dir.listFiles();
+						if ( (_list != null && _list.length != 0) || _i >= 3) {
+							moveDirLot2ArchiveBuffer(_file_pointer);
+							csv_load_lot.setFinished(true);
+							zipArchive(_file_pointer.getName());
+							break;
+						}
+						
+					}
 				}
 
 				last_directory = current_lot_directory_name;
