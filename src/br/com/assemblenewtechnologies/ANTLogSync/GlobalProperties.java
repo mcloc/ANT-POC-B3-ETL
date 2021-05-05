@@ -23,6 +23,8 @@ public class GlobalProperties {
 	private final String ARCHIVE_BUFFER_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive_buffer/";
 	
 	private final int CSV_RETRY_LOT_TIMEDELAY = 1500;
+	private final int CSV_WAIT2COPY_LOT_TIMEDELAY = 1500;
+	private final int CSV_MAX_WAIT2COPY_LOT = 5;
 	
 	
 	private static GlobalProperties instance;
@@ -147,6 +149,20 @@ public class GlobalProperties {
 	 */
 	public int getCSV_RETRY_LOT_TIMEDELAY() {
 		return CSV_RETRY_LOT_TIMEDELAY;
+	}
+
+	/**
+	 * @return the cSV_WAIT2COPY_LOT_TIMEDELAY
+	 */
+	public int getCSV_WAIT2COPY_LOT_TIMEDELAY() {
+		return CSV_WAIT2COPY_LOT_TIMEDELAY;
+	}
+
+	/**
+	 * @return the cSV_MAX_WAIT2COPY_LOT
+	 */
+	public int getCSV_MAX_WAIT2COPY_LOT() {
+		return CSV_MAX_WAIT2COPY_LOT;
 	}
 
 	
