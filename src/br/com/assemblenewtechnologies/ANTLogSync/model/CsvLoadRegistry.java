@@ -32,8 +32,10 @@ public class CsvLoadRegistry {
 	public static final int STATUS_ARCHIVING = 1;
 	public static final int STATUS_LOADED = 2;
 	public static final int STATUS_LOADED_ARCHIVED = 3;
+	public static final int STATUS_LOADED_NOTARCHIVED_BY_CONFIG = 4;
 	public static final int STATUS_ERROR_ARCHIVED = -1;
 	public static final int STATUS_ERROR_NOT_ARCHIVED = -2;
+	public static final int STATUS_ERROR_NOT_ARCHIVED_BY_CONFIG  = -4;
 	public static final int STATUS_END_LOT = 10;
 	public static final int STATUS_RTDLOG_FILE = 30;
 	public static final int STATUS_UNKNOWN_FILE = -10;

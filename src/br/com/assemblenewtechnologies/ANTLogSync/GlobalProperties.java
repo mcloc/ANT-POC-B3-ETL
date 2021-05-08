@@ -26,6 +26,8 @@ public class GlobalProperties {
 	private final int CSV_WAIT2COPY_LOT_TIMEDELAY = 1500;
 	private final int CSV_MAX_WAIT2COPY_LOT = 5;
 	
+	private final boolean CSV_ARCHIVE_ON = false;
+	
 	
 	private static GlobalProperties instance;
 
@@ -163,6 +165,13 @@ public class GlobalProperties {
 	 */
 	public int getCSV_MAX_WAIT2COPY_LOT() {
 		return CSV_MAX_WAIT2COPY_LOT;
+	}
+
+	/**
+	 * @return the cSV_ARCHIVE_ON
+	 */
+	public boolean isCSV_ARCHIVE_ON() {
+		return CSV_ARCHIVE_ON;
 	}
 
 	

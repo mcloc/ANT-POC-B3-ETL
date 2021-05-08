@@ -68,6 +68,8 @@ public class CsvLoadLot {
 	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED = 30; 
 	public static final int STATUS_FINISHED_WITHERRORS_ARCHIVED = -30;
 	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED = -31;
+	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED_BYCONFIG = 31;
+	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG = -40;
 	public static final int STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -50; 
 	public static final int STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -100;
 	public static final int STATUS_ERROR_ARCHIVED = -1; 

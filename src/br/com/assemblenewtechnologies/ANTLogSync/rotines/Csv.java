@@ -170,15 +170,22 @@ public class Csv extends AbstractRotine {
 							if (_last_size_list != _list.length) {
 								_last_size_list = _list.length;
 								_wait_copy_delay_counter++;
-								LOGGER.warn("[CSV] This lot is already finished. But files still beeing copied. \n" +
-										"Wating to Archive : " + current_lot_directory_name + " "+ _wait_copy_delay_counter + "/"+CSV_MAX_WAIT2COPY_LOT);
+								LOGGER.warn("[CSV] This lot is already finished. But files still beeing copied. \n"
+										+ "Wating to Archive : " + current_lot_directory_name + " "
+										+ _wait_copy_delay_counter + "/" + CSV_MAX_WAIT2COPY_LOT);
 								continue;
 							}
-							
+
 							break;
 						}
-						
-						
+
+						if (!GlobalProperties.getInstance().isCSV_ARCHIVE_ON()) {
+							FileUtils.deleteDirectory(_file_pointer);
+							LOGGER.info("[CSV] Deleting Directory: " + current_lot_directory_name + " lot id: "
+									+ csv_load_lot.getId() + " actual status: " + csv_load_lot.getStatus());
+							continue;
+						}
+
 						LOGGER.warn("[CSV] This lot is already finished. Archiving : " + current_lot_directory_name
 								+ " without loading.");
 						moveDirLot2ArchiveBuffer(_file_pointer);
@@ -186,7 +193,7 @@ public class Csv extends AbstractRotine {
 						continue;
 					}
 
-				} else {
+				} else { // END OF IF ALREADY PROCESSED CREATE NEW csv_load_lot
 					csv_load_lot = CsvLoadLot.registerCSVLot(current_lot_directory_name,
 							GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING,
 							this.connection);
@@ -212,7 +219,7 @@ public class Csv extends AbstractRotine {
 
 				// GET ALL FILES FROM LOG_DATA DIR on this Lot
 				File[] _list = _log_data_dir.listFiles();
-				
+
 				// DIRECTORY EMPTY
 				if (_list.length == 0) {
 					LOGGER.error("[CSV] Directory LOG_DATA empty. Archiving and removing: " + _file_pointer.getName());
@@ -226,7 +233,7 @@ public class Csv extends AbstractRotine {
 				// Calls same method again but this time with file on the LOT/LOG_DATA dir
 				// This is a recursive function
 				processFiles(_list);
-				
+
 				int _wait_copy_delay_counter = 0;
 				while (_wait_copy_delay_counter < CSV_MAX_WAIT2COPY_LOT) {
 					Thread.sleep(CSV_WAIT2COPY_LOT_TIMEDELAY);
@@ -236,19 +243,15 @@ public class Csv extends AbstractRotine {
 					_list = _log_data_dir.listFiles();
 					if (_list != null && _list.length != 0) {
 						_wait_copy_delay_counter++;
-						LOGGER.warn("[CSV] This lot is already finished. But files still beeing copied. \n" +
-								"processing again : " + current_lot_directory_name +" "+ _wait_copy_delay_counter + "/"+CSV_MAX_WAIT2COPY_LOT);
+						LOGGER.warn("[CSV] This lot is already finished. But files still beeing copied. \n"
+								+ "processing again : " + current_lot_directory_name + " " + _wait_copy_delay_counter
+								+ "/" + CSV_MAX_WAIT2COPY_LOT);
 						processFiles(_list);
 						continue;
 					}
-					
+
 					break;
 				}
-				
-				
-				
-				
-				
 
 				// There should not be any files on LOG_DATA after processFiles() returns
 				// ps: Need to reopen de File() pointer, if not the _log_data_dir.listFiles()
@@ -392,6 +395,10 @@ public class Csv extends AbstractRotine {
 	}
 
 	private void moveDirLot2ArchiveBuffer(File _file_pointer) throws Exception {
+		if (!GlobalProperties.getInstance().isCSV_ARCHIVE_ON()) {
+			return;
+		}
+
 		if (_file_pointer.exists()) {
 			String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
 					+ _file_pointer.getName();
@@ -420,6 +427,18 @@ public class Csv extends AbstractRotine {
 	}
 
 	private void moveFile2ArchiveBuffer(File file, int file_status) throws Exception {
+		if (!GlobalProperties.getInstance().isCSV_ARCHIVE_ON()) {
+			switch (file_status) {
+			case CsvLoadRegistry.STATUS_LOADED_ARCHIVED:
+				csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_LOADED_NOTARCHIVED_BY_CONFIG);
+			case CsvLoadRegistry.STATUS_ERROR_ARCHIVED:
+				csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_ERROR_NOT_ARCHIVED_BY_CONFIG);
+			default:
+				csv_db_registry.changeStatus(file_status);
+			}
+
+			return;
+		}
 		LOGGER.debug("[CSV] Archiving File: " + file.getAbsoluteFile());
 		String archive_path = ARCHIVE_BUFFER_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
 				+ current_lot_directory_name;
@@ -444,6 +463,10 @@ public class Csv extends AbstractRotine {
 	}
 
 	private void zipArchive(String _directory) throws Exception {
+		if (!GlobalProperties.getInstance().isCSV_ARCHIVE_ON()) {
+			closeLot();
+			return;
+		}
 		LOGGER.info("[CSV] Total load errors on this lot: " + csv_load_lot.getFiles_error_not_loaded());
 		String _archive_buffer_path = ARCHIVE_BUFFER_DIRETCTORY + _directory;
 		String zip_file = ARCHIVE_DIRETCTORY + _directory + ".zip";
@@ -484,9 +507,16 @@ public class Csv extends AbstractRotine {
 			FileUtils.deleteDirectory(_directory2zip_obj);
 		}
 
+		closeLot();
+	}
+
+	private void closeLot() throws Exception {
 		if (csv_load_lot.getFiles_error_not_loaded() > 0 && csv_load_lot.getFiles_loaded() > 0
 				&& csv_load_lot.isFinished()) {
-			csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_ARCHIVED);
+			if (!GlobalProperties.getInstance().isCSV_ARCHIVE_ON())
+				csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_ARCHIVED);
+			else
+				csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG);
 			return;
 		}
 
