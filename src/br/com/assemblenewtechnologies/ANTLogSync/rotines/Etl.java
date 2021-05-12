@@ -24,6 +24,9 @@ public class Etl extends AbstractRotine {
 		LOGGER.info("[ETL]etl1_populate_assets ...");
 		//extract group by all assets to assets table
 		//PL SQL
+		
+		
+		
 	}
 	public void etl1_normalization() throws Exception{
 		LOGGER.info("[ETL] etl1_normalization...");

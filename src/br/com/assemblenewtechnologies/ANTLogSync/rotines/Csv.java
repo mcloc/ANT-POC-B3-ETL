@@ -223,6 +223,12 @@ public class Csv extends AbstractRotine {
 				// DIRECTORY EMPTY
 				if (_list.length == 0) {
 					LOGGER.error("[CSV] Directory LOG_DATA empty. Archiving and removing: " + _file_pointer.getName());
+					if (!GlobalProperties.getInstance().isCSV_ARCHIVE_ON()) {
+						closeLot();
+						LOGGER.info("[CSV] Cleaning  directory: " + _file_pointer.getName());
+						FileUtils.deleteDirectory(_file_pointer);
+						continue;
+					}
 					moveDirLot2ArchiveBuffer(_file_pointer);
 					csv_load_lot.setFinished(true);
 					zipArchive(_file_pointer.getName());
