@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?><Model version="5.0">
+    <Configuration>
+        <Property name="dialect" value="PostgresDialect"/>
+        <Property name="ALIAS" value="ANTOption"/>
+        <Property name="DRIVER" value="org.postgresql.Driver"/>
+        <Property name="PASSWORD" value="lacuna"/>
+        <Property name="PROMPTFORPASSWORD" value="false"/>
+        <Property name="URL" value="jdbc:postgresql://localhost:5432/ANTOption"/>
+        <Property name="USER" value="ANTOption"/>
+    </Configuration>
+    <CustomTypes/>
+    <Domains/>
+    <Tables>
+        <Table id="9d35f7a9-469e-4606-838d-0ff4de6abf3b" name="b3signalloggerlevel1" schema="">
+            <Property name="LOCATION" value="20:20"/>
+            <Attribute datatype="bigserial" defaultvalue="nextval('b3log.b3signalloggerlevel1_id'::regclass)" extra="" fraction="0" id="54a35dd9-cea1-41f8-b242-7f4d0b972f65" name="id" nullable="false" scale="10" size="19"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="8387483f-0470-4377-817d-cb381c0c0b17" name="asset" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="b789efd7-5511-45b1-8cb4-48d9bf34714a" name="data" nullable="false" scale="10" size="13"/>
+            <Attribute datatype="time" defaultvalue="" extra="" fraction="6" id="590a2ae1-afa7-44e4-8a57-c1fb9e420b84" name="hora" nullable="false" scale="10" size="15"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="e3864241-9688-43da-a52d-c1a15e9e1817" name="ultimo" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="4b9b834a-c2eb-4472-99e9-7ef15eb8dd79" name="strike" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="45a60427-91d6-4658-bd6b-3d8afc9edea9" name="valor_ativo" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="integer" defaultvalue="" extra="" fraction="0" id="8266587a-2724-498d-9116-62df6ae57c90" name="negocios" nullable="false" scale="10" size="10"/>
+            <Attribute datatype="integer" defaultvalue="" extra="" fraction="0" id="ebdc3cf5-1e9b-452f-8a9c-65a3f1352513" name="quantidade" nullable="false" scale="10" size="10"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="31f6654d-a989-46c6-bc2d-0c07a6b280e3" name="volume" nullable="false" scale="10" size="18"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="0bac11fb-e8eb-40dc-87dd-6840f6d4eb52" name="oferta_compra" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="d1b30a9e-6acd-4c38-8e5e-962f8b67a7b1" name="oferta_venda" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="40" id="90a225d5-65d6-4769-99e9-361111249dda" name="log_devirada1semana" nullable="true" scale="10" size="43"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="2" id="93bb1895-1cfe-4acd-9473-92a8deb40599" name="preco_blackshoes1semanas" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="40" id="eec79ee9-6748-4098-8871-a3b544e90393" name="log_devirada2semana" nullable="true" scale="10" size="43"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="2" id="695f1559-7dfa-4bf7-906b-fd7f7557f490" name="preco_blackshoes2semanas" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="40" id="55aaf27b-202e-4202-a93d-ecd4bfc9edde" name="log_devirada3semana" nullable="true" scale="10" size="43"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="2" id="6ce6e0ab-e3a5-4fce-ac40-2eaa5df63d5a" name="preco_blackshoes3semanas" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="40" id="76fc94ef-6b29-4438-9bef-2bb2c590ad02" name="log_devirada3meses" nullable="true" scale="10" size="43"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="2" id="324f6670-8be7-4f9a-8dea-3a77edb29592" name="preco_blackshoes3meses" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="40" id="addaebfc-3b79-4a1b-81a3-bd4110ce5547" name="log_devirada6meses" nullable="true" scale="10" size="43"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="2" id="6011d4cf-954b-495f-86f4-846f97b27d69" name="preco_blackshoes6meses" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="40" id="68d841ad-42e1-498a-b4be-d6681b73fa2b" name="log_devirada12meses" nullable="true" scale="10" size="43"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="2" id="39870e58-dae9-4dce-82bb-a55b7a0b33b4" name="preco_blackshoes12meses" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="40" id="819db80d-3786-4ba3-8b08-47a64eac72eb" name="log_devirada18meses" nullable="true" scale="10" size="43"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="2" id="8b0e7667-d86f-4566-bfea-4422b95a70b8" name="preco_blackshoes18meses" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="40" id="0bfd9f40-2d35-4fa1-b8dc-4ff9b4754dd4" name="log_devirada24meses" nullable="true" scale="10" size="43"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="2" id="56db902a-8d64-47ce-8c7b-ffb5b10c6fe3" name="preco_blackshoes24meses" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="40" id="29d91466-52e1-4703-beaa-5cbc5d50f7ca" name="log_devirada36meses" nullable="true" scale="10" size="43"/>
+            <Attribute datatype="numeric" defaultvalue="NULL::numeric" extra="" fraction="2" id="fdffb772-0f07-4d89-abd6-94341cc0591c" name="preco_blackshoes36meses" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="integer" defaultvalue="" extra="" fraction="0" id="d2d3f967-3c41-44a5-9664-7b2f9df266e8" name="voc" nullable="false" scale="10" size="10"/>
+            <Attribute datatype="integer" defaultvalue="" extra="" fraction="0" id="26d8b087-c478-4875-8bc6-8fc0a9b93801" name="vov" nullable="false" scale="10" size="10"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="70351cef-b0c5-4256-a2d8-fd2bbaf9107e" name="vencimento" nullable="false" scale="10" size="13"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="7393b8f6-1f17-4721-866e-7e2d5a96ac10" name="validade" nullable="false" scale="10" size="13"/>
+            <Attribute datatype="bigint" defaultvalue="" extra="" fraction="0" id="39b89f76-449f-4efb-9734-a38f6ea84dc1" name="contratos_abertos" nullable="false" scale="10" size="19"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="edffd761-44e6-486c-8d8f-a6a021ce6c01" name="estado_atual" nullable="false" scale="10" size="80"/>
+            <Attribute datatype="timestamp" defaultvalue="" extra="" fraction="6" id="08ef4238-5425-4ceb-b76e-321d3723a08c" name="relogio" nullable="false" scale="10" size="29"/>
+            <Index id="cbbf67d5-042f-4081-8d98-bc5fd8054e17" indextype="PRIMARYKEY" name="b3signalloggerlevel1_pk">
+                <Indexattribute attributerefid="54a35dd9-cea1-41f8-b242-7f4d0b972f65" id="e2f289fd-2f43-4937-976d-97a24923f8b8"/>
+            </Index>
+        </Table>
+        <Table id="2a5a5c2c-b41f-4f70-8970-f5bbec5d6b97" name="b3historical" schema="">
+            <Property name="LOCATION" value="411:20"/>
+            <Attribute datatype="bigserial" defaultvalue="nextval('b3log.b3historical_id'::regclass)" extra="" fraction="0" id="b71dac91-a934-4709-8b2d-60bdf5e69cff" name="id" nullable="false" scale="10" size="19"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="a9780d95-8385-449b-bc3b-ce8e12d42fb7" name="tipreg" nullable="false" scale="10" size="2"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="0e62c2b9-8f48-468d-af84-8b93924275c6" name="data_pregao" nullable="false" scale="10" size="13"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="a29afdc5-1f4d-4a90-b41a-2cae116343a9" name="tpmerc" nullable="false" scale="10" size="3"/>
+            <Attribute datatype="character" defaultvalue="" extra="" fraction="0" id="75d352f8-fbd5-439c-86f5-bc551d1d3183" name="codbdi" nullable="false" scale="10" size="2"/>
+            <Attribute datatype="character" defaultvalue="" extra="" fraction="0" id="fe51e3c3-69ac-4312-94fb-0e584eccda34" name="prazot" nullable="false" scale="10" size="3"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="6a08bee7-005a-408d-9bfb-68f36999ebf4" name="codneg" nullable="false" scale="10" size="12"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="2d0d8d1f-f2be-4985-8cd5-96fdeb04fe09" name="premax" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="308b0f1b-c592-4601-87ee-503434e27889" name="preabe" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="746854da-e024-4588-9ded-86d33b4d9242" name="premin" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="6" id="6ba67fb5-78ab-4e0a-a98b-f65b74455f4e" name="ptoexe" nullable="false" scale="10" size="13"/>
+            <Attribute datatype="character" defaultvalue="" extra="" fraction="0" id="3e852132-0260-45ee-92bd-23d882495750" name="modref" nullable="false" scale="10" size="4"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="7bddabac-63db-4dfb-9ce1-1b1a3a291841" name="preofv" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="235c1f50-3c3c-4189-b2a9-9a77a76d5e14" name="preult" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="a0afc416-ef28-4a6d-b39a-bbffc90fc8c8" name="dismes" nullable="false" scale="10" size="3"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="05377579-a362-436f-8d3f-68b7f22485c1" name="codisi" nullable="false" scale="10" size="12"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="577bb926-9167-4807-ac59-3d291f286feb" name="premed" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="16b21fb2-537c-450f-b46a-20b579b1baad" name="fatcot" nullable="false" scale="10" size="7"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="f04c1108-5484-4c0b-82e3-60abb9821c1c" name="preofc" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="063a7f6a-826e-4e8b-b2c7-9c6860b33434" name="indopc" nullable="false" scale="10" size="1"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="0c9ad15b-0c84-478b-aa79-a5f74b1e217b" name="quatot" nullable="false" scale="10" size="18"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="2f5b8127-d965-40e3-8f1c-eb8fa5968e45" name="voltot" nullable="false" scale="10" size="16"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="a9e4fd31-a588-45eb-a8a2-e42140e95bbc" name="preexe" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="cb36d805-4b2e-4d93-a707-67cc3feff43e" name="datven" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="ca1c6131-bd7f-4a80-96ed-d2e527e6222d" name="totneg" nullable="false" scale="10" size="5"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="7c3f6fe9-b71f-4b7c-a168-3e66335c1791" name="nomres" nullable="false" scale="10" size="12"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="f54f70a5-c2a1-4d2c-9a20-773e0044d8c1" name="especi" nullable="false" scale="10" size="10"/>
+            <Index id="fd6cb416-3aad-4974-a0f3-4477c0a0add2" indextype="PRIMARYKEY" name="b3historical_pk">
+                <Indexattribute attributerefid="b71dac91-a934-4709-8b2d-60bdf5e69cff" id="82c6c55e-03ea-4140-b75b-84be9e84b3ef"/>
+            </Index>
+            <Index id="ae9b9dba-8ecf-4d35-a573-53034be65947" indextype="NONUNIQUE" name="b3historical_idx">
+                <Indexattribute attributerefid="a29afdc5-1f4d-4a90-b41a-2cae116343a9" id="6a476c39-f96c-4c4a-998b-e6d33dad4620"/>
+            </Index>
+            <Index id="53b9822a-3860-44f1-97bc-c66dff81eb79" indextype="NONUNIQUE" name="b3historical_bova11_idx">
+                <Indexattribute attributerefid="6a08bee7-005a-408d-9bfb-68f36999ebf4" id="25fca3c8-c519-4761-852f-a2ca09b17119"/>
+            </Index>
+            <Index id="95e4aa26-468f-4268-ab2e-6b5ddcac0f3f" indextype="NONUNIQUE" name="b3historical_bova11_idx2">
+                <Indexattribute attributerefid="ca1c6131-bd7f-4a80-96ed-d2e527e6222d" id="8cfb91d5-9382-49cd-b550-36f5b5615b61"/>
+            </Index>
+            <Index id="498f1602-ddce-4222-a584-694c87ba7ba5" indextype="NONUNIQUE" name="b3historical_vale3_idx">
+                <Indexattribute attributerefid="6a08bee7-005a-408d-9bfb-68f36999ebf4" id="b68556a4-72ac-4bf3-ba65-7bf86ece1cd8"/>
+            </Index>
+            <Index id="dd713dbb-1eff-4abc-9642-8607cf3ed50d" indextype="NONUNIQUE" name="b3historical_vale3_idx2">
+                <Indexattribute attributerefid="ca1c6131-bd7f-4a80-96ed-d2e527e6222d" id="ce032bcb-4d42-409b-9223-eec0d3f0dc0c"/>
+            </Index>
+        </Table>
+        <Table id="d71bcbb0-fde7-4fee-bc66-af053ec02755" name="b3signallogger" schema="">
+            <Property name="LOCATION" value="716:20"/>
+            <Attribute datatype="bigserial" defaultvalue="nextval('b3log.b3signallogger_id'::regclass)" extra="" fraction="0" id="49e62ac0-8c47-4782-923b-ed81d10ec4b6" name="id" nullable="false" scale="10" size="19"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="0af0f44b-c65b-4e35-8d35-0d8b73561ed6" name="asset" nullable="false" scale="10" size="11"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="42ec2a02-df49-4334-a45d-e78d18bcdd8e" name="data" nullable="false" scale="10" size="13"/>
+            <Attribute datatype="time" defaultvalue="" extra="" fraction="6" id="05c686d1-68ab-4aea-9b28-2f08b7c764e6" name="hora" nullable="false" scale="10" size="15"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="646b7d3b-aa4a-49ef-9616-4d74fb1baa87" name="ultimo" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="19d704ee-7c9c-4b12-a3fe-cc5e25c3313e" name="strike" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="integer" defaultvalue="" extra="" fraction="0" id="b535f8a6-45ee-4fef-969b-542e8091008c" name="negocios" nullable="false" scale="10" size="10"/>
+            <Attribute datatype="integer" defaultvalue="" extra="" fraction="0" id="1f588b20-6a13-4e5b-9362-726294c53fea" name="quantidade" nullable="false" scale="10" size="10"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="1caa0885-dc5c-40ea-9f82-4ce3514a2ca7" name="volume" nullable="false" scale="10" size="18"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="8f140ae6-773d-4b8a-9732-b91e28cef9e2" name="oferta_compra" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="2cca0313-b98c-4957-b68e-be5dcaac9102" name="oferta_venda" nullable="false" scale="10" size="8"/>
+            <Attribute datatype="integer" defaultvalue="" extra="" fraction="0" id="f628dd66-5d7d-494e-adf8-a5d301eeeb5c" name="voc" nullable="false" scale="10" size="10"/>
+            <Attribute datatype="integer" defaultvalue="" extra="" fraction="0" id="fd7000a2-94ea-4b36-bb02-c3261022ce43" name="vov" nullable="false" scale="10" size="10"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="237c5a86-41c5-4f15-bc3c-3a56c20de51f" name="vencimento" nullable="false" scale="10" size="13"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="44af8bfd-af30-4930-a1e9-b8f110e5f6d7" name="validade" nullable="false" scale="10" size="13"/>
+            <Attribute datatype="bigint" defaultvalue="" extra="" fraction="0" id="e9cadc65-a744-4978-923f-6f94fb5d22e3" name="contratos_abertos" nullable="false" scale="10" size="19"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="bb80286e-912f-4e5c-bea1-9d79faa79c87" name="estado_atual" nullable="false" scale="10" size="80"/>
+            <Attribute datatype="timestamp" defaultvalue="" extra="" fraction="6" id="296cc876-caeb-4071-9c78-674524bdf2e2" name="relogio" nullable="false" scale="10" size="29"/>
+            <Index id="89d6f4b5-136a-40fc-9ac8-22dce618d590" indextype="PRIMARYKEY" name="b3signallogger_pk">
+                <Indexattribute attributerefid="49e62ac0-8c47-4782-923b-ed81d10ec4b6" id="1521a792-9312-4a98-9cc2-a23044f9d313"/>
+            </Index>
+            <Index id="0b5a4fc5-ba87-4d3a-94cf-1fda47d90e08" indextype="NONUNIQUE" name="b3signallogger_vencimento_idx">
+                <Indexattribute attributerefid="237c5a86-41c5-4f15-bc3c-3a56c20de51f" id="7c183896-b1a0-4f03-a89b-c9e0170443cb"/>
+            </Index>
+            <Index id="ca165e76-34ef-4b88-86a4-f8a897c21daa" indextype="NONUNIQUE" name="b3signallogger_relogio_idx1">
+                <Indexattribute attributerefid="296cc876-caeb-4071-9c78-674524bdf2e2" id="9347ef0c-ab89-4b2c-a38b-a6543a253aac"/>
+            </Index>
+        </Table>
+        <Table id="d4a9ec02-2b4e-4557-9f11-6a0ee0c1623f" name="b3logsignalunique" schema="">
+            <Property name="LOCATION" value="1061:20"/>
+            <Attribute datatype="bigserial" defaultvalue="nextval('b3log.b3logsignalunique_id_seq'::regclass)" extra="" fraction="0" id="402b8325-be47-4480-9680-db8f610ea1b1" name="id" nullable="false" scale="10" size="19"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="b2f65279-7152-4ee2-b3f8-16fa0090169e" name="data" nullable="true" scale="10" size="13"/>
+            <Attribute datatype="time" defaultvalue="" extra="" fraction="6" id="09f5fb71-116b-45c5-9ed7-8cc4d3b8c96c" name="hora" nullable="true" scale="10" size="15"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="cba89196-3a3e-414a-919f-f211f7566509" name="asset" nullable="true" scale="10" size="12"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="2667f651-bb35-45c9-92b8-88deb0c64336" name="valor_ativo" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="b1ae74c4-71b8-4bc1-944f-79f920099354" name="preco_opcao" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="7683cb9a-d51b-46ec-b8f7-06bcafa5a1af" name="strike" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="8f54e8cf-6724-4280-bc21-c3a34861b727" name="oferta_compra" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="63630b10-8824-4480-a93f-ac8e2a4a1f29" name="oferta_venda" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="a1e4dcb0-4c99-489f-8f27-9903f0773c1d" name="vencimento" nullable="true" scale="10" size="13"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="40" id="64dca17b-1e67-4122-83b5-20341de505b4" name="desvio_padrao_3mses" nullable="true" scale="10" size="42"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="40" id="7513e8a4-98a0-4450-bca2-2bbd9f56b7d7" name="desvio_padrao_6mses" nullable="true" scale="10" size="42"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="40" id="2957570f-37c0-49f9-8f48-6f74636b4323" name="desvio_padrao_12mses" nullable="true" scale="10" size="42"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="40" id="d6baeb6a-d36c-40ac-9149-4e212834999f" name="desvio_padrao_18mses" nullable="true" scale="10" size="42"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="40" id="0eb99364-6ce1-4cfa-909d-908bc7e2b9a7" name="desvio_padrao_24mses" nullable="true" scale="10" size="42"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="40" id="07f09ae0-0475-49e0-b265-1ab83e088674" name="desvio_padrao_36mses" nullable="true" scale="10" size="42"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="da590d15-dcdf-4a54-a7d8-e6ee6affd8d3" name="preco_blackshoes" nullable="true" scale="10" size="8"/>
+            <Attribute datatype="timestamp" defaultvalue="" extra="" fraction="6" id="78e1235f-93d0-4dfc-af98-a24c4a90e8a9" name="relogio" nullable="true" scale="10" size="29"/>
+            <Index id="4b2b1f01-ca4c-4e89-8cb1-2ff156d1c986" indextype="PRIMARYKEY" name="b3logsignalunique_pkey">
+                <Indexattribute attributerefid="402b8325-be47-4480-9680-db8f610ea1b1" id="c80a59e9-1af1-42c5-b38c-0282592103d8"/>
+            </Index>
+        </Table>
+        <Table id="f9887264-16c0-4ab5-a937-36e01b56a9b7" name="volatilidade_historica" schema="">
+            <Property name="LOCATION" value="1432:20"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="27696159-243c-4c6d-91c2-eeeb605db659" name="codneg" nullable="true" scale="10" size="12"/>
+            <Attribute datatype="date" defaultvalue="" extra="" fraction="0" id="9e51ba9f-dc87-4735-831c-e35e45fcd9d3" name="data_pregao" nullable="true" scale="10" size="13"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="2" id="8237fe7d-666b-4c75-8c09-ed4dec6d333b" name="preult" nullable="true" scale="10" size="11"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="bf0b3dbe-2c45-4ce3-832f-24400ad7a281" name="anterior" nullable="true" scale="10" size="131089"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="6a7a5049-07b7-45b3-9b94-7baa18f85404" name="variacao" nullable="true" scale="10" size="131089"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="d7531ee5-5faa-448b-8443-99a3627cec19" name="log_variacao" nullable="true" scale="10" size="131089"/>
+            <Attribute datatype="timestamp with time zone" defaultvalue="" extra="" fraction="6" id="f5149cc3-583a-4d37-ba5a-c74c411f653a" name="update_at" nullable="true" scale="10" size="35"/>
+        </Table>
+        <Table id="62d3cf79-1541-48f3-ba35-e41a3fdb8c36" name="ativos_maior_liquidez" schema="">
+            <Property name="LOCATION" value="1790:20"/>
+            <Attribute datatype="character varying" defaultvalue="" extra="" fraction="0" id="a1dca6fd-628e-4392-b215-686b787ef559" name="codneg" nullable="true" scale="10" size="12"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="d1ff373a-747b-4f10-a2c1-ad0d5e719ae0" name="volume_total" nullable="true" scale="10" size="131089"/>
+            <Attribute datatype="numeric" defaultvalue="" extra="" fraction="0" id="a47fcdbc-eb50-479c-93e8-9aeb3b24659c" name="total_negociacoes" nullable="true" scale="10" size="131089"/>
+            <Attribute datatype="bigint" defaultvalue="" extra="" fraction="0" id="7632c501-2876-4ada-9793-a3cdf36aef13" name="total_dias_negociados" nullable="true" scale="10" size="19"/>
+        </Table>
+    </Tables>
+    <Relations/>
+    <Views/>
+    <Subjectareas/>
+    <Comments/>
+</Model>

@@ -1,0 +1,27 @@
+
+CREATE TABLE B3Log.B3SignalLogger (
+                id BIGINT NOT NULL,
+                asset VARCHAR(11) NOT NULL,
+                data DATE NOT NULL,
+                hora TIME NOT NULL,
+                ultimo REAL NOT NULL,
+                strike SMALLINT NOT NULL,
+                negocios SMALLINT NOT NULL,
+                quantidade INTEGER NOT NULL,
+                volume BIGINT NOT NULL,
+                oferta_compra REAL NOT NULL,
+                oferta_venda REAL NOT NULL,
+                VOC SMALLINT NOT NULL,
+                VOV SMALLINT NOT NULL,
+                vencimento DATE NOT NULL,
+                validade DATE NOT NULL,
+                contratos_abertos BIGINT NOT NULL,
+                estado_atual VARCHAR(80) NOT NULL,
+                relogio DATE NOT NULL,
+                CONSTRAINT b3signallogger_pk PRIMARY KEY (id)
+);
+
+
+CREATE INDEX b3signallogger_idx
+ ON B3Log.B3SignalLogger
+ ( id ASC, asset, data ASC, hora ASC, strike, vencimento, validade, relogio ASC );

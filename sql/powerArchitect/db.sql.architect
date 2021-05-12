@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<architect-project version="1.0" appversion="2.0.11">
+ <project-name>db.sql</project-name>
+ <print-settings numCopies="1" zoom="1.0" pageNumbersPrinted="true" orientation="1" paperWidth="612.0" paperHeight="792.0" leftBorder="50.0" rightBorder="50.0" topBorder="50.0" bottomBorder="50.0" />
+ <project-data-sources>
+  <data-source id="DS0">
+   <property key="Connection Type" value="PostgreSQL" />
+   <property key="Logical" value="PlayPen Database" />
+   <property key="JDBC URL" value="jdbc:postgresql://localhost:5432/ANTOption" />
+   <property key="UID" value="ANTOption" />
+   <property key="PWD" value="lacuna" />
+   <property key="ca.sqlpower.architect.etl.kettle.database" value="" />
+   <property key="ca.sqlpower.architect.etl.kettle.port" value="" />
+   <property key="ca.sqlpower.architect.etl.kettle.hostname" value="" />
+   <property key="ca.sqlpower.architect.etl.kettle.repos.login" value="" />
+   <property key="ca.sqlpower.architect.etl.kettle.repos.password" value="" />
+  </data-source>
+  <data-source id="DS0">
+   <property key="Connection Type" value="PostgreSQL" />
+   <property key="Logical" value="PlayPen Database" />
+   <property key="JDBC URL" value="jdbc:postgresql://localhost:5432/ANTOption" />
+   <property key="UID" value="ANTOption" />
+   <property key="PWD" value="lacuna" />
+   <property key="ca.sqlpower.architect.etl.kettle.database" value="" />
+   <property key="ca.sqlpower.architect.etl.kettle.port" value="" />
+   <property key="ca.sqlpower.architect.etl.kettle.hostname" value="" />
+   <property key="ca.sqlpower.architect.etl.kettle.repos.login" value="" />
+   <property key="ca.sqlpower.architect.etl.kettle.repos.password" value="" />
+  </data-source>
+ </project-data-sources>
+ <source-databases>
+  <database id="DB0" populated="true" UUID="5f64f56c-ee25-49d7-8413-6430522773da" dbcs-ref="DS0" name="PlayPen Database" physicalName="ANTOption Postgres" >
+   <catalog id="CAT1" populated="true" UUID="b271446d-19be-4c80-91d0-2911202e6c4e" name="ANTOption" nativeTerm="database" physicalName="ANTOption" >
+    <schema id="SCH2" populated="true" UUID="b4099ab8-e8a9-4008-8746-73643ec03962" name="information_schema" nativeTerm="schema" physicalName="information_schema" >
+    </schema>
+    <schema id="SCH3" populated="true" UUID="0785cdba-d5b3-423d-891d-2fd83b283539" name="pg_catalog" nativeTerm="schema" physicalName="pg_catalog" >
+    </schema>
+    <schema id="SCH4" populated="true" UUID="9d3ed632-94b4-4df5-a04b-f03d9a1ac970" name="public" nativeTerm="schema" physicalName="public" >
+    </schema>
+   </catalog>
+   <relationships>
+   </relationships>
+  </database>
+ </source-databases>
+ <target-database id="ppdb" dbcs-ref="DS0">
+  <table id="TAB6" populated="true" UUID="79113e34-b68e-4e4b-982d-b4a375939c77" name="B3SignalLogger" objectType="TABLE" physicalName="B3SignalLogger" >
+   <remarks></remarks>
+   <folder id="FOLTAB61" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL7" populated="true" UUID="f269b25e-2cc0-4365-aaf3-28cf3d74ac33" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_id_seq" defaultValue="nextval(&apos;b3signallogger_id&apos;)" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+     <remarks></remarks>
+    </column>
+    <column id="COL8" populated="true" UUID="8ee3225e-8e5f-4a44-980c-88cea2c76bc1" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_asset_seq" defaultValue="" name="asset" nullable="0" physicalName="asset" precision="11" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL9" populated="true" UUID="3b043ed4-f149-4780-9624-12b07a3d43c3" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_data_seq" defaultValue="" name="data" nullable="0" physicalName="data" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="91" userDefinedTypeUUID="ee349be3-6af2-46e1-b305-975f5354b009" >
+     <remarks></remarks>
+    </column>
+    <column id="COL10" populated="true" UUID="7102a98f-b18f-4e13-b89f-32e88d48d5b0" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_hora_seq" defaultValue="" name="hora" nullable="0" physicalName="hora" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="92" userDefinedTypeUUID="10d6960f-169d-47c2-860a-37341342b1d5" >
+     <remarks></remarks>
+    </column>
+    <column id="COL11" populated="true" UUID="26bf4a22-0e58-4b30-8c57-a9bcbab11c54" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_ultimo_seq" defaultValue="" name="ultimo" nullable="0" physicalName="ultimo" precision="8" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL12" populated="true" UUID="93f49d8e-405a-4b4f-8a02-96dc8ca2fa62" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_strike_seq" defaultValue="" name="strike" nullable="0" physicalName="strike" precision="8" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL13" populated="true" UUID="edc8a5f1-9fc5-4603-a106-671d26152808" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_negocios_seq" defaultValue="" name="neoocios" nullable="0" physicalName="negocios" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks></remarks>
+    </column>
+    <column id="COL14" populated="true" UUID="03fe486d-0560-4af8-b5ed-400a105acd5d" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_quantidade_seq" defaultValue="" name="quantidade" nullable="0" physicalName="quantidade" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks></remarks>
+    </column>
+    <column id="COL15" populated="true" UUID="b0129133-e6bb-40d0-9291-46feafbd8bd4" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_volume_seq" defaultValue="" name="volume" nullable="0" physicalName="volume" precision="18" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL16" populated="true" UUID="d4b04632-207c-4d1a-b706-fb4a19cc1029" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_oferta_compra_seq" defaultValue="" name="oferta_compra" nullable="0" physicalName="oferta_compra" precision="8" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL17" populated="true" UUID="b92bd0b2-0ab8-4f3c-83f4-3105aab377e7" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_oferta_venda_seq" defaultValue="" name="oferta_venda" nullable="0" physicalName="oferta_venda" precision="8" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL18" populated="true" UUID="39a07fdf-9123-49bd-8ff0-5d248b815763" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_VOC_seq" defaultValue="" name="VOC" nullable="0" physicalName="VOC" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks></remarks>
+    </column>
+    <column id="COL19" populated="true" UUID="4b62842d-2d3e-4efc-9bff-97dfd4cc92ba" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_VOV_seq" defaultValue="" name="VOV" nullable="0" physicalName="VOV" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks></remarks>
+    </column>
+    <column id="COL20" populated="true" UUID="7ce8e945-ab76-4021-b7a3-41266bf0b817" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_vencimento_seq" defaultValue="" name="vencimento" nullable="0" physicalName="vencimento" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="91" userDefinedTypeUUID="ee349be3-6af2-46e1-b305-975f5354b009" >
+     <remarks></remarks>
+    </column>
+    <column id="COL21" populated="true" UUID="fe21379f-31a4-4f18-ab14-ad91bdf8e288" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_validade_seq" defaultValue="" name="validade" nullable="0" physicalName="validade" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="91" userDefinedTypeUUID="ee349be3-6af2-46e1-b305-975f5354b009" >
+     <remarks></remarks>
+    </column>
+    <column id="COL22" populated="true" UUID="a1d5d41d-7e6f-499a-bf3e-e93dcc6368dd" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_contratos_abertos_seq" defaultValue="" name="contratos_abertos" nullable="0" physicalName="contratos_abertos" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+     <remarks></remarks>
+    </column>
+    <column id="COL23" populated="true" UUID="0b431044-18aa-4470-a956-0f07a0247ee5" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_estado_atual_seq" defaultValue="" name="estado_atual" nullable="0" physicalName="estado_atual" precision="80" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL24" populated="true" UUID="c8e217c6-f4a6-4509-b094-7f1c88f7e9ff" autoIncrement="false" autoIncrementSequenceName="B3SignalLogger_relogio_seq" defaultValue="" name="relogio" nullable="0" physicalName="relogio" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="93" userDefinedTypeUUID="6497d8de-0e00-40d6-a42e-e2adca83be64" >
+     <remarks></remarks>
+    </column>
+    </folder>
+    <folder id="FOLTAB63" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    </folder>
+    <folder id="FOLTAB62" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    </folder>
+    <folder id="FOLTAB64" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX25" populated="true" UUID="d3faaaac-2e44-4416-a625-3e6ad010dddb" clustered="false" name="B3SignalLogger_pk" physicalName="b3signallogger_pk" primaryKeyIndex="true" unique="false" >
+     <index-column id="IDC26" populated="true" UUID="f0c025a4-52d1-489f-b2d5-50077a11ff5e" ascendingOrDescending="ASCENDING" column-ref="COL7" name="id" physicalName="id" />
+    </index>
+    <index id="IDX27" populated="true" UUID="50a5f95b-f4e7-4d6a-b1de-0aa9039269b9" clustered="true" index-type="BTREE" name="B3SignalLogger_asset_idx" physicalName="b3signallogger_asset_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC28" populated="true" UUID="fbf17584-da1b-4ba0-a9eb-f42236ba9c1b" ascendingOrDescending="ASCENDING" column-ref="COL8" name="asset" physicalName="asset" />
+    </index>
+    <index id="IDX29" populated="true" UUID="b25a0a1e-6104-4aa9-adff-6e0b14467688" clustered="true" index-type="BTREE" name="B3SignalLogger_strike_idx" physicalName="b3signallogger_strike_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC30" populated="true" UUID="a68d95b1-5c27-4aee-a344-57be4dd02d04" ascendingOrDescending="UNSPECIFIED" column-ref="COL12" name="strike" physicalName="strike" />
+    </index>
+    <index id="IDX31" populated="true" UUID="91672697-98aa-48bb-b2c0-0501430e39d3" clustered="true" index-type="BTREE" name="B3SignalLogger_vencimento_idx" physicalName="b3signallogger_vencimento_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC32" populated="true" UUID="dc5d0d1a-947f-4da0-b1e3-ff69bd45eb83" ascendingOrDescending="ASCENDING" column-ref="COL20" name="vencimento" physicalName="vencimento" />
+    </index>
+    <index id="IDX33" populated="true" UUID="7aa7341e-2baf-4ed2-93be-80093e1df3aa" clustered="false" index-type="BTREE" name="B3SignalLogger_relogio_idx1" physicalName="b3signallogger_relogio_idx1" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC34" populated="true" UUID="a5ef7e03-6eee-4a82-92f0-e438d1d3ce38" ascendingOrDescending="DESCENDING" column-ref="COL24" name="relogio" physicalName="relogio" />
+    </index>
+    <index id="IDX35" populated="true" UUID="21672874-55b0-47eb-a4d6-8fb431707c84" clustered="true" index-type="BTREE" name="B3SignalLogger_asset_vencimemnto_idx" physicalName="b3signallogger_asset_vencimemnto_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC36" populated="true" UUID="4ea066ed-dc66-4c15-af55-37004198c6f8" ascendingOrDescending="UNSPECIFIED" column-ref="COL8" name="asset" physicalName="asset" />
+     <index-column id="IDC37" populated="true" UUID="a4eff413-897e-4e66-83f4-91d86fcf030c" ascendingOrDescending="DESCENDING" column-ref="COL20" name="vencimento" physicalName="vencimento" />
+    </index>
+    <index id="IDX38" populated="true" UUID="0a3fa2a3-507b-4cdb-87e8-f911711cbd92" clustered="true" index-type="BTREE" name="B3SignalLogger_asset_strike_vencimento_idx" physicalName="b3signallogger_asset_strike_vencimento_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC39" populated="true" UUID="09fdc31f-c3f2-4c72-8f69-c57b893c82f7" ascendingOrDescending="UNSPECIFIED" column-ref="COL8" name="asset" physicalName="asset" />
+     <index-column id="IDC40" populated="true" UUID="eb217e73-a41b-4fd5-a5ef-7aedabeb5c7a" ascendingOrDescending="UNSPECIFIED" column-ref="COL12" name="strike" physicalName="strike" />
+     <index-column id="IDC41" populated="true" UUID="4720fb89-0ce2-4a61-8dce-997d0b3a15ca" ascendingOrDescending="DESCENDING" column-ref="COL20" name="vencimento" physicalName="vencimento" />
+    </index>
+    <index id="IDX42" populated="true" UUID="bb5d71e3-668b-454b-bf3e-d536cf98c19a" clustered="true" index-type="BTREE" name="B3SignalLogger_strike_vecimento_idx" physicalName="b3signallogger_strike_vecimento_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC43" populated="true" UUID="96392143-94ee-4d69-800e-3bf421b3c99c" ascendingOrDescending="DESCENDING" column-ref="COL12" name="strike" physicalName="strike" />
+     <index-column id="IDC44" populated="true" UUID="e8542c3b-50e7-4089-a94f-15834847fb52" ascendingOrDescending="DESCENDING" column-ref="COL20" name="vencimento" physicalName="vencimento" />
+    </index>
+   </folder>
+  </table>
+  <table id="TAB45" populated="true" UUID="1250bd67-05da-40ca-b9c8-215dcfa34772" name="B3Historical" objectType="TABLE" physicalName="B3Historical" >
+   <remarks></remarks>
+   <folder id="FOLTAB451" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL46" populated="true" UUID="9e752d9a-468d-486c-bb25-ad637e3741da" autoIncrement="false" autoIncrementSequenceName="B3Historical_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+     <remarks></remarks>
+    </column>
+    <column id="COL47" populated="true" UUID="9388155f-beee-43e3-995c-056f6c6165e7" autoIncrement="false" autoIncrementSequenceName="B3Historical_TIPREG_seq" defaultValue="" name="TIPREG" nullable="0" physicalName="TIPREG" precision="2" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL48" populated="true" UUID="6c446d1c-8832-4cd2-9771-7a15aa4e14f1" autoIncrement="false" autoIncrementSequenceName="B3Historical_DATA_PREGAO_seq" defaultValue="" name="DATA_PREGAO" nullable="0" physicalName="DATA_PREGAO" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="91" userDefinedTypeUUID="ee349be3-6af2-46e1-b305-975f5354b009" >
+     <remarks></remarks>
+    </column>
+    <column id="COL49" populated="true" UUID="eb874066-8fd8-488d-b6ef-c32792a79c4c" autoIncrement="false" autoIncrementSequenceName="B3Historical_TPMERC_seq" defaultValue="" name="TPMERC" nullable="0" physicalName="TPMERC" precision="3" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL50" populated="true" UUID="8deab7a0-9b01-45e2-afc3-24f3b42f1bda" autoIncrement="false" autoIncrementSequenceName="B3Historical_CODBDI_seq" defaultValue="" name="CODBDI" nullable="0" physicalName="CODBDI" precision="2" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="1" userDefinedTypeUUID="67ddc63f-5541-4dd1-9236-632d9d155e80" >
+     <remarks></remarks>
+    </column>
+    <column id="COL51" populated="true" UUID="d17e35df-9b33-4b41-9eaa-5e0f8486782f" autoIncrement="false" autoIncrementSequenceName="B3Historical_PRAZOT_seq" defaultValue="" name="PRAZOT" nullable="0" physicalName="PRAZOT" precision="3" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="1" userDefinedTypeUUID="67ddc63f-5541-4dd1-9236-632d9d155e80" >
+     <remarks></remarks>
+    </column>
+    <column id="COL52" populated="true" UUID="16ed909f-cf92-492c-b853-a8101caf234f" autoIncrement="false" autoIncrementSequenceName="B3Historical_CODNEG_seq" defaultValue="" name="CODNEG" nullable="0" physicalName="CODNEG" precision="12" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL53" populated="true" UUID="2a0f580c-4069-44be-a79d-b0a0606d2e58" autoIncrement="false" autoIncrementSequenceName="B3Historical_PREMAX_seq" defaultValue="" name="PREMAX" nullable="0" physicalName="PREMAX" precision="11" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL54" populated="true" UUID="c51dcc49-5498-4c28-b45b-b7f7100a63d4" autoIncrement="false" autoIncrementSequenceName="B3Historical_PREABE_seq" defaultValue="" name="PREABE" nullable="0" physicalName="PREABE" precision="11" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL55" populated="true" UUID="461b5fdf-7bd1-477f-8b26-883a4e817b2a" autoIncrement="false" autoIncrementSequenceName="B3Historical_PREMIN_seq" defaultValue="" name="PREMIN" nullable="0" physicalName="PREMIN" precision="11" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL56" populated="true" UUID="27cb1943-41bb-4c34-a3e2-88ff3d63eecf" autoIncrement="false" autoIncrementSequenceName="B3Historical_PTOEXE_seq" defaultValue="" name="PTOEXE" nullable="0" physicalName="PTOEXE" precision="13" referenceCount="1" scale="6" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL57" populated="true" UUID="666764de-9c9f-49d1-93f9-ab71467c3a34" autoIncrement="false" autoIncrementSequenceName="B3Historical_MODREF_seq" defaultValue="" name="MODREF" nullable="0" physicalName="MODREF" precision="4" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="1" userDefinedTypeUUID="67ddc63f-5541-4dd1-9236-632d9d155e80" >
+     <remarks></remarks>
+    </column>
+    <column id="COL58" populated="true" UUID="eb2eee2d-5d95-432e-ab99-6db960fc06d2" autoIncrement="false" autoIncrementSequenceName="B3Historical_PREOFV_seq" defaultValue="" name="PREOFV" nullable="0" physicalName="PREOFV" precision="11" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL59" populated="true" UUID="79ced1f7-cf5a-480c-8b23-8d492f6ea59a" autoIncrement="false" autoIncrementSequenceName="B3Historical_PREULT_seq" defaultValue="" name="PREULT" nullable="0" physicalName="PREULT" precision="11" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL60" populated="true" UUID="a38043ae-68d7-4fe4-b52a-2706f8b9d9f7" autoIncrement="false" autoIncrementSequenceName="B3Historical_DISMES_seq" defaultValue="" name="DISMES" nullable="0" physicalName="DISMES" precision="3" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL61" populated="true" UUID="d0abedb3-6656-44a7-9a13-5f5c4d8a4735" autoIncrement="false" autoIncrementSequenceName="B3Historical_CODISI_seq" defaultValue="" name="CODISI" nullable="0" physicalName="CODISI" precision="12" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL62" populated="true" UUID="f075edb4-7d02-4d04-86a0-af4f46cec289" autoIncrement="false" autoIncrementSequenceName="B3Historical_PREMED_seq" defaultValue="" name="PREMED" nullable="0" physicalName="PREMED" precision="11" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL63" populated="true" UUID="70b13209-fd87-4de4-bce5-9212627695ed" autoIncrement="false" autoIncrementSequenceName="B3Historical_FATCOT_seq" defaultValue="" name="FATCOT" nullable="0" physicalName="FATCOT" precision="7" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL64" populated="true" UUID="2cc3334a-4b01-40d0-93ff-00d7136f3a45" autoIncrement="false" autoIncrementSequenceName="B3Historical_PREOFC_seq" defaultValue="" name="PREOFC" nullable="0" physicalName="PREOFC" precision="11" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL65" populated="true" UUID="3733c8f4-f5e7-4d8b-9233-a245481f3482" autoIncrement="false" autoIncrementSequenceName="B3Historical_INDOPC_seq" defaultValue="" name="INDOPC" nullable="0" physicalName="INDOPC" precision="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL66" populated="true" UUID="f6d3451b-5c7c-4afd-84c1-54f034957f89" autoIncrement="false" autoIncrementSequenceName="B3Historical_QUATOT_seq" defaultValue="" name="QUATOT" nullable="0" physicalName="QUATOT" precision="18" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL67" populated="true" UUID="41d09582-0fe9-4b41-8d5a-a07bda6006de" autoIncrement="false" autoIncrementSequenceName="B3Historical_VOLTOT_seq" defaultValue="" name="VOLTOT" nullable="0" physicalName="VOLTOT" precision="16" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL68" populated="true" UUID="20100fe1-6cb6-42f4-80f1-0e14738eef51" autoIncrement="false" autoIncrementSequenceName="B3Historical_PREEXE_seq" defaultValue="" name="PREEXE" nullable="0" physicalName="PREEXE" precision="11" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL69" populated="true" UUID="b449a2ef-5c61-4299-b763-0610fb70006f" autoIncrement="false" autoIncrementSequenceName="B3Historical_DATVEN_seq" defaultValue="" name="DATVEN" nullable="0" physicalName="DATVEN" precision="8" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL70" populated="true" UUID="026f0e40-7f52-4743-87df-d72a19ce49fc" autoIncrement="false" autoIncrementSequenceName="B3Historical_TOTNEG_seq" defaultValue="" name="TOTNEG" nullable="0" physicalName="TOTNEG" precision="5" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL71" populated="true" UUID="e6328cbc-9e65-42a1-95bd-5ce2998ca5db" autoIncrement="false" autoIncrementSequenceName="B3Historical_NOMRES_seq" defaultValue="" name="NOMRES" nullable="0" physicalName="NOMRES" precision="12" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL72" populated="true" UUID="33a8d924-7549-4307-b9f6-48340edb287e" autoIncrement="false" autoIncrementSequenceName="B3Historical_ESPECI_seq" defaultValue="" name="ESPECI" nullable="0" physicalName="ESPECI" precision="10" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    </folder>
+    <folder id="FOLTAB453" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    </folder>
+    <folder id="FOLTAB452" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    </folder>
+    <folder id="FOLTAB454" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX73" populated="true" UUID="cc04d3e8-f77d-4751-b6f2-0c10bbc1fd0e" clustered="false" name="B3Historical_pk" physicalName="b3historical_pk" primaryKeyIndex="true" unique="false" >
+     <index-column id="IDC74" populated="true" UUID="6d241ac4-f610-4958-9ac9-a4345572bd80" ascendingOrDescending="UNSPECIFIED" column-ref="COL46" name="id" physicalName="id" />
+    </index>
+    <index id="IDX75" populated="true" UUID="e1606669-3e7b-4e77-a530-4914b5004a08" clustered="true" index-type="BTREE" name="B3Historical_data_pregao_idx" physicalName="b3historical_data_pregao_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC76" populated="true" UUID="2f126625-e7d8-4622-9217-13861d77be15" ascendingOrDescending="DESCENDING" column-ref="COL48" name="DATA_PREGAO" physicalName="DATA_PREGAO" />
+    </index>
+    <index id="IDX77" populated="true" UUID="26a2b34c-8d5c-4d8d-80f3-3120de1ec1a0" clustered="true" index-type="BTREE" name="B3Historical_CODBDI_idx" physicalName="b3historical_codbdi_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC78" populated="true" UUID="85fa543a-6acb-42c2-a09d-69e482315f4a" ascendingOrDescending="UNSPECIFIED" column-ref="COL50" name="CODBDI" physicalName="CODBDI" />
+    </index>
+    <index id="IDX79" populated="true" UUID="11b31603-907f-4439-a78e-792a3514a444" clustered="true" index-type="BTREE" name="B3Historical_ESPECI_idx" physicalName="b3historical_especi_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC80" populated="true" UUID="5b2765f1-b9b3-4387-9e85-d6ba25d91a78" ascendingOrDescending="UNSPECIFIED" column-ref="COL72" name="ESPECI" physicalName="ESPECI" />
+    </index>
+    <index id="IDX81" populated="true" UUID="bb2f2f31-5e7b-492a-9fda-5095f3b5456c" clustered="true" index-type="BTREE" name="B3Historical_tpmerc_idx" physicalName="b3historical_tpmerc_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC82" populated="true" UUID="4aee62f1-15ea-44ce-8747-743f3c23f4f0" ascendingOrDescending="ASCENDING" column-ref="COL49" name="TPMERC" physicalName="TPMERC" />
+    </index>
+    <index id="IDX83" populated="true" UUID="1f1bc2e2-830f-4575-92d5-098aed363a36" clustered="true" index-type="BTREE" name="B3Historical_codneg_idx" physicalName="b3historical_codneg_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC84" populated="true" UUID="08144de5-d6b6-40dc-b470-fb25bc9ec75f" ascendingOrDescending="ASCENDING" column-ref="COL52" name="CODNEG" physicalName="CODNEG" />
+    </index>
+    <index id="IDX85" populated="true" UUID="809b4d75-9a2f-4066-812e-784d209a8461" clustered="true" index-type="BTREE" name="B3Historical_nomeres_idx" physicalName="b3historical_nomeres_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC86" populated="true" UUID="af0d990f-2b36-4ed7-9529-b2452929d7ab" ascendingOrDescending="ASCENDING" column-ref="COL71" name="NOMRES" physicalName="NOMRES" />
+    </index>
+    <index id="IDX87" populated="true" UUID="e75872c4-0089-4991-ab95-7b89e7fb64c2" clustered="true" index-type="BTREE" name="B3Historical_codneg_datvenc_idx" physicalName="b3historical_codneg_datvenc_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC88" populated="true" UUID="ab401862-b9e4-495c-b78e-dc61c2d5fb10" ascendingOrDescending="ASCENDING" column-ref="COL52" name="CODNEG" physicalName="CODNEG" />
+     <index-column id="IDC89" populated="true" UUID="04b29a2a-26c9-4bdd-80bf-13e70ec60301" ascendingOrDescending="DESCENDING" column-ref="COL69" name="DATVEN" physicalName="DATVEN" />
+    </index>
+    <index id="IDX90" populated="true" UUID="afaf0942-00aa-40f4-894f-f0d024113dca" clustered="false" index-type="BTREE" name="B3Historical_voltot_idx" physicalName="b3historical_voltot_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC91" populated="true" UUID="87ba0450-2776-4379-bae2-f5479a22fce2" ascendingOrDescending="DESCENDING" column-ref="COL67" name="VOLTOT" physicalName="VOLTOT" />
+    </index>
+    <index id="IDX92" populated="true" UUID="28e98da7-1241-4aa4-8829-95e7184bc096" clustered="false" name="B3Historical_totneg_idx" physicalName="b3historical_totneg_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC93" populated="true" UUID="6e9aa186-ca0c-4585-8a83-639ca88df9db" ascendingOrDescending="DESCENDING" column-ref="COL70" name="TOTNEG" physicalName="TOTNEG" />
+    </index>
+    <index id="IDX94" populated="true" UUID="ba67d265-6fed-4b4b-b109-4282c630cd66" clustered="true" index-type="BTREE" name="b3historical_bova11_idx" physicalName="b3historical_bova11_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC95" populated="true" UUID="13108315-80e5-4f9a-8474-f102ee8a05ba" ascendingOrDescending="UNSPECIFIED" column-ref="COL70" name="TOTNEG" physicalName="TOTNEG" />
+    </index>
+   </folder>
+  </table>
+  <table id="TAB96" populated="true" UUID="1d9d4620-14e3-4da9-afbc-adfd48b939c0" name="B3SignalLoggerLevel1" objectType="TABLE" physicalName="B3SignalLoggerLevel1" >
+   <remarks></remarks>
+   <folder id="FOLTAB961" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL97" populated="true" UUID="dd9adc82-366d-489d-9a79-c5190dfc437d" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_id_seq" defaultValue="nextval(&apos;b3signallogger_id&apos;)" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+     <remarks></remarks>
+    </column>
+    <column id="COL98" populated="true" UUID="6526cf6b-2395-404a-8e1f-970bd793afd5" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_asset_seq" defaultValue="" name="asset" nullable="0" physicalName="asset" precision="11" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL99" populated="true" UUID="05c59795-89b9-4d0a-a08a-75ee8f6e5785" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_data_seq" defaultValue="" name="data" nullable="0" physicalName="data" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="91" userDefinedTypeUUID="ee349be3-6af2-46e1-b305-975f5354b009" >
+     <remarks></remarks>
+    </column>
+    <column id="COL100" populated="true" UUID="0346ba6d-308f-4a91-840a-a3af9b2325c6" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_hora_seq" defaultValue="" name="hora" nullable="0" physicalName="hora" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="92" userDefinedTypeUUID="10d6960f-169d-47c2-860a-37341342b1d5" >
+     <remarks></remarks>
+    </column>
+    <column id="COL101" populated="true" UUID="abfbea22-7bdd-4e9c-bfcb-2622647a6ca9" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_ultimo_seq" defaultValue="" name="ultimo" nullable="0" physicalName="ultimo" precision="8" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL102" populated="true" UUID="3657ab7b-4e29-4438-9fb3-dbee0276fc9b" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_strike_seq" defaultValue="" name="strike" nullable="0" physicalName="strike" precision="8" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL103" populated="true" UUID="4afb4436-596b-4c2b-9ce9-68bb7da47ea4" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_valor_ativo_seq" defaultValue="" name="valor_ativo" nullable="0" physicalName="valor_ativo" precision="8" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL104" populated="true" UUID="db37b2c0-2acc-4e2b-829b-dad07d4f8249" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_negocios_seq" defaultValue="" name="neoocios" nullable="0" physicalName="negocios" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks></remarks>
+    </column>
+    <column id="COL105" populated="true" UUID="257eae98-2260-48cc-8bc8-a8fe1a80885d" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_quantidade_seq" defaultValue="" name="quantidade" nullable="0" physicalName="quantidade" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks></remarks>
+    </column>
+    <column id="COL106" populated="true" UUID="08c61cce-42a7-4d6d-a0f4-4ed8553c0818" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_volume_seq" defaultValue="" name="volume" nullable="0" physicalName="volume" precision="18" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL107" populated="true" UUID="370d9eec-7e12-401e-b8c3-65e46a7db40f" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_oferta_compra_seq" defaultValue="" name="oferta_compra" nullable="0" physicalName="oferta_compra" precision="8" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL108" populated="true" UUID="0728ecb6-8fec-4181-8411-86c5bb62d33d" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_oferta_venda_seq" defaultValue="" name="oferta_venda" nullable="0" physicalName="oferta_venda" precision="8" referenceCount="1" scale="2" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL109" populated="true" UUID="615f3a7a-d3e1-426c-a30d-0c9feb4a9c33" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_log_devirada3meses_seq" defaultValue="" name="log_devirada3meses" nullable="0" physicalName="log_devirada3meses" precision="43" referenceCount="1" scale="40" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL110" populated="true" UUID="dce1a20f-1d47-46e1-8a45-e4c4bfcb38c3" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_log_devirada6meses_seq" defaultValue="" name="log_devirada6meses" nullable="0" physicalName="log_devirada6meses" precision="43" referenceCount="1" scale="40" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL111" populated="true" UUID="fd8e3560-42d2-4b53-b6e8-3dd81b67252f" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_log_devirada12meses_seq" defaultValue="" name="log_devirada12meses" nullable="0" physicalName="log_devirada12meses" precision="43" referenceCount="1" scale="40" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL112" populated="true" UUID="5f870b69-d07a-4680-9e0e-ffa998087e3c" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_log_devirada18meses_seq" defaultValue="" name="log_devirada18meses" nullable="0" physicalName="log_devirada18meses" precision="43" referenceCount="1" scale="40" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL113" populated="true" UUID="3cdc814b-4e5a-4a81-96c1-fdd1c7225feb" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_log_devirada24meses_seq" defaultValue="" name="log_devirada24meses" nullable="0" physicalName="log_devirada24meses" precision="43" referenceCount="1" scale="40" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL114" populated="true" UUID="fbce1e24-994a-4959-a543-f8ccf9a4c950" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_log_devirada36meses_seq" defaultValue="" name="log_devirada36meses" nullable="0" physicalName="log_devirada36meses" precision="43" referenceCount="1" scale="40" sourceDataTypeName="UserDefinedSQLType" type="2" userDefinedTypeUUID="115245ce-612c-4d6a-b559-6dd903dd959a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL115" populated="true" UUID="bc4fa681-1017-4e52-bdaf-b728fa1454e9" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_VOC_seq" defaultValue="" name="VOC" nullable="0" physicalName="VOC" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks></remarks>
+    </column>
+    <column id="COL116" populated="true" UUID="bc25c2d5-44a1-450d-b5ed-36a64c83a867" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_VOV_seq" defaultValue="" name="VOV" nullable="0" physicalName="VOV" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks></remarks>
+    </column>
+    <column id="COL117" populated="true" UUID="2b4e727b-b4ab-4c47-b7cc-334aaa280f0a" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_vencimento_seq" defaultValue="" name="vencimento" nullable="0" physicalName="vencimento" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="91" userDefinedTypeUUID="ee349be3-6af2-46e1-b305-975f5354b009" >
+     <remarks></remarks>
+    </column>
+    <column id="COL118" populated="true" UUID="068f1b9f-8f23-4cad-bf9c-29a02ed89059" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_validade_seq" defaultValue="" name="validade" nullable="0" physicalName="validade" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="91" userDefinedTypeUUID="ee349be3-6af2-46e1-b305-975f5354b009" >
+     <remarks></remarks>
+    </column>
+    <column id="COL119" populated="true" UUID="01c0f112-6867-4f2c-86dd-f856a1fad3a8" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_contratos_abertos_seq" defaultValue="" name="contratos_abertos" nullable="0" physicalName="contratos_abertos" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+     <remarks></remarks>
+    </column>
+    <column id="COL120" populated="true" UUID="69fb28a5-87e7-48a5-8ae7-0d4ae871f79f" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_estado_atual_seq" defaultValue="" name="estado_atual" nullable="0" physicalName="estado_atual" precision="80" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL121" populated="true" UUID="23816db3-c1cd-4919-bfd2-54eeb5f20d40" autoIncrement="false" autoIncrementSequenceName="B3SignalLoggerLevel1_relogio_seq" defaultValue="" name="relogio" nullable="0" physicalName="relogio" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="93" userDefinedTypeUUID="6497d8de-0e00-40d6-a42e-e2adca83be64" >
+     <remarks></remarks>
+    </column>
+    </folder>
+    <folder id="FOLTAB963" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    </folder>
+    <folder id="FOLTAB962" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    </folder>
+    <folder id="FOLTAB964" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX122" populated="true" UUID="62828691-1390-425c-ade6-b8e18e67ec8d" clustered="false" name="B3SignalLoggerLevel1_pk" physicalName="b3signalloggerlevel1_pk" primaryKeyIndex="true" unique="false" >
+     <index-column id="IDC123" populated="true" UUID="05cb431e-cb90-4c0e-b27f-30f0bea9963b" ascendingOrDescending="ASCENDING" column-ref="COL97" name="id" physicalName="id" />
+    </index>
+    <index id="IDX124" populated="true" UUID="f056cdee-462e-4ff1-bc4b-acc52ae0cd25" clustered="true" index-type="BTREE" name="B3SignalLogger_asset_idx" physicalName="b3signallogger_asset_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC125" populated="true" UUID="9ca80fd5-26d6-4244-8a22-82f4069bdf87" ascendingOrDescending="ASCENDING" column-ref="COL98" name="asset" physicalName="asset" />
+    </index>
+    <index id="IDX126" populated="true" UUID="05b75119-5207-4dc5-bfe0-f39141048d4e" clustered="true" index-type="BTREE" name="B3SignalLogger_strike_idx" physicalName="b3signallogger_strike_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC127" populated="true" UUID="a7b38506-28fd-44d6-ad18-7819ff05560b" ascendingOrDescending="UNSPECIFIED" column-ref="COL102" name="strike" physicalName="strike" />
+    </index>
+    <index id="IDX128" populated="true" UUID="078b1eee-2dd5-448c-90f0-d4d6468eba50" clustered="true" index-type="BTREE" name="B3SignalLogger_vencimento_idx" physicalName="b3signallogger_vencimento_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC129" populated="true" UUID="bb2fa88f-4820-4086-96bb-4726afcad93a" ascendingOrDescending="ASCENDING" column-ref="COL117" name="vencimento" physicalName="vencimento" />
+    </index>
+    <index id="IDX130" populated="true" UUID="cc71c1b4-6bc6-4564-a773-ae145a3df3d7" clustered="false" index-type="BTREE" name="B3SignalLogger_relogio_idx1" physicalName="b3signallogger_relogio_idx1" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC131" populated="true" UUID="01d04cf3-1cc3-4fa9-b1fe-b7298616e08d" ascendingOrDescending="DESCENDING" column-ref="COL121" name="relogio" physicalName="relogio" />
+    </index>
+    <index id="IDX132" populated="true" UUID="fdcb105d-d172-423d-b7e0-09e5fbfccb5e" clustered="true" index-type="BTREE" name="B3SignalLogger_asset_vencimemnto_idx" physicalName="b3signallogger_asset_vencimemnto_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC133" populated="true" UUID="fd222ab8-59ca-41a4-be60-9f0ac085c0ea" ascendingOrDescending="UNSPECIFIED" column-ref="COL98" name="asset" physicalName="asset" />
+     <index-column id="IDC134" populated="true" UUID="4c19fd63-8ca2-450b-8700-752cef515668" ascendingOrDescending="DESCENDING" column-ref="COL117" name="vencimento" physicalName="vencimento" />
+    </index>
+    <index id="IDX135" populated="true" UUID="903e6e44-e22c-4ed5-b7e7-593ee8586968" clustered="true" index-type="BTREE" name="B3SignalLogger_asset_strike_vencimento_idx" physicalName="b3signallogger_asset_strike_vencimento_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC136" populated="true" UUID="dd34efaa-1d45-44c9-830b-5e4562b2982a" ascendingOrDescending="UNSPECIFIED" column-ref="COL98" name="asset" physicalName="asset" />
+     <index-column id="IDC137" populated="true" UUID="e43a35c5-6444-411b-b5dd-c1b1757044f1" ascendingOrDescending="UNSPECIFIED" column-ref="COL102" name="strike" physicalName="strike" />
+     <index-column id="IDC138" populated="true" UUID="65298b47-7c84-4e45-9114-60ffbf0f2266" ascendingOrDescending="DESCENDING" column-ref="COL117" name="vencimento" physicalName="vencimento" />
+    </index>
+    <index id="IDX139" populated="true" UUID="c587b906-f34e-4f1b-9adb-1103530bbcf5" clustered="true" index-type="BTREE" name="B3SignalLogger_strike_vecimento_idx" physicalName="b3signallogger_strike_vecimento_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC140" populated="true" UUID="5b350679-0bee-484e-93dc-3ac098d6cccf" ascendingOrDescending="DESCENDING" column-ref="COL102" name="strike" physicalName="strike" />
+     <index-column id="IDC141" populated="true" UUID="b8780fee-51f5-4d17-abe5-35e9f98b56a6" ascendingOrDescending="DESCENDING" column-ref="COL117" name="vencimento" physicalName="vencimento" />
+    </index>
+   </folder>
+  </table>
+  <table id="TAB142" populated="true" UUID="2c3d99e4-23b6-490c-8206-94ae5f537966" name="B3AitvosOpcoes" objectType="TABLE" physicalName="B3AitvosOpcoes" >
+   <remarks></remarks>
+   <folder id="FOLTAB1421" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL143" populated="true" UUID="bc053269-f49f-47cb-98a1-a7c191d102fc" autoIncrement="false" autoIncrementSequenceName="B3AitvosOpcoes_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks></remarks>
+    </column>
+    <column id="COL144" populated="true" UUID="2d51639d-b473-4477-9acd-e6ead8f2f2bf" autoIncrement="false" autoIncrementSequenceName="B3AitvosOpcoes_ativo_seq" defaultValue="" name="ativo" nullable="0" physicalName="ativo" precision="11" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    <column id="COL145" populated="true" UUID="c94f3f8a-88f1-48f3-bbff-ce0f6f7f0271" autoIncrement="false" autoIncrementSequenceName="B3AitvosOpcoes_opcao_ativo_seq" defaultValue="" name="opcao_ativo" nullable="0" physicalName="opcao_ativo" precision="11" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks></remarks>
+    </column>
+    </folder>
+    <folder id="FOLTAB1423" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    </folder>
+    <folder id="FOLTAB1422" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    </folder>
+    <folder id="FOLTAB1424" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX146" populated="true" UUID="07adc19b-4d24-4a27-8d19-a1fdcee0cca3" clustered="false" name="B3AitvosOpcoes_pk" physicalName="b3aitvosopcoes_pk" primaryKeyIndex="true" unique="false" >
+     <index-column id="IDC147" populated="true" UUID="882dd44c-8272-4c59-9d09-d80819c1f419" ascendingOrDescending="UNSPECIFIED" column-ref="COL143" name="id" physicalName="id" />
+    </index>
+   </folder>
+  </table>
+  <relationships>
+  </relationships>
+ </target-database>
+ <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="false" target-schema="B3Log"> </ddl-generator>
+ <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
+ <compare-dm-settings  ddlGenerator="ca.sqlpower.architect.ddl.PostgresDDLGenerator"  outputFormatAsString="SQL"  saveFlag="true" >
+  <source-stuff   datastoreTypeAsString="DATABASE"   connectName="ANTOption Postgres"   filePath=""  />
+  <target-stuff   datastoreTypeAsString="PROJECT"   connectName="ANTOption Postgres"   filePath=""  />
+  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
+ </compare-dm-settings>
+ <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
+ <play-pen zoom="1.0" viewportX="0" viewportY="341" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+  <table-pane table-ref="TAB6" x="473" y="117" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="true"/>
+  <table-pane table-ref="TAB45" x="132" y="145" bgColor="0xeeeeee" fgColor="0x000000" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB96" x="468" y="474" bgColor="0xf0f0f0" fgColor="0x000000" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB142" x="120" y="615" bgColor="0xeeeeee" fgColor="0x000000" rounded="false" dashed="false"/>
+ </play-pen>
+ <critic-manager>
+  <critic-grouping platformType="Generic" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.PrimaryKeyCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.RelationshipMappingTypeCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.EmptyRelationshipCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.AlphaNumericNameCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.AlphaNumericSequenceNameCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.SetDefaultOnColumnWithNoDefaultCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.SetNullOnNonNullableColumnCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.DuplicateNameCritic" severity="ERROR"/>
+  </critic-grouping>
+  <critic-grouping platformType="DB2" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.DB2UnsupportedFeaturesCritic" severity="ERROR"/>
+  </critic-grouping>
+  <critic-grouping platformType="H2" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.H2UnsupportedFeaturesCritic" severity="ERROR"/>
+  </critic-grouping>
+  <critic-grouping platformType="HSQLDB" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.HSQLDBUnsupportedFeaturesCritic" severity="ERROR"/>
+  </critic-grouping>
+  <critic-grouping platformType="MySQL" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.MySQLCommentCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.MySQLReservedWordsCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.MySQLUnsupportedFeaturesCritic" severity="ERROR"/>
+  </critic-grouping>
+  <critic-grouping platformType="Oracle" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.OraclePhysicalNameCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.OracleReservedWordsCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.OracleUnsupportedFeaturesCritic" severity="ERROR"/>
+  </critic-grouping>
+  <critic-grouping platformType="PostgreSQL" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.PostgreSQLReservedWordsCritic" severity="ERROR"/>
+  </critic-grouping>
+  <critic-grouping platformType="SQL Server" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.SQLServerUnsupportedFeaturesCritic" severity="ERROR"/>
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.SQLServerReservedWordsCritic" severity="ERROR"/>
+  </critic-grouping>
+  <critic-grouping platformType="SQL Server 2000" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.SQLServer2000UnsupportedFeaturesCritic" severity="ERROR"/>
+  </critic-grouping>
+  <critic-grouping platformType="SQL Server 2005" enabled="true">
+   <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.SQLServer2005UnsupportedFeaturesCritic" severity="ERROR"/>
+  </critic-grouping>
+ </critic-manager>
+ <profiles topNCount="10">
+  </profiles>
+  <olap>
+  </olap>
+  <olap-gui>
+  </olap-gui>
+</architect-project>
