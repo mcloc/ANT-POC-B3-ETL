@@ -40,57 +40,65 @@ public class Etl extends AbstractRotine {
 		// extract group by all assets to assets table
 		// PL SQL
 		Connection connection;
-		
+
 		try {
 			connection = DBConnectionHelper.getNewConn();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("No database connection...");
 		}
-		
+
 		Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery("select* from B3Log.B3AtivosOpcoes");
-		
-		Map<String, String> ativo_opcoes_db = new HashMap<String,String>();
+
+		Map<String, String> ativo_opcoes_db = new HashMap<String, String>();
 		while (rs.next()) {
 			ativo_opcoes_db.put(rs.getString("asset"), rs.getString("opcao_ativo"));
 		}
-		
-		
+
 		try {
 
 			LOGGER.info("Fetching assets from B3Log.B3SignalLogger:");
 			stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-			rs = stmt.executeQuery(
-					"select asset, substring(asset, '[A-Z]+') as substr_ativo, opcao_ativo \n"+
-					"from B3Log.B3SignalLogger  \n"
-							+ "WHERE strike = 0\n" + "group by 1,2\n" + "order by 1,2");
+			rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo \n"
+					+ "from B3Log.B3SignalLogger  \n" + "WHERE strike = 0\n" + "group by 1,2\n" + "order by 1,2");
 			int rows = 0;
 			if (rs.last()) {
 				rows = rs.getRow();
 				rs.beforeFirst();
-				LOGGER.info("total assets found " + rows );
-				
+				LOGGER.info("total assets found " + rows);
+
 				if (rows == 0)
 					return;
 			}
 
-			String compiledQuery = "INSERT INTO B3Log.B3AtivosOpcoes(ativo,substr_opcao_ativo) VALUES (?, ?)";
-			PreparedStatement preparedStatement = connection.prepareStatement(compiledQuery);
-
+			PreparedStatement preparedStatement;
 			while (rs.next()) {
-				//Asset and Option already on DB
-				if(ativo_opcoes_db.containsKey(rs.getString("asset")) && 
-					ativo_opcoes_db.containsValue(rs.getString("opcao_ativo")))
+				// Asset and Option already on DB
+				if (ativo_opcoes_db.containsKey(rs.getString("asset")))
 					continue;
-				
-				preparedStatement.clearParameters();
-				preparedStatement.setString(1, rs.getString("asset"));
-				preparedStatement.setString(2, rs.getString("substr_ativo"));
-				preparedStatement.execute();
+
+				Statement stmt2 = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+						ResultSet.CONCUR_READ_ONLY);
+				ResultSet rs2 = stmt2.executeQuery("select '" + rs.getString("asset")
+						+ "' as ativo, '"+rs.getString("substr_ativo")+"' as substr_ativo, asset as opcao_ativo \n"
+						+ "from B3Log.B3SignalLogger  \n" + "WHERE strike != 0 AND asset like '"
+						+ rs.getString("substr_ativo") + "%' \n" + "group by 1,2,3\n" + "order by 1,3");
+
+				while (rs2.next()) {
+					String compiledQuery = "INSERT INTO B3Log.B3AtivosOpcoes("
+							+ "ativo,substr_opcao_ativo,opcao_ativo) VALUES" + "(?, ?, ?)";
+					preparedStatement = connection.prepareStatement(compiledQuery);
+					preparedStatement.setString(1, rs2.getString("ativo"));
+					preparedStatement.setString(2, rs2.getString("substr_ativo"));
+					preparedStatement.setString(3, rs2.getString("opcao_ativo"));
+					preparedStatement.execute();
+					preparedStatement.clearParameters();
+					preparedStatement.close();
+				}
+
 			}
-			
-			preparedStatement.close();
+
 			connection.close();
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
@@ -98,7 +106,7 @@ public class Etl extends AbstractRotine {
 //			e.printStackTrace();
 			throw e;
 		}
-		
+
 		long _now = System.currentTimeMillis();
 		long _diff_time = _now - start_time;
 		LOGGER.info("Total time to populate assets: " + _diff_time + "ms ");

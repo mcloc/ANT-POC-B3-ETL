@@ -181,7 +181,7 @@ public class MainController {
 				String name = t.getName();
 				if (execution_processment_threads.containsValue(name)) {
 					already_in_execution = true;
-					break;
+					continue;
 				} else {
 					already_in_execution = false;
 				}
