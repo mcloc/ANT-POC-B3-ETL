@@ -13,8 +13,6 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
-import javax.swing.JFileChooser;
-
 import org.apache.commons.io.FileUtils;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;

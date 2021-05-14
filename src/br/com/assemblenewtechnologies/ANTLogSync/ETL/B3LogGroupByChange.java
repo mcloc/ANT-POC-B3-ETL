@@ -80,7 +80,10 @@ public class B3LogGroupByChange {
 		LOGGER.info("Fetching assets from B3Log.B3SignalLogger:");
 		Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
 				ResultSet.CONCUR_READ_ONLY);
-		ResultSet rs = stmt.executeQuery("select  ativo from B3Log.B3AtivosOpcoes group by ativo");
+		ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLogger  \n"
+				+ "WHERE strike = 0\n"
+				+ "group by 1,2\n"
+				+ "order by 1,2");
 		while (rs.next()) {
 			ativos_list.add(rs.getString("ativo"));
 		}
@@ -107,7 +110,7 @@ public class B3LogGroupByChange {
 							+ _dt_inicio + " 00:00:00.0','YYYY-MM-DD HH24:MI:SS') \n" + "			AND a.relogio <= TO_TIMESTAMP('"
 							+ _dt_inicio + " 23:59:59.9','YYYY-MM-DD HH24:MI:SS') ORDER BY a.relogio ASC";
 
-					// LOGGER.info(sql);
+					 LOGGER.info(sql);
 					rs = stmt.executeQuery(sql);
 					int rows = 0;
 					timer1 = System.currentTimeMillis();
