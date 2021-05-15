@@ -599,9 +599,10 @@ update Intellect.csv_load_lot set status = -1 where id = 49
 
 select * from Intellect.processment_errors_log
 
+select * from Intellect.processment_rotines
+
 truncate Intellect.csv_load_registry RESTART IDENTITY;
 truncate Intellect.csv_load_lot RESTART IDENTITY CASCADE;
-
 truncate Intellect.processment_execution RESTART IDENTITY CASCADE;
 
 
@@ -633,3 +634,6 @@ LEFT JOIN B3Log.B3SignalLogger b  on b.strike = 0 AND b.asset like substring(a.a
 WHERE a.strike != 0 
 group by a.asset, opcao, b.asset order by b.asset, a.asset
 limit 1000;
+
+INSERT INTO Intellect.processment_rotines (name, description, active_status, processment_seq, processment_group, processment_mode, new_thread, thread_name, created_at) VALUES 
+('handler_start', 'ETL Level-1 populate assets', true, 21, 'etl', 'batch_process', false,null,   now())

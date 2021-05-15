@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -146,6 +147,7 @@ public class Csv extends AbstractRotine {
 				// Crash Recovery
 				if (CsvLoadLot.checkIfLotAlreadyProcessed(current_lot_directory_name)) {
 					csv_load_lot = CsvLoadLot.getLotByLotName(current_lot_directory_name);
+					alterDefaultLotTableRaw();
 					LOGGER.info("[CSV] Resuming load processing on Directory: " + current_lot_directory_name
 							+ " lot id: " + csv_load_lot.getId() + " actual status: " + csv_load_lot.getStatus());
 					// Crash Recovery Loading was finished just archive into another zip the
@@ -173,7 +175,7 @@ public class Csv extends AbstractRotine {
 										+ _wait_copy_delay_counter + "/" + CSV_MAX_WAIT2COPY_LOT);
 								continue;
 							}
-
+							removeDefaultLotColumn();
 							break;
 						}
 
@@ -188,6 +190,7 @@ public class Csv extends AbstractRotine {
 								+ " without loading.");
 						moveDirLot2ArchiveBuffer(_file_pointer);
 						zipArchive(current_lot_directory_name);
+						removeDefaultLotColumn();
 						continue;
 					}
 
@@ -195,6 +198,7 @@ public class Csv extends AbstractRotine {
 					csv_load_lot = CsvLoadLot.registerCSVLot(current_lot_directory_name,
 							GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING,
 							this.connection);
+					alterDefaultLotTableRaw();
 					LOGGER.info("[CSV] Processing new Lot: " + current_lot_directory_name + " lot id: "
 							+ csv_load_lot.getId() + " actual status: " + csv_load_lot.getStatus());
 				}
@@ -210,6 +214,7 @@ public class Csv extends AbstractRotine {
 							+ " finishing and archiving lot");
 					moveDirLot2ArchiveBuffer(_file_pointer);
 					csv_load_lot.setFinished(true);
+					removeDefaultLotColumn();
 					zipArchive(_file_pointer.getName());
 					in_root_dir = false;
 					continue;
@@ -223,12 +228,14 @@ public class Csv extends AbstractRotine {
 					LOGGER.error("[CSV] Directory LOG_DATA empty. Archiving and removing: " + _file_pointer.getName());
 					if (!GlobalProperties.getInstance().isCSV_ARCHIVE_ON()) {
 						closeLot();
+						removeDefaultLotColumn();
 						LOGGER.info("[CSV] Cleaning  directory: " + _file_pointer.getName());
 						FileUtils.deleteDirectory(_file_pointer);
 						continue;
 					}
 					moveDirLot2ArchiveBuffer(_file_pointer);
 					csv_load_lot.setFinished(true);
+					removeDefaultLotColumn();
 					zipArchive(_file_pointer.getName());
 					continue;
 				}
@@ -268,6 +275,7 @@ public class Csv extends AbstractRotine {
 				if (_list != null && _list.length != 0) {
 					moveDirLot2ArchiveBuffer(_file_pointer);
 					csv_load_lot.setFinished(true);
+					removeDefaultLotColumn();
 					zipArchive(_file_pointer.getName());
 				}
 
@@ -284,6 +292,7 @@ public class Csv extends AbstractRotine {
 			if (_file_pointer.getName().toUpperCase().equals("RTD_FIM_DE_LOTE.TXT")) {
 
 				csv_load_lot.setFinished(true);
+				removeDefaultLotColumn();
 				csv_db_registry = CsvLoadRegistry.registerCSV(current_lot_directory_name, csv_load_lot.getId(),
 						_file_pointer.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_END_LOT, connection);
 				moveFile2ArchiveBuffer(_file_pointer, CsvLoadRegistry.STATUS_END_LOT);
@@ -325,6 +334,7 @@ public class Csv extends AbstractRotine {
 				if (!is_csv) {
 					LOGGER.error("File: " + _file_pointer.getAbsoluteFile() + " not supported");
 					moveFile2ArchiveBuffer(_file_pointer, CsvLoadRegistry.STATUS_UNKNOWN_FILE);
+					removeDefaultLotColumn();
 					continue;
 				}
 			}
@@ -357,8 +367,9 @@ public class Csv extends AbstractRotine {
 		try {
 			csv_db_registry = CsvLoadRegistry.registerCSV(current_lot_directory_name, csv_load_lot.getId(),
 					file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_LOADING, connection);
+
 			long rowsInserted = new CopyManager((BaseConnection) connection).copyIn(
-					"COPY B3Log.B3SignalLogger " + "( " + "asset," + "data," + "hora," + "ultimo," + "strike,"
+					"COPY B3Log.B3SignalLoggerRaw " + "( " + "asset," + "data," + "hora," + "ultimo," + "strike,"
 							+ "negocios," + "quantidade," + "volume," + "oferta_compra," + "oferta_venda," + "VOC,"
 							+ "VOV," + "vencimento," + "validade," + "contratos_abertos," + "estado_atual," + "relogio"
 							+ ") " + "FROM STDIN (FORMAT csv, HEADER true, DELIMITER ',')",
@@ -368,6 +379,8 @@ public class Csv extends AbstractRotine {
 				csv_db_registry.changeStatus(CsvLoadRegistry.STATUS_LOADED);
 				csv_load_lot.incrementFilesLoaded();
 			}
+
+
 
 			moveFile2ArchiveBuffer(file, CsvLoadRegistry.STATUS_LOADED_ARCHIVED);
 			rows_processed += rowsInserted;
@@ -395,6 +408,25 @@ public class Csv extends AbstractRotine {
 			LOGGER.debug("[CSV] Error Loading File: " + file.getAbsoluteFile());
 			LOGGER.debug(e.getMessage());
 			throw new Exception(e.getMessage());
+		}
+	}
+
+	private void removeDefaultLotColumn() {
+		// Super POG para adicionar LotName and LotId into the copy load on
+		// B3SignalLoggerRaw
+		// BACK to NULL
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(
+					"ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN " + "lot_name SET DEFAULT NULL;");
+			preparedStatement.execute();
+			preparedStatement.close();
+			preparedStatement = connection.prepareStatement(
+					"ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN " + "lot_id SET DEFAULT NULL;");
+			preparedStatement.execute();
+			preparedStatement.close();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -540,6 +572,26 @@ public class Csv extends AbstractRotine {
 
 	public void setStartTime() {
 		this.start_time = System.currentTimeMillis();
+	}
+	
+	private void alterDefaultLotTableRaw() {
+		// Super POG para adicionar LotName and LotId into the copy load on
+		// B3SignalLoggerRaw
+		PreparedStatement preparedStatement;
+		try {
+			preparedStatement = connection
+					.prepareStatement("ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN " + "lot_name SET DEFAULT '"
+							+ csv_load_lot.getLot_name() + "';");
+			preparedStatement.execute();
+			preparedStatement.close();
+			preparedStatement = connection.prepareStatement("ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN "
+					+ "lot_id SET DEFAULT " + csv_load_lot.getId() + ";");
+			preparedStatement.execute();
+			preparedStatement.close();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 }

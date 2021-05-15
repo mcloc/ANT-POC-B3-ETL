@@ -33,6 +33,11 @@ public class Etl extends AbstractRotine {
 
 	private void etl1_populate_assets() throws Exception {
 		LOGGER.info("[ETL]etl1_populate_assets ...");
+		
+		
+		if(1==1)return; //DEBUG
+		
+		
 
 		long start_time = System.currentTimeMillis();
 		LOGGER.info("Initializing B3 SignalLogger ETL phase 1 - 'etl1_populate_assets' ...");
@@ -58,10 +63,10 @@ public class Etl extends AbstractRotine {
 
 		try {
 
-			LOGGER.info("Fetching assets from B3Log.B3SignalLogger:");
+			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw:");
 			stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo \n"
-					+ "from B3Log.B3SignalLogger  \n" + "WHERE strike = 0\n" + "group by 1,2\n" + "order by 1,2");
+					+ "from B3Log.B3SignalLoggerRaw  \n" + "WHERE strike = 0\n" + "group by 1,2\n" + "order by 1,2");
 			int rows = 0;
 			if (rs.last()) {
 				rows = rs.getRow();
@@ -80,11 +85,13 @@ public class Etl extends AbstractRotine {
 
 				Statement stmt2 = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
 						ResultSet.CONCUR_READ_ONLY);
-				ResultSet rs2 = stmt2.executeQuery("select '" + rs.getString("asset")
-						+ "' as ativo, '"+rs.getString("substr_ativo")+"' as substr_ativo, asset as opcao_ativo \n"
-						+ "from B3Log.B3SignalLogger  \n" + "WHERE strike != 0 AND asset like '"
-						+ rs.getString("substr_ativo") + "%' \n" + "group by 1,2,3\n" + "order by 1,3");
-
+				String sql = "select '" + rs.getString("asset")
+				+ "' as ativo, '"+rs.getString("substr_ativo")+"' as substr_ativo, asset as opcao_ativo \n"
+				+ "from B3Log.B3SignalLoggerRaw  \n" + "WHERE strike != 0 AND asset like '"
+				+ rs.getString("substr_ativo") + "%' \n" + "group by 1,2,3\n" + "order by 1,3";
+				LOGGER.info(sql);
+				ResultSet rs2 = stmt2.executeQuery(sql);
+				
 				while (rs2.next()) {
 					String compiledQuery = "INSERT INTO B3Log.B3AtivosOpcoes("
 							+ "ativo,substr_opcao_ativo,opcao_ativo) VALUES" + "(?, ?, ?)";
@@ -115,7 +122,7 @@ public class Etl extends AbstractRotine {
 
 	public void etl1_normalization() throws Exception {
 		LOGGER.info("[ETL] etl1_normalization...");
-		LOGGER.info("B3Log.B3SignalLogger GROUP BY CHANGES");
+		LOGGER.info("B3Log.B3SignalLoggerRaw GROUP BY CHANGES");
 		LOGGER.info("Results will be at B3Log.B3LogSignalUnique table.");
 		// if diferente manda pra hot_table order by relogio
 	}

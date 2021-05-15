@@ -107,10 +107,12 @@ DROP TABLE B3Log.B3AtivosOpcoes;
 
 CREATE TABLE B3Log.B3AtivosOpcoes (
                 ativo VARCHAR(11) NOT NULL,
+                substr_opcao_ativo VARCHAR(11) NOT NULL,
                 opcao_ativo VARCHAR(11) NULL,
                 CONSTRAINT b3aitvosopcoes_pk PRIMARY KEY (ativo,opcao_ativo)
 );
 
+select * from B3Log.B3AtivosOpcoes 
 
 
 DROP TABLE   B3Log.B3SignalLoggerLevel2Negocios;
