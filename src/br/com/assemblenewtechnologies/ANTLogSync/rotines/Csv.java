@@ -90,6 +90,7 @@ public class Csv extends AbstractRotine {
 		}
 
 		csv_load_start();
+		removeDefaultLotColumn();
 	}
 
 	public void csv_load_start() throws Exception {
@@ -380,8 +381,6 @@ public class Csv extends AbstractRotine {
 				csv_load_lot.incrementFilesLoaded();
 			}
 
-
-
 			moveFile2ArchiveBuffer(file, CsvLoadRegistry.STATUS_LOADED_ARCHIVED);
 			rows_processed += rowsInserted;
 		} catch (SQLException e) {
@@ -574,7 +573,7 @@ public class Csv extends AbstractRotine {
 		this.start_time = System.currentTimeMillis();
 	}
 	
-	private void alterDefaultLotTableRaw() {
+	private void alterDefaultLotTableRaw() throws Exception {
 		// Super POG para adicionar LotName and LotId into the copy load on
 		// B3SignalLoggerRaw
 		PreparedStatement preparedStatement;
@@ -591,6 +590,7 @@ public class Csv extends AbstractRotine {
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
 			e.printStackTrace();
+			throw e;
 		}
 	}
 
