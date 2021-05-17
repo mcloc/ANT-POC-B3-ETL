@@ -47,7 +47,7 @@ public class DBConnectionHelper {
 		if (dbInstance == null)
 			throw new Exception("No instance of DBConnectionHelper found");
 
-		return jdbcConnector.getNewConn();
+		return jdbcConnector.getConn();
 	}
 
 }

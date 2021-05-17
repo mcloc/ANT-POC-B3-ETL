@@ -53,7 +53,7 @@ public class Main {
 			throw new Exception("No database connection...");
 		}
 
-		connection = jdbcConnection.getNewConn();
+		connection = jdbcConnection.getConn();
 		connection.setAutoCommit(true);
 
 		start_time = System.currentTimeMillis();

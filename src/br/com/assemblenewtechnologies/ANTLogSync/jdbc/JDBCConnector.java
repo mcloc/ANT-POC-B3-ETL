@@ -19,6 +19,7 @@ import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
  */
 public class JDBCConnector {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JDBCConnector.class);
+	private static Connection _conn;
 
 	/**
 	 * Create JDBC Connection using GlobalProperties FIXME: GlobalProperties must be
@@ -26,12 +27,30 @@ public class JDBCConnector {
 	 * 
 	 * @param _GlobalProperties.getInstance()
 	 * @return
-	 * @throws SQLException
+	 * @throws Exception 
 	 */
-	public JDBCConnector() throws SQLException {
+	public JDBCConnector() throws Exception {
 		if (!GlobalProperties.getInstance().getDbms().equals("postgres")) {
 			LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 			throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+		}
+		
+		Properties connectionProps = new Properties();
+		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
+		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
+		connectionProps.put("reWriteBatchedInserts", true);
+		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
+			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
+					+ GlobalProperties.getInstance().getDbDatabaseName();
+
+			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
+			try {
+				_conn =  DriverManager.getConnection(url, connectionProps);
+				_conn.setAutoCommit(false);
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage());
+				throw new Exception("No database connection...");
+			}
 		}
 	}
 
@@ -41,29 +60,33 @@ public class JDBCConnector {
 	 * @return
 	 * @throws Exception
 	 */
-	public Connection getNewConn() throws Exception {
-		Properties connectionProps = new Properties();
-		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
-		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
-		connectionProps.put("reWriteBatchedInserts", true);
-		Connection _conn;
-		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
-			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
-					+ GlobalProperties.getInstance().getDbDatabaseName();
-
-			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
-			try {
-				_conn =  DriverManager.getConnection(url, connectionProps);
-				_conn.setAutoCommit(false);
-				
-				return _conn;
-			} catch (SQLException e) {
-				LOGGER.error(e.getMessage());
-				throw new Exception("No database connection...");
-			}
-		}
-		
-		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
-		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+	public static Connection getConn() throws Exception {
+		return _conn;
 	}
+	
+	
+//	public static Connection getNewConn() throws Exception {
+//		Properties connectionProps = new Properties();
+//		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
+//		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
+//		connectionProps.put("reWriteBatchedInserts", true);
+//		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
+//			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
+//					+ GlobalProperties.getInstance().getDbDatabaseName();
+//
+//			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
+//			try {
+//				_conn =  DriverManager.getConnection(url, connectionProps);
+//				_conn.setAutoCommit(false);
+//				
+//				return _conn;
+//			} catch (SQLException e) {
+//				LOGGER.error(e.getMessage());
+//				throw new Exception("No database connection...");
+//			}
+//		}
+//		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+//		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+//	}
+	
 }

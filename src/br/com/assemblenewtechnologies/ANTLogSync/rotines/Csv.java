@@ -131,7 +131,7 @@ public class Csv extends AbstractRotine {
 				LOGGER.info("[CSV] total rows per sec: " + rows_processed / total_time + " seconds");
 			}
 		} catch (Exception e) {
-			LOGGER.debug("[CSV]csv_load_start() error");
+			LOGGER.info("[CSV]csv_load_start() error");
 			LOGGER.error(e.getMessage());
 			removeDefaultLotColumn();
 			throw e;
@@ -141,12 +141,17 @@ public class Csv extends AbstractRotine {
 
 	}
 
-	private void processRTD(File[] rtd_list) throws Exception {
+	private void processRTD(File[] rtd_list)  {
 		String last_directory = null;
 		boolean in_root_dir = false;
 		for (File _file_pointer : rtd_list) {
 			if (_file_pointer.isDirectory())
-				processRTDDirectory(_file_pointer);
+				try {
+					processRTDDirectory(_file_pointer);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		} // END OF LOOP rtd_list
 
 	}
@@ -386,11 +391,9 @@ public class Csv extends AbstractRotine {
 			PreparedStatement preparedStatement = connection.prepareStatement(
 					"ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN " + "lot_name SET DEFAULT NULL;");
 			preparedStatement.execute();
-//			preparedStatement.close();
 			preparedStatement = connection
 					.prepareStatement("ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN " + "lot_id SET DEFAULT NULL;");
 			preparedStatement.execute();
-//			preparedStatement.close();
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
 			e.printStackTrace();
@@ -552,7 +555,6 @@ public class Csv extends AbstractRotine {
 			preparedStatement = connection.prepareStatement("ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN "
 					+ "lot_id SET DEFAULT " + csv_load_lot.getId() + ";");
 			preparedStatement.execute();
-			preparedStatement.close();
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
 			e.printStackTrace();
