@@ -7,11 +7,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 
 public class CsvLoadLot {
@@ -172,8 +173,8 @@ public class CsvLoadLot {
 			preparedStatement.setInt(5, files_error_not_loaded);
 			preparedStatement.setTimestamp(6, _updated_at);
 			preparedStatement.executeUpdate();
-//			if(!_connection.getAutoCommit())
-//				_connection.commit();
+			if(!_connection.getAutoCommit())
+				_connection.commit();
 		} catch (SQLException e) {
 			LOGGER.error("Error update() CsvLoadLot");
 			LOGGER.error(e.getMessage());
@@ -237,6 +238,30 @@ public class CsvLoadLot {
 			default:
 				csv_lot.finished = false;
 		}
+	}
+	
+	public static List<Integer> getFinishedStatus(){
+		List<Integer> status_finished = new ArrayList<Integer>();
+		status_finished.add(STATUS_FINISHED_NOERRORS_ARCHIVED);
+		status_finished.add(STATUS_FINISHED_WITHERRORS_ARCHIVED);
+		status_finished.add(STATUS_FINISHED_WITHERRORS_NOTARCHIVED);
+		
+		return status_finished;
+	}
+	
+//	private static List<String> getFinishedStatusString(){
+//		List<Integer> status_finished = getFinishedStatus();
+//		List<>
+//	}
+	
+	public static String getFinishedStatusStringCommaSeparated(){
+		List<Integer> status_finished = getFinishedStatus();
+		StringBuilder sb = new StringBuilder();
+		for (Integer s : status_finished) {
+			sb.append(""+s).append(",");
+		}
+		
+		return sb.toString();
 	}
 
 	public void incrementFilesLoaded() {

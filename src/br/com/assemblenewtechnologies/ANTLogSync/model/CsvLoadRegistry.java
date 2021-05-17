@@ -149,8 +149,8 @@ public class CsvLoadRegistry {
 			preparedStatement.setString(6, error_msg);
 			preparedStatement.setTimestamp(7, _updated_at);
 			preparedStatement.executeUpdate();
-//			if(!_connection.getAutoCommit())
-//				_connection.commit();	
+			if(!_connection.getAutoCommit())
+				_connection.commit();	
 		} catch (SQLException e) {
 			LOGGER.error("Error update() CsvLoadRegistry");
 			LOGGER.error(e.getMessage());
