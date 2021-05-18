@@ -87,7 +87,7 @@ public class Csv extends AbstractRotine {
 		thread.interrupt();
 	}
 
-	public void csv_check_for_files() throws Exception {
+	public synchronized void csv_check_for_files()  throws Exception {
 		if (isExecuting()) {
 			LOGGER.error("[CSV] checking for files already executing, returning");
 			return;
@@ -144,6 +144,8 @@ public class Csv extends AbstractRotine {
 	private void processRTD(File[] rtd_list)  {
 		String last_directory = null;
 		boolean in_root_dir = false;
+		
+		//FOREACH RTD DIRECTORY in 'data_load' dir
 		for (File _file_pointer : rtd_list) {
 			if (_file_pointer.isDirectory())
 				try {
@@ -315,13 +317,16 @@ public class Csv extends AbstractRotine {
 				}
 			}
 
+			/**
+			 * from this point should be a valid CSV, so load it
+			 */
 			files_processed++;
 			try {
 				// TRY TO EFFECTLY LOAD the file (at this point it should be a valid CSV file
 				loadCSV(_logdata_file);
 			} catch (Exception e) {
 				LOGGER.error(e.getMessage());
-//				throw e;
+				throw e;
 			}
 		} // END OF LOOP
 	}
