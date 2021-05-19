@@ -85,8 +85,8 @@ public class MainController {
 			} catch (Exception e) {
 				LOGGER.error("ANTController processment error");
 				LOGGER.error(e.getMessage());
-				processmentExecution.updateStatus(ProcessmentExecution.STATUS_FINISHED_ERRORS);
-				processmentStatus = ProcessmentExecution.STATUS_FINISHED_ERRORS;
+//				processmentExecution.updateStatus(ProcessmentExecution.STATUS_FINISHED_ERRORS);
+//				processmentStatus = ProcessmentExecution.STATUS_FINISHED_ERRORS;
 //				ProcessmentErrorLog.logError(ErrorCodes.RUNTIME_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
 //						MainController.class.getName());
 				// Interrupt all threads
@@ -173,7 +173,7 @@ public class MainController {
 	 * 
 	 * @throws Exception
 	 */
-	private static void process() {
+	private static void process() throws Exception{
 		// For each rotine on processment_rotine table order by processment_seq
 		// TODO: make distinct execution for distinc routines_group, p.e. DB_MANAGEMENT
 		// or processment_seq > X
@@ -192,7 +192,6 @@ public class MainController {
 						already_in_execution = true;
 						break;
 					}
-					continue;
 				} else {
 					already_in_execution = false;
 				}

@@ -1,5 +1,6 @@
 package br.com.assemblenewtechnologies.ANTLogSync.rotines;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,8 +38,8 @@ public class Etl extends AbstractRotine {
 	private void etl1_populate_assets() throws Exception {
 		LOGGER.info("[ETL]etl1_populate_assets ...");
 
-		if (1 == 1)
-			return; // DEBUG
+//		if (1 == 1)
+//			return; // DEBUG
 
 		long start_time = System.currentTimeMillis();
 		LOGGER.info("Initializing B3 SignalLogger ETL phase 1 - 'etl1_populate_assets' ...");
@@ -59,9 +60,9 @@ public class Etl extends AbstractRotine {
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
 
-		List<Integer> csv_lot_finished = new ArrayList<Integer>();
+		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
 		while (rs.next()) {
-			csv_lot_finished.add(rs.getInt("id"));
+			csv_lot_finished.add(rs.getBigDecimal("id"));
 		}
 
 		stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -69,17 +70,18 @@ public class Etl extends AbstractRotine {
 
 		Map<String, String> ativo_opcoes_db = new HashMap<String, String>();
 		while (rs.next()) {
-			ativo_opcoes_db.put(rs.getString("asset"), rs.getString("opcao_ativo"));
+			ativo_opcoes_db.put(rs.getString("ativo"), rs.getString("opcao_ativo"));
 		}
 
 		//FOR EACH FINISHED LOT
-		for (Integer csv_lot_id : csv_lot_finished) {
+		for (BigDecimal csv_lot_id : csv_lot_finished) {
 			try {
 				LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw:");
 				stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo \n"
-						+ "from B3Log.B3SignalLoggerRaw  \n" + "WHERE strike = 0\n" + "group by 1,2\n"
-						+ "and lot_id = " + csv_lot_id + " \n"
+						+ "from B3Log.B3SignalLoggerRaw  \n" + "WHERE strike = 0\n" 
+						+ "and lot_id = " + csv_lot_id + "  \n"
+						+ "group by 1,2\n"
 						+ "order by 1,2");
 				int rows = 0;
 				if (rs.last()) {
@@ -93,6 +95,11 @@ public class Etl extends AbstractRotine {
 
 				PreparedStatement preparedStatement;
 				while (rs.next()) {
+					
+					if(rs.getString("asset").equals("B3SA3"))
+						continue;
+					
+					
 					// Asset and Option already on DB
 					if (ativo_opcoes_db.containsKey(rs.getString("asset")))
 						continue;
@@ -103,7 +110,7 @@ public class Etl extends AbstractRotine {
 							+ "' as substr_ativo, asset as opcao_ativo \n" + "from B3Log.B3SignalLoggerRaw  \n"
 							+ "WHERE lot_id = "+csv_lot_id+" AND strike != 0 AND asset like '" + rs.getString("substr_ativo") + "%' \n"
 							+ "group by 1,2,3\n" + "order by 1,3";
-					LOGGER.info(sql);
+//					LOGGER.info(sql);
 					ResultSet rs2 = stmt2.executeQuery(sql);
 
 					while (rs2.next()) {
@@ -115,19 +122,29 @@ public class Etl extends AbstractRotine {
 						preparedStatement.setString(3, rs2.getString("opcao_ativo"));
 						preparedStatement.execute();
 						preparedStatement.clearParameters();
-						preparedStatement.close();
+//						preparedStatement.close();
 					}
 
 				}
 
-				connection.close();
+//				connection.close();
 			} catch (Exception e) {
 				LOGGER.error(e.getMessage());
-				connection.close();
+//				connection.close();
 				// e.printStackTrace();
 				throw e;
 			}
+		
+			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
+			int csv_status = csv_lot.getStatus();
+			if( csv_status < 0 )
+				csv_lot.changeStatus(csv_lot.getStatus()-1);
+			else
+				csv_lot.changeStatus(csv_lot.getStatus()+1);
+			
 		}
+		
+		
 
 		long _now = System.currentTimeMillis();
 		long _diff_time = _now - start_time;

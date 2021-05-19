@@ -47,6 +47,7 @@ public class CSVHandler implements Runnable {
 				Thread.sleep(1000);
 			}
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			LOGGER.error(e.getMessage());
 			e.printStackTrace();
 		}

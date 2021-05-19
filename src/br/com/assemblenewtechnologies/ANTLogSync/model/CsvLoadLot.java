@@ -13,6 +13,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 
 public class CsvLoadLot {
@@ -66,12 +67,17 @@ public class CsvLoadLot {
 
 	public static final int STATUS_LOADING = 0;
 	public static final int STATUS_ARCHIVING = 10;
-	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED = 30; 
+	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED = 30;
+	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED_ASSETS_EXTRACTED = 31; 
 	public static final int STATUS_FINISHED_WITHERRORS_ARCHIVED = -30;
-	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED = -31;
-	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED_BYCONFIG = 31;
-	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG = -40;
-	public static final int STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -50; 
+	public static final int STATUS_FINISHED_WITHERRORS_ARCHIVED_ASSETS_EXTRACTED = -31;
+	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED = -40;
+	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED_ASSETS_EXTRACTED = -41;
+	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED_BYCONFIG = 41;
+	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED_BYCONFIG_ASSETS_EXTRACTED = 41;
+	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG = -50;
+	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG_ASSETS_EXTRACTED = -51;
+	public static final int STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -60; 
 	public static final int STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -100;
 	public static final int STATUS_ERROR_ARCHIVED = -1; 
 	
@@ -227,6 +233,41 @@ public class CsvLoadLot {
 			throw new Exception(e1);
 		}
 	}
+	
+	public static CsvLoadLot getLotByLotId(BigDecimal lot_id) throws Exception {
+		Statement stmt;
+		try {
+			if(_connection == null || _connection.isClosed()) 
+				_connection = DBConnectionHelper.getNewConn();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new Exception("No database connection...");
+		}
+		try {
+			stmt = _connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot " + "WHERE id = '" + lot_id
+					+ "' order by updated_at DESC limit 1");
+			CsvLoadLot csv_lot = null;
+			while (rs.next()) {
+				csv_lot = new CsvLoadLot();
+				csv_lot.id = rs.getBigDecimal("id");
+				csv_lot.lot_name = rs.getString("lot_name");
+				csv_lot.load_path = rs.getString("load_path");
+				csv_lot.status = rs.getInt("status");
+				csv_lot.files_loaded = rs.getInt("files_loaded");
+				csv_lot.files_error_not_loaded = rs.getInt("files_error_not_loaded");
+				csv_lot.created_at = rs.getTimestamp("created_at");
+				csv_lot.updated_at = rs.getTimestamp("updated_at");
+				
+			}
+			setFinishedStatus(csv_lot);
+			return csv_lot;
+		} catch (SQLException e1) {
+			LOGGER.error(e1.getMessage());
+			// TODO: check if connection.close() get calls on finally before the throw
+			throw new Exception(e1);
+		}
+	}
 
 	private static void setFinishedStatus(CsvLoadLot csv_lot) {
 		switch(csv_lot.status) {
@@ -257,8 +298,13 @@ public class CsvLoadLot {
 	public static String getFinishedStatusStringCommaSeparated(){
 		List<Integer> status_finished = getFinishedStatus();
 		StringBuilder sb = new StringBuilder();
+		int i = 1;
 		for (Integer s : status_finished) {
-			sb.append(""+s).append(",");
+			if(i == status_finished.size())
+				sb.append(""+s);
+			else
+				sb.append(""+s).append(",");
+			i++;
 		}
 		
 		return sb.toString();

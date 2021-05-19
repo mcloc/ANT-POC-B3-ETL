@@ -61,32 +61,35 @@ public class JDBCConnector {
 	 * @throws Exception
 	 */
 	public static Connection getConn() throws Exception {
+		if(_conn == null || _conn.isClosed())
+			return getNewConn();
+		
 		return _conn;
 	}
 	
 	
-//	public static Connection getNewConn() throws Exception {
-//		Properties connectionProps = new Properties();
-//		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
-//		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
-//		connectionProps.put("reWriteBatchedInserts", true);
-//		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
-//			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
-//					+ GlobalProperties.getInstance().getDbDatabaseName();
-//
-//			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
-//			try {
-//				_conn =  DriverManager.getConnection(url, connectionProps);
-//				_conn.setAutoCommit(false);
-//				
-//				return _conn;
-//			} catch (SQLException e) {
-//				LOGGER.error(e.getMessage());
-//				throw new Exception("No database connection...");
-//			}
-//		}
-//		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
-//		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
-//	}
+	private static Connection getNewConn() throws Exception {
+		Properties connectionProps = new Properties();
+		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
+		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
+		connectionProps.put("reWriteBatchedInserts", true);
+		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
+			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
+					+ GlobalProperties.getInstance().getDbDatabaseName();
+
+			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
+			try {
+				_conn =  DriverManager.getConnection(url, connectionProps);
+				_conn.setAutoCommit(false);
+				
+				return _conn;
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage());
+				throw new Exception("No database connection...");
+			}
+		}
+		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+	}
 	
 }
