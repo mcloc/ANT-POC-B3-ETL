@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -91,7 +92,8 @@ public class Etl extends AbstractRotine {
 						return;
 				}
 
-				PreparedStatement preparedStatement;
+				Map<String, String> _ativos = new HashMap<String, String>();
+//				PreparedStatement preparedStatement;
 				while (rs.next()) {
 
 					if (rs.getString("asset").equals("B3SA3"))
@@ -100,16 +102,20 @@ public class Etl extends AbstractRotine {
 					// Asset and Option already on DB
 					if (ativo_opcoes_db.containsKey(rs.getString("asset")))
 						continue;
+					
+					
+					_ativos.put(rs.getString("asset"), rs.getString("substr_ativo"));
+					
 
-					Statement stmt2 = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
-							ResultSet.CONCUR_READ_ONLY);
-					String sql = "INSERT INTO B3Log.B3AtivosOpcoes(\n" + "ativo,substr_opcao_ativo,opcao_ativo)\n"
-							+ "select '" + rs.getString("asset") + "' as ativo, '" + rs.getString("substr_ativo")
-							+ "' as substr_ativo, asset as opcao_ativo \n" + "from B3Log.B3SignalLoggerRaw  \n"
-							+ "WHERE lot_id = " + csv_lot_id + " AND strike != 0 AND asset like '"
-							+ rs.getString("substr_ativo") + "%' \n" + "group by 1,2,3\n" + "order by 1,3";
-//					LOGGER.info(sql);
-					stmt2.execute(sql);
+//					Statement stmt2 = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+//							ResultSet.CONCUR_READ_ONLY);
+//					String sql = "INSERT INTO B3Log.B3AtivosOpcoes(\n" + "ativo,substr_opcao_ativo,opcao_ativo)\n"
+//							+ "select '" + rs.getString("asset") + "' as ativo, '" + rs.getString("substr_ativo")
+//							+ "' as substr_ativo, asset as opcao_ativo \n" + "from B3Log.B3SignalLoggerRaw  \n"
+//							+ "WHERE lot_id = " + csv_lot_id + " AND strike != 0 AND asset like '"
+//							+ rs.getString("substr_ativo") + "%' \n" + "group by 1,2,3\n" + "order by 1,3";
+////					LOGGER.info(sql);
+//					stmt2.execute(sql);
 //					ResultSet rs2 = stmt2.executeQuery(sql);
 //
 //					while (rs2.next()) {
@@ -126,6 +132,60 @@ public class Etl extends AbstractRotine {
 
 				}
 
+				stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				rs = stmt.executeQuery("select asset as opcao \n"
+						+ "from B3Log.B3SignalLoggerRaw  \n" + "WHERE strike != 0\n" + "and lot_id = " + csv_lot_id
+						+ "  \n" + "group by 1\n" + "order by 1");
+				rows = 0;
+				if (rs.last()) {
+					rows = rs.getRow();
+					rs.beforeFirst();
+					LOGGER.info("total asset options found " + rows);
+
+					if (rows == 0)
+						return;
+				}
+				
+				List<String> _ativos_options = new ArrayList<String>();
+//				PreparedStatement preparedStatement;
+				while (rs.next()) {
+
+					if (rs.getString("opcao").equals("B3SA3"))
+						continue;
+
+					// Asset and Option already on DB
+					if (ativo_opcoes_db.containsKey(rs.getString("opcao")))
+						continue;
+					
+					
+					_ativos_options.add(rs.getString("opcao"));
+				}
+				
+				Iterator<Map.Entry<String, String>> itr = _ativos.entrySet().iterator();
+		         
+		        while(itr.hasNext())
+		        {
+		             Map.Entry<String, String> entry = itr.next();
+		             String _ativo = entry.getKey();
+		             String _ativo_substr = entry.getValue();
+		             PreparedStatement preparedStatement;
+		             for(String _option : _ativos_options) {
+		            	 if(_option.contains(_ativo_substr)) {
+		            		 
+		            			String sql = "INSERT INTO B3Log.B3AtivosOpcoes(\n" + "ativo,substr_opcao_ativo,opcao_ativo)\n"
+		    							+ "VALUES (?,?,?)";
+//		    					LOGGER.info(sql);
+		    							
+							preparedStatement = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+							preparedStatement.setString(1, _ativo);
+							preparedStatement.setString(2, _ativo_substr);
+							preparedStatement.setString(3, _option);
+							preparedStatement.execute();
+		            	 }
+		             }
+		        }
+				
+				
 //				connection.close();
 			} catch (Exception e) {
 				LOGGER.error(e.getMessage());
