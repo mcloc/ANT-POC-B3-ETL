@@ -73,16 +73,14 @@ public class Etl extends AbstractRotine {
 			ativo_opcoes_db.put(rs.getString("ativo"), rs.getString("opcao_ativo"));
 		}
 
-		//FOR EACH FINISHED LOT
+		// FOR EACH FINISHED LOT
 		for (BigDecimal csv_lot_id : csv_lot_finished) {
 			try {
 				LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw:");
 				stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo \n"
-						+ "from B3Log.B3SignalLoggerRaw  \n" + "WHERE strike = 0\n" 
-						+ "and lot_id = " + csv_lot_id + "  \n"
-						+ "group by 1,2\n"
-						+ "order by 1,2");
+						+ "from B3Log.B3SignalLoggerRaw  \n" + "WHERE strike = 0\n" + "and lot_id = " + csv_lot_id
+						+ "  \n" + "group by 1,2\n" + "order by 1,2");
 				int rows = 0;
 				if (rs.last()) {
 					rows = rs.getRow();
@@ -95,35 +93,36 @@ public class Etl extends AbstractRotine {
 
 				PreparedStatement preparedStatement;
 				while (rs.next()) {
-					
-					if(rs.getString("asset").equals("B3SA3"))
+
+					if (rs.getString("asset").equals("B3SA3"))
 						continue;
-					
-					
+
 					// Asset and Option already on DB
 					if (ativo_opcoes_db.containsKey(rs.getString("asset")))
 						continue;
 
 					Statement stmt2 = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
 							ResultSet.CONCUR_READ_ONLY);
-					String sql = "select '" + rs.getString("asset") + "' as ativo, '" + rs.getString("substr_ativo")
+					String sql = "INSERT INTO B3Log.B3AtivosOpcoes(\n" + "ativo,substr_opcao_ativo,opcao_ativo)\n"
+							+ "select '" + rs.getString("asset") + "' as ativo, '" + rs.getString("substr_ativo")
 							+ "' as substr_ativo, asset as opcao_ativo \n" + "from B3Log.B3SignalLoggerRaw  \n"
-							+ "WHERE lot_id = "+csv_lot_id+" AND strike != 0 AND asset like '" + rs.getString("substr_ativo") + "%' \n"
-							+ "group by 1,2,3\n" + "order by 1,3";
+							+ "WHERE lot_id = " + csv_lot_id + " AND strike != 0 AND asset like '"
+							+ rs.getString("substr_ativo") + "%' \n" + "group by 1,2,3\n" + "order by 1,3";
 //					LOGGER.info(sql);
-					ResultSet rs2 = stmt2.executeQuery(sql);
-
-					while (rs2.next()) {
-						String compiledQuery = "INSERT INTO B3Log.B3AtivosOpcoes("
-								+ "ativo,substr_opcao_ativo,opcao_ativo) VALUES" + "(?, ?, ?)";
-						preparedStatement = connection.prepareStatement(compiledQuery);
-						preparedStatement.setString(1, rs2.getString("ativo"));
-						preparedStatement.setString(2, rs2.getString("substr_ativo"));
-						preparedStatement.setString(3, rs2.getString("opcao_ativo"));
-						preparedStatement.execute();
-						preparedStatement.clearParameters();
-//						preparedStatement.close();
-					}
+					stmt2.execute(sql);
+//					ResultSet rs2 = stmt2.executeQuery(sql);
+//
+//					while (rs2.next()) {
+//						String compiledQuery = "INSERT INTO B3Log.B3AtivosOpcoes("
+//								+ "ativo,substr_opcao_ativo,opcao_ativo) VALUES" + "(?, ?, ?)";
+//						preparedStatement = connection.prepareStatement(compiledQuery);
+//						preparedStatement.setString(1, rs2.getString("ativo"));
+//						preparedStatement.setString(2, rs2.getString("substr_ativo"));
+//						preparedStatement.setString(3, rs2.getString("opcao_ativo"));
+//						preparedStatement.execute();
+//						preparedStatement.clearParameters();
+////						preparedStatement.close();
+//					}
 
 				}
 
@@ -134,17 +133,15 @@ public class Etl extends AbstractRotine {
 				// e.printStackTrace();
 				throw e;
 			}
-		
+
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 			int csv_status = csv_lot.getStatus();
-			if( csv_status < 0 )
-				csv_lot.changeStatus(csv_lot.getStatus()-1);
+			if (csv_status < 0)
+				csv_lot.changeStatus(csv_lot.getStatus() - 1);
 			else
-				csv_lot.changeStatus(csv_lot.getStatus()+1);
-			
+				csv_lot.changeStatus(csv_lot.getStatus() + 1);
+
 		}
-		
-		
 
 		long _now = System.currentTimeMillis();
 		long _diff_time = _now - start_time;
