@@ -249,7 +249,7 @@ public class Etl extends AbstractRotine {
 			LOGGER.info("Fetching assets from B3Log.B3SignalLogger:");
 			Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLoggerraw a "
-					+ "WHERE strike = 0" + "group by 1,2" + "order by 1,2");
+					+ "WHERE strike = 0 and lot_id = " + csv_lot_id + " group by 1,2 order by 1,2");
 //			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo "
 //					+ "from B3Log.B3SignalLoggerRaw a WHERE strike = 0" + "and a.lot_id = " + csv_lot_id
 //					+ "  " + "and b.lot_id = " + csv_lot_id + "" + "group by 1,2" + "order by 1,2");
@@ -502,7 +502,13 @@ public class Etl extends AbstractRotine {
 					asset_counter_batch_insert_total = 0L;
 					buffer_last_values = new HashMap<String, Map<String, Object>>();
 				}
-
+				
+				// INCREMENT CSV LOT STATUS FINISHED TO +1
+				int csv_status = csv_lot.getStatus();
+				if (csv_status < 0)
+					csv_lot.changeStatus(csv_lot.getStatus() - 1);
+				else
+					csv_lot.changeStatus(csv_lot.getStatus() + 1);
 				long timer5 = System.currentTimeMillis();
 				long _diff_time = timer5 - start_time;
 				LOGGER.info("Total time to process " + ativos_list.size() + " assets: " + _diff_time + "ms ");
@@ -511,13 +517,6 @@ public class Etl extends AbstractRotine {
 				LOGGER.error(e.getMessage(), e);
 				return;
 			}
-
-			// INCREMENT CSV LOT STATUS FINISHED TO +1
-			int csv_status = csv_lot.getStatus();
-			if (csv_status < 0)
-				csv_lot.changeStatus(csv_lot.getStatus() - 1);
-			else
-				csv_lot.changeStatus(csv_lot.getStatus() + 1);
 		} // END LOOP FINISHED +1 STATUS Lot
 			// if diferente manda pra hot_table order by relogio
 	}
