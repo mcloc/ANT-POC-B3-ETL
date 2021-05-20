@@ -238,7 +238,7 @@ public class CsvLoadLot {
 		Statement stmt;
 		try {
 			if(_connection == null || _connection.isClosed()) 
-				_connection = DBConnectionHelper.getNewConn();
+				_connection = DBConnectionHelper.getConn();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("No database connection...");
@@ -300,6 +300,26 @@ public class CsvLoadLot {
 		StringBuilder sb = new StringBuilder();
 		int i = 1;
 		for (Integer s : status_finished) {
+			if(i == status_finished.size())
+				sb.append(""+s);
+			else
+				sb.append(""+s).append(",");
+			i++;
+		}
+		
+		return sb.toString();
+	}
+	
+	public static String getFinishedStatusStringCommaSeparated(int status_increment){
+		List<Integer> status_finished = getFinishedStatus();
+		StringBuilder sb = new StringBuilder();
+		int i = 1;
+		for (Integer s : status_finished) {
+			if(s > 0)
+				s += status_increment;
+			else
+				s -= status_increment;
+			
 			if(i == status_finished.size())
 				sb.append(""+s);
 			else

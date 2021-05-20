@@ -68,7 +68,7 @@ public class JDBCConnector {
 	}
 	
 	
-	private static Connection getNewConn() throws Exception {
+	public static Connection getNewConn() throws Exception {
 		Properties connectionProps = new Properties();
 		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
 		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());

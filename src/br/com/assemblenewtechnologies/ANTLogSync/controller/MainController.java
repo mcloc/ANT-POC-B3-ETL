@@ -107,7 +107,7 @@ public class MainController {
 		// Singleton DBConnection, load Singleton
 		try {
 			DBConnectionHelper.getInstance();
-			connection = DBConnectionHelper.getNewConn();
+			connection = DBConnectionHelper.getConn();
 		} catch (Exception e1) {
 			LOGGER.error(e1.getMessage());
 			// Interrupt all threads

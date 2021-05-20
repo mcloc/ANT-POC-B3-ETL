@@ -27,7 +27,7 @@ public class LoadB3Hist {
 	
 	public static void main(String[] args) throws Exception {
 		try {
-			connection = DBConnectionHelper.getNewConn();
+			connection = DBConnectionHelper.getConn();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("No database connection...");

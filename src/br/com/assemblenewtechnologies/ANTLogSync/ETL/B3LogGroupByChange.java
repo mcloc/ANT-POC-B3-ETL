@@ -65,7 +65,7 @@ public class B3LogGroupByChange {
 		_day_to_process.add("2021-02-02");
 
 		try {
-			connection = DBConnectionHelper.getNewConn();
+			connection = DBConnectionHelper.getConn();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("No database connection...");

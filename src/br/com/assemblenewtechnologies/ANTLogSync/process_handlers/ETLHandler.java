@@ -20,12 +20,15 @@ public class ETLHandler implements Runnable {
 			LOGGER.info("[ETL Thread] Starting...");
 			while (true) {
 				try {
+					etl_rotine.checkConnection();
 					etl_rotine.setStartTime();
 					etl_rotine.etl1_populate_assets();
+					etl_rotine.etl1_normalization();
 					etl_rotine.setExecuting(false);
 				} catch (Exception e) {
 					LOGGER.error("[ETL Thread] Error");
 					LOGGER.error(e.getMessage());
+					etl_rotine.closeConnection();
 					e.printStackTrace();
 				}
 				Thread.sleep(1000);
