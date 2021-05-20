@@ -226,6 +226,7 @@ public class Etl extends AbstractRotine {
 		Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
+		LOGGER.info("status_finishedAssetsExtracted: " + status_finished);
 		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
 		while (rs.next()) {
 			csv_lot_finished.add(rs.getBigDecimal("id"));
@@ -509,6 +510,8 @@ public class Etl extends AbstractRotine {
 					csv_lot.changeStatus(csv_lot.getStatus() - 1);
 				else
 					csv_lot.changeStatus(csv_lot.getStatus() + 1);
+				
+				LOGGER.info("ETL Normalization Finished for this lot: " + csv_lot.getLot_name() + " actual status: " + csv_lot.getStatus());
 				long timer5 = System.currentTimeMillis();
 				long _diff_time = timer5 - start_time;
 				LOGGER.info("Total time to process " + ativos_list.size() + " assets: " + _diff_time + "ms ");
