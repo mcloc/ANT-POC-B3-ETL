@@ -31,7 +31,7 @@ public class Etl extends AbstractRotine {
 	private ETLHandler runnable;
 	private Connection connection;
 
-	private static final Long BULK_BATCH_INSERT_SIZE = 15000L;
+	private static final int BULK_BATCH_INSERT_SIZE = 150000;
 
 	public Etl() throws Exception {
 		try {
@@ -266,7 +266,11 @@ public class Etl extends AbstractRotine {
 			LOGGER.info("Total assets for lot:" + csv_lot.getLot_name() + " - " + ativos_list.size());
 			PreparedStatement preparedStatement;
 			int _ativo_counter = 0;
+			Connection _conn_chunks = null;
 			try {
+				_conn_chunks = DBConnectionHelper.getNewConn();
+				_conn_chunks.setAutoCommit(false);
+				
 				for (String _ativo : ativos_list) {
 					
 					//FIXME REGEX QUEBRADO COM ESSE CARA
@@ -275,9 +279,10 @@ public class Etl extends AbstractRotine {
 					
 					
 					LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRaw:");
-					LOGGER.info("asset ("+_ativo_counter+"):" + _ativo + " lot" + csv_lot.getLot_name());
-					stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-					stmt.setFetchSize(150000);
+					LOGGER.info("asset ("+_ativo_counter+"):" + _ativo + " lot: " + csv_lot.getLot_name());
+					
+					stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+					stmt.setFetchSize(BULK_BATCH_INSERT_SIZE);
 					String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 							+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
 							+ " from B3Log.b3signalloggerraw a "
@@ -451,7 +456,7 @@ public class Etl extends AbstractRotine {
 							asset_counter_changes++;
 							asset_counter_changes_total++;
 							changes = false;
-
+							buffer_added = false;
 							java.sql.Date _date = java.sql.Date.valueOf(data);
 							java.sql.Date _vencimento = java.sql.Date.valueOf(vencimento);
 							java.sql.Date _validade = java.sql.Date.valueOf(validade);
@@ -489,7 +494,7 @@ public class Etl extends AbstractRotine {
 						/*
 						 * BULK INSERT OR IF TOTAL ROWS FETCHED < BULK_SIZE
 						 */
-						if ((asset_counter_changes % BULK_BATCH_INSERT_SIZE) == 0 ) {
+						if ((asset_counter_changes % BULK_BATCH_INSERT_SIZE) == 0) {
 							long timer2 = System.currentTimeMillis();
 
 							/*
@@ -497,10 +502,18 @@ public class Etl extends AbstractRotine {
 							 */
 							int[] inserted = preparedStatement.executeBatch();
 
-							if (inserted[0] < 0)
-								throw new Exception("error on bulk insert at record: " + asset_counter_total
-										+ " from tables b3signalloggerraw " + "records before " + asset_counter_total
-										+ " counter, may be already inserted on database hot_table");
+//							if(inserted == null) {
+//								preparedStatement.clearBatch();
+//								asset_counter_changes = 0L;
+//								asset_counter_batch_insert_total++;
+//								continue;
+//							}
+//							
+//							
+//							if (inserted[0] < 0)
+//								throw new Exception("error on bulk insert at record: " + asset_counter_total
+//										+ " from tables b3signalloggerraw " + "records before " + asset_counter_total
+//										+ " counter, may be already inserted on database hot_table");
 
 							long timer3 = System.currentTimeMillis();
 							long diff_time = timer3 - timer2;
@@ -521,6 +534,33 @@ public class Etl extends AbstractRotine {
 						if((diff_time % 5000) == 0) {
 							LOGGER.info("records processed on this asset: " + _option_counter + " total spent time: " + (diff_time/1000) + " sec");
 						}
+					}
+					
+					/*
+					 * BULK INSERT OF RESIDUAL CHANGES
+					 */
+					if (asset_counter_changes > 0) {
+						long timer2 = System.currentTimeMillis();
+
+						/*
+						 * execute BATCH INSERT OF BULK_SIZE preperadStatement
+						 */
+						int[] inserted = preparedStatement.executeBatch();
+
+//						if (inserted[0] < 0)
+//							throw new Exception("error on bulk insert at record: " + asset_counter_total
+//									+ " from tables b3signalloggerraw " + "records before " + asset_counter_total
+//									+ " counter, may be already inserted on database hot_table");
+
+						long timer3 = System.currentTimeMillis();
+						long diff_time = timer3 - timer2;
+						LOGGER.info("BULK insert of: " + inserted.length + " inserted.lenght");
+						LOGGER.info("Total time to INSERT: " + inserted.length + " registros " + diff_time + " ms");
+						// connection.commit();
+						preparedStatement.clearBatch();
+
+						asset_counter_changes = 0L;
+						asset_counter_batch_insert_total++;
 					}
 
 					long timer5 = System.currentTimeMillis();
@@ -553,10 +593,16 @@ public class Etl extends AbstractRotine {
 				long _diff_time = timer5 - start_time;
 				LOGGER.info("Total time to process " + ativos_list.size() + " assets: " + _diff_time + "ms ");
 
+				if(_conn_chunks != null && ! _conn_chunks.isClosed())
+					_conn_chunks.close();
 			} catch (Exception e) {
+				if(_conn_chunks != null && ! _conn_chunks.isClosed())
+					_conn_chunks.close();
 				LOGGER.error(e.getMessage(), e);
 				return;
 			}
+			if(_conn_chunks != null && ! _conn_chunks.isClosed())
+				_conn_chunks.close();
 		} // END LOOP FINISHED +1 STATUS Lot
 			// if diferente manda pra hot_table order by relogio
 	}
