@@ -87,7 +87,8 @@ public class Csv extends AbstractRotine {
 		thread.interrupt();
 	}
 
-	public synchronized void csv_check_for_files()  throws Exception {
+//	public synchronized void csv_check_for_files()  throws Exception {
+	public void csv_check_for_files()  throws Exception {
 		if (isExecuting()) {
 			LOGGER.error("[CSV] checking for files already executing, returning");
 			return;
@@ -265,6 +266,9 @@ public class Csv extends AbstractRotine {
 
 		Arrays.sort(_logdata_list);
 
+		LOGGER.info("[CSV] processing " + current_lot_directory_name + " :" + _logdata_list.length
+				+ " files now...");
+		int i = 0;
 		for (File _logdata_file : _logdata_list) {
 			/**
 			 * FROM THIS POINT IT's a File
@@ -321,6 +325,7 @@ public class Csv extends AbstractRotine {
 			 * from this point should be a valid CSV, so load it
 			 */
 			files_processed++;
+			i++;
 			try {
 				// TRY TO EFFECTLY LOAD the file (at this point it should be a valid CSV file
 				loadCSV(_logdata_file);
@@ -329,6 +334,9 @@ public class Csv extends AbstractRotine {
 				throw e;
 			}
 		} // END OF LOOP
+		
+		LOGGER.info("[CSV] processed " + current_lot_directory_name + " :" + i
+				+ " files have been processed in this lot...");
 	}
 
 	private void checkAndArchiveLiveData() throws IOException {

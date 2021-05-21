@@ -220,6 +220,7 @@ public class MainController {
 				method.invoke(_rotine);
 				execution_processment_threads.put(processment_seq,
 						processment_map.get(processment_seq).getThread_name());
+				LOGGER.info("[MainController] Calling Thread : " + processment_map.get(processment_seq).getThread_name());
 			} catch (ClassNotFoundException e) {
 				LOGGER.error("ANTController class not found error: " + class_name);
 				LOGGER.error(e.getMessage());

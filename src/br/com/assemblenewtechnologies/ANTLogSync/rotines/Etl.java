@@ -226,7 +226,7 @@ public class Etl extends AbstractRotine {
 		Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
-		LOGGER.info("status_finishedAssetsExtracted: " + status_finished);
+		LOGGER.debug("status_finishedAssetsExtracted: " + status_finished);
 		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
 		while (rs.next()) {
 			csv_lot_finished.add(rs.getBigDecimal("id"));
@@ -235,7 +235,6 @@ public class Etl extends AbstractRotine {
 	}
 
 	public void etl1_normalization() throws Exception {
-		LOGGER.info("[ETL] etl1_normalization...");
 		start_time = System.currentTimeMillis();
 
 		Map<String, Object> asset_book_values;
@@ -246,8 +245,9 @@ public class Etl extends AbstractRotine {
 
 		// FOR EACH FINISHED LOT
 		for (BigDecimal csv_lot_id : csv_lot_finished) {
+			LOGGER.info("[ETL] etl1_normalization...");
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
-			LOGGER.info("Fetching assets from B3Log.B3SignalLogger:");
+			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw for this lot:" + csv_lot.getLot_name());
 			Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLoggerraw a "
 					+ "WHERE strike = 0 and lot_id = " + csv_lot_id + " group by 1,2 order by 1,2");
@@ -262,19 +262,27 @@ public class Etl extends AbstractRotine {
 				throw new Exception("No mapped Assets found on B3Log.B3AtivosOpcoes");
 			}
 
+			LOGGER.info("Total assets for lot:" + csv_lot.getLot_name() + " - " + ativos_list.size());
 			PreparedStatement preparedStatement;
+			int _ativo_counter = 0;
 			try {
 				for (String _ativo : ativos_list) {
-					LOGGER.info("Fetching raw data from B3Log.B3SignalLogger:");
-					LOGGER.info("asset:" + _ativo + " lot" + csv_lot.getLot_name());
+					
+					//FIXME REGEX QUEBRADO COM ESSE CARA
+					if (_ativo.equals("B3SA3"))
+						continue;
+					
+					
+					LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRaw:");
+					LOGGER.info("asset ("+_ativo_counter+"):" + _ativo + " lot" + csv_lot.getLot_name());
 					stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 					String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 							+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
 							+ " from B3Log.b3signalloggerraw a "
 							+ "			LEFT JOIN B3Log.b3signalloggerraw b ON a.relogio=b.relogio AND b.asset = '"
 							+ _ativo + "' " + "			where  a.asset like  substring('" + _ativo
-							+ "', '[A-Z]+')||'%' AND a.strike != 0 " + "	and a.lot_id = " + csv_lot_id + ""
-							+ "and b.lot_id = " + csv_lot_id + "" + "ORDER BY a.relogio ASC";
+							+ "', '[A-Z]+')||'%' AND a.strike != 0 " + "	and a.lot_id = " + csv_lot_id + " "
+							+ "and b.lot_id = " + csv_lot_id + " " + "ORDER BY a.relogio ASC";
 
 //					LOGGER.info(sql);
 					rs = stmt.executeQuery(sql);
@@ -307,15 +315,15 @@ public class Etl extends AbstractRotine {
 					int negocios;
 					int quantidade;
 					Double volume;
-
-					if (rs.last()) {
-						rows = rs.getRow();
-						rs.beforeFirst();
-						LOGGER.info(
-								"total records fetched on database for this period: " + rows + " for asset: " + _ativo);
-						if (rows == 0)
-							throw new Exception("No records found to normalize  lot :" + csv_lot.getLot_name());
-					}
+//
+//					if (rs.last()) {
+//						rows = rs.getRow();
+//						rs.beforeFirst();
+//						LOGGER.info(
+//								"total records fetched on database for this period: " + rows + " for asset: " + _ativo);
+//						if (rows == 0)
+//							throw new Exception("No records found to normalize  lot :" + csv_lot.getLot_name());
+//					}
 
 					String compiledQuery = "INSERT INTO Intellect.hot_table("
 							+ "data,hora,asset,valor_ativo,ultimo,strike,oferta_compra,oferta_venda,vencimento,validade,estado_atual,relogio_last_change,"
@@ -323,6 +331,8 @@ public class Etl extends AbstractRotine {
 							+ "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
 					preparedStatement = connection.prepareStatement(compiledQuery);
 
+					int _option_counter = 0;
+					long _option_start_time = System.currentTimeMillis();
 					while (rs.next()) {
 						data = rs.getString("data");
 						hora = rs.getString("hora");
@@ -372,7 +382,15 @@ public class Etl extends AbstractRotine {
 
 							asset_counter_changes++;
 							asset_counter_changes_total++;
-
+							_option_counter++;
+							
+							long timer6 = System.currentTimeMillis();
+							long _diff_time = timer6 - _option_start_time;
+							
+							if((_diff_time % 5000) == 0) {
+								LOGGER.info("records processed on this asset: " + _option_counter + " total spent time: " + (_diff_time/1000) + " sec");
+							}
+							
 							continue;
 						}
 
@@ -486,10 +504,18 @@ public class Etl extends AbstractRotine {
 							asset_counter_batch_insert_total++;
 						}
 						asset_counter_total++;
+						_option_counter++;
+						
+						long timer4 = System.currentTimeMillis();
+						long diff_time = timer4 - _option_start_time;
+						
+						if((diff_time % 5000) == 0) {
+							LOGGER.info("records processed on this asset: " + _option_counter + " total spent time: " + (diff_time/1000) + " sec");
+						}
 					}
 
-					long timer4 = System.currentTimeMillis();
-					long diff_time = timer4 - timer1;
+					long timer5 = System.currentTimeMillis();
+					long diff_time = timer5 - timer1;
 
 					LOGGER.info("Total records processed: " + asset_counter_total);
 					LOGGER.info("Total records changes: " + asset_counter_changes);
@@ -502,6 +528,8 @@ public class Etl extends AbstractRotine {
 					asset_counter_changes_total = 0L;
 					asset_counter_batch_insert_total = 0L;
 					buffer_last_values = new HashMap<String, Map<String, Object>>();
+					
+					_ativo_counter++;
 				}
 				
 				// INCREMENT CSV LOT STATUS FINISHED TO +1
