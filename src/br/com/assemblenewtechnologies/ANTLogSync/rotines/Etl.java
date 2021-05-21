@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ public class Etl extends AbstractRotine {
 	private ETLHandler runnable;
 	private Connection connection;
 
-	private static final Long BULK_BATCH_INSERT_SIZE = 150000L;
+	private static final Long BULK_BATCH_INSERT_SIZE = 15000L;
 
 	public Etl() throws Exception {
 		try {
@@ -87,19 +88,19 @@ public class Etl extends AbstractRotine {
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 			try {
 				LOGGER.debug("Fetching assets from B3Log.B3SignalLoggerRaw:");
-				stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo "
 						+ "from B3Log.B3SignalLoggerRaw  " + "WHERE strike = 0" + "and lot_id = " + csv_lot_id + "  "
 						+ "group by 1,2" + "order by 1,2");
 				int rows = 0;
-				if (rs.last()) {
-					rows = rs.getRow();
-					rs.beforeFirst();
-					LOGGER.debug("total assets found " + rows + " for this lot: " + csv_lot.getLot_name());
-
-					if (rows == 0)
-						return;
-				}
+//				if (rs.last()) {
+//					rows = rs.getRow();
+//					rs.beforeFirst();
+//					LOGGER.debug("total assets found " + rows + " for this lot: " + csv_lot.getLot_name());
+//
+//					if (rows == 0)
+//						return;
+//				}
 				List<String> _inserted_ativo = new ArrayList<String>();
 				Map<String, String> _ativos = new HashMap<String, String>();
 				while (rs.next()) {
@@ -112,18 +113,18 @@ public class Etl extends AbstractRotine {
 					_ativos.put(rs.getString("asset"), rs.getString("substr_ativo"));
 				}
 
-				stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery("select asset as opcao " + "from B3Log.B3SignalLoggerRaw  " + "WHERE strike != 0"
 						+ "and lot_id = " + csv_lot_id + "  " + "group by 1" + "order by 1");
-				rows = 0;
-				if (rs.last()) {
-					rows = rs.getRow();
-					rs.beforeFirst();
-					LOGGER.info("total asset options found " + rows);
-
-					if (rows == 0)
-						return;
-				}
+//				rows = 0;
+//				if (rs.last()) {
+//					rows = rs.getRow();
+//					rs.beforeFirst();
+//					LOGGER.info("total asset options found " + rows);
+//
+//					if (rows == 0)
+//						return;
+//				}
 
 				List<String> _ativos_options = new ArrayList<String>();
 				while (rs.next()) {
@@ -196,7 +197,7 @@ public class Etl extends AbstractRotine {
 		Statement stmt;
 		ResultSet rs;
 		// GET ASSESTS ALREADY IN DB
-		stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		rs = stmt.executeQuery("select * from B3Log.B3AtivosOpcoes");
 		Map<String, String> ativo_opcoes_db = new HashMap<String, String>();
 		while (rs.next()) {
@@ -208,7 +209,7 @@ public class Etl extends AbstractRotine {
 	private List<BigDecimal> getFinishedLots() throws SQLException {
 		// GET ALL LOTs STATUS FINISHED TO INITIATE ETL PHASE 1
 		String status_finished = CsvLoadLot.getFinishedStatusStringCommaSeparated();
-		Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		Statement stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
 		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
@@ -223,7 +224,7 @@ public class Etl extends AbstractRotine {
 		// ETL PHASE 1
 		int status_increment = 1;
 		String status_finished = CsvLoadLot.getFinishedStatusStringCommaSeparated(status_increment);
-		Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		Statement stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
 		LOGGER.debug("status_finishedAssetsExtracted: " + status_finished);
@@ -239,7 +240,7 @@ public class Etl extends AbstractRotine {
 
 		Map<String, Object> asset_book_values;
 		Map<String, Map<String, Object>> buffer_last_values = new HashMap<String, Map<String, Object>>();
-		List<String> ativos_list = new ArrayList<String>();
+		List<String> ativos_list = new LinkedList<String>();
 
 		List<BigDecimal> csv_lot_finished = getFinishedLotsAssetsExtracted();
 
@@ -248,7 +249,7 @@ public class Etl extends AbstractRotine {
 			LOGGER.info("[ETL] etl1_normalization...");
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw for this lot:" + csv_lot.getLot_name());
-			Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			Statement stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLoggerraw a "
 					+ "WHERE strike = 0 and lot_id = " + csv_lot_id + " group by 1,2 order by 1,2");
 //			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo "
@@ -275,7 +276,8 @@ public class Etl extends AbstractRotine {
 					
 					LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRaw:");
 					LOGGER.info("asset ("+_ativo_counter+"):" + _ativo + " lot" + csv_lot.getLot_name());
-					stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+					stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+					stmt.setFetchSize(150000);
 					String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 							+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
 							+ " from B3Log.b3signalloggerraw a "
@@ -334,6 +336,12 @@ public class Etl extends AbstractRotine {
 					int _option_counter = 0;
 					long _option_start_time = System.currentTimeMillis();
 					while (rs.next()) {
+						long timer7 = System.currentTimeMillis();
+						long __diff_time = timer7 - _option_start_time;
+						
+						if((__diff_time % 10000) == 0) {
+							LOGGER.info("records processed on this asset: " + _option_counter + " total spent time: " + (__diff_time/1000) + " sec");
+						}
 						data = rs.getString("data");
 						hora = rs.getString("hora");
 						asset = rs.getString("asset");
@@ -375,6 +383,7 @@ public class Etl extends AbstractRotine {
 						asset_book_values.put("quantidade", quantidade);
 						asset_book_values.put("volume", volume);
 
+						boolean buffer_added = false;
 						if (!buffer_last_values.containsKey(asset)) {
 							LOGGER.info("Adding asset:" + asset + " to buffer");
 							asset_counter_total++;
@@ -390,8 +399,8 @@ public class Etl extends AbstractRotine {
 							if((_diff_time % 5000) == 0) {
 								LOGGER.info("records processed on this asset: " + _option_counter + " total spent time: " + (_diff_time/1000) + " sec");
 							}
-							
-							continue;
+							buffer_added = true;
+//							continue;
 						}
 
 						double buffer_valor_ativo = (double) buffer_last_values.get(asset).get("valor_ativo");
@@ -437,7 +446,7 @@ public class Etl extends AbstractRotine {
 							changes = true;
 
 						// EH DIFERENTE DO ANTERIOR DO MESMO ASSET
-						if (changes) {
+						if (changes || buffer_added) {
 							buffer_last_values.put(asset, new HashMap<String, Object>(asset_book_values));
 							asset_counter_changes++;
 							asset_counter_changes_total++;
@@ -480,7 +489,7 @@ public class Etl extends AbstractRotine {
 						/*
 						 * BULK INSERT OR IF TOTAL ROWS FETCHED < BULK_SIZE
 						 */
-						if (asset_counter_changes > BULK_BATCH_INSERT_SIZE || rows == (asset_counter_total + 1)) {
+						if ((asset_counter_changes % BULK_BATCH_INSERT_SIZE) == 0 ) {
 							long timer2 = System.currentTimeMillis();
 
 							/*
