@@ -1,8 +1,8 @@
 
---CREATE TABLE B3SignalLogger
---DROP TABLE B3Log.B3SignalLogger cascade
+--CREATE TABLE B3SignalLoggerRaw
+--DROP TABLE B3Log.B3SignalLoggerRaw cascade
 -- nextval('b3signallogger_id') NOT NULL,
-CREATE TABLE B3Log.B3SignalLogger (
+CREATE TABLE B3Log.B3SignalLoggerRaw (
                 id BIGINT  NOT NULL,
                 asset VARCHAR(11) NOT NULL,
                 data DATE NOT NULL,
@@ -21,7 +21,41 @@ CREATE TABLE B3Log.B3SignalLogger (
                 contratos_abertos BIGINT NOT NULL,
                 estado_atual VARCHAR(80) NOT NULL,
                 relogio TIMESTAMP NOT NULL,
-                CONSTRAINT b3signallogger_pk PRIMARY KEY (id)
+		 	 lot_name VARCHAR(70) NOT NULL,
+		      lot_id BIGINT  NOT NULL,
+                CONSTRAINT b3signalloggerraw_pk PRIMARY KEY (id),
+                CONSTRAINT fk_B3SignalLogger_lot_id FOREIGN KEY(lot_id) 
+	  REFERENCES Intellect.csv_load_lot(id)
+);
+
+
+--CREATE TABLE B3SignalLoggerUnique
+--DROP TABLE B3Log.B3SignalLoggerUnique cascade
+-- nextval('b3signallogger_id') NOT NULL,
+CREATE TABLE B3Log.B3SignalLoggerUnique (
+                id BIGINT  NOT NULL,
+                asset VARCHAR(11) NOT NULL,
+                data DATE NOT NULL,
+                hora TIME NOT NULL,
+                ultimo NUMERIC(8,2) NOT NULL,
+                strike NUMERIC(8,2) NOT NULL,
+                negocios INTEGER NOT NULL,
+                quantidade INTEGER NOT NULL,
+                volume NUMERIC(18,2) NOT NULL,
+                oferta_compra NUMERIC(8,2) NOT NULL,
+                oferta_venda NUMERIC(8,2) NOT NULL,
+                VOC INTEGER NOT NULL,
+                VOV INTEGER NOT NULL,
+                vencimento DATE NOT NULL,
+                validade DATE NOT NULL,
+                contratos_abertos BIGINT NOT NULL,
+                estado_atual VARCHAR(80) NOT NULL,
+                relogio TIMESTAMP NOT NULL,
+		 	 lot_name VARCHAR(70) NOT NULL,
+		      lot_id BIGINT  NOT NULL,
+                CONSTRAINT b3signalloggerunique_pk PRIMARY KEY (id),
+                CONSTRAINT fk_B3SignalLoggerUnique_lot_id FOREIGN KEY(lot_id) 
+	  REFERENCES Intellect.csv_load_lot(id)
 );
 
 
@@ -113,6 +147,13 @@ CREATE TABLE B3Log.B3AtivosOpcoes (
 );
 
 select * from B3Log.B3AtivosOpcoes 
+
+select 'ABEV3' as ativo, 'ABEV' as substr_ativo, asset as opcao_ativo 
+from B3Log.B3SignalLogger  
+WHERE strike != 0 AND asset like 'ABEV%' 
+group by 1,2,3
+order by 1,3
+
 
 
 DROP TABLE   B3Log.B3SignalLoggerLevel2Negocios;
@@ -231,13 +272,13 @@ CONSTRAINT fk_processment_errors_log_processment_execution_id FOREIGN KEY(proces
 );
 
 
---DROP TABLE IF EXISTS Intellect.csv_load_lot
+--DROP TABLE IF EXISTS Intellect.csv_load_lot CASCADE
 CREATE TABLE Intellect.csv_load_lot (
 		id BIGINT  NOT NULL,
 		lot_name VARCHAR(70) NOT NULL,
 		load_path VARCHAR(255) NOT NULL,
 		processment_execution_id BIGINT NOT NULL,
-		status NUMERIC(2,0) NOT NULL,	
+		status NUMERIC(6,0) NOT NULL,	
 		files_loaded NUMERIC(8,0) NOT NULL DEFAULT 0,
 		files_error_not_loaded NUMERIC(8,0) NOT NULL DEFAULT 0,
 		created_at TIMESTAMP NOT NULL,
@@ -276,24 +317,25 @@ CONSTRAINT fk_csv_load_registry_load_lot_id FOREIGN KEY(lot_id)
 	  REFERENCES Intellect.csv_load_lot(id)
 );
 
-
-CREATE TABLE Intellect.hot_table (
+-- DROP TABLE intellect.hot_table_derivatives
+CREATE TABLE Intellect.hot_table_derivatives (
 		id BIGINT  NOT NULL,
 		asset VARCHAR(11) NOT NULL,
 		data DATE NOT NULL,
 		hora TIME NOT NULL,
-		ultimo NUMERIC(8,2) NOT NULL,
-		strike NUMERIC(8,2) NOT NULL,
-		valor_ativo NUMERIC(8,2) NOT NULL,
-		valor_medio_negocios NUMERIC(8,2) NOT NULL,
+		ultimo NUMERIC(10,2) NOT NULL,
+		strike NUMERIC(10,2) NOT NULL,
+		valor_ativo NUMERIC(10,2) NOT NULL,
+		valor_medio_by_negocios NUMERIC(10,2) NOT NULL,
+		valor_medio_by_quantidade NUMERIC(10,2) NOT NULL,
 		negocios INTEGER NOT NULL,
 		quantidade INTEGER NOT NULL,
 		volume NUMERIC(18,2) NOT NULL,
 		media_dia_negocios INTEGER DEFAULT  NULL,
 		media_dia_quantidade INTEGER DEFAULT  NULL,
 		media_dia_volume NUMERIC(18,2) DEFAULT NULL,
-		oferta_compra NUMERIC(8,2) NOT NULL,
-		oferta_venda NUMERIC(8,2) NOT NULL,
+		oferta_compra NUMERIC(10,2) NOT NULL,
+		oferta_venda NUMERIC(10,2) NOT NULL,
 		VOC INTEGER NOT NULL,
 		VOV INTEGER NOT NULL,
 		vencimento DATE NOT NULL,
@@ -301,5 +343,51 @@ CREATE TABLE Intellect.hot_table (
 		contratos_abertos BIGINT NOT NULL,
 		estado_atual VARCHAR(80) NOT NULL,
 		relogio_last_change TIMESTAMP NOT NULL,
-CONSTRAINT pk_intellect_hot_table_idx PRIMARY KEY (id)
+		lot_name VARCHAR(70) NOT NULL,
+		lot_id BIGINT  NOT NULL,
+		CONSTRAINT fk_intellect_hot_table_derivatives_lot_id FOREIGN KEY (lot_id)
+			  REFERENCES Intellect.csv_load_lot(id),
+ 		UNIQUE(asset,data,hora,ultimo,strike,valor_ativo,
+			negocios ,quantidade,volume,media_dia_negocios, media_dia_quantidade, 
+			media_dia_volume,oferta_compra,oferta_venda,VOC,VOV,vencimento,
+			validade ,contratos_abertos,estado_atual),
+		CONSTRAINT pk_intellect_hot_table_derivatives_idx PRIMARY KEY (id)
+);
+
+
+-- DROP TABLE intellect.hot_table_assets
+CREATE TABLE Intellect.hot_table_assets (
+		id BIGINT  NOT NULL,
+		asset VARCHAR(11) NOT NULL,
+		data DATE NOT NULL,
+		hora TIME NOT NULL,
+		ultimo NUMERIC(10,2) NOT NULL,
+		strike NUMERIC(10,2) NOT NULL,
+		valor_ativo NUMERIC(10,2) NOT NULL,
+		valor_medio_by_negocios NUMERIC(10,2) NOT NULL,
+		valor_medio_by_quantidade NUMERIC(10,2) NOT NULL,
+		negocios INTEGER NOT NULL,
+		quantidade INTEGER NOT NULL,
+		volume NUMERIC(18,2) NOT NULL,
+		media_dia_negocios INTEGER DEFAULT  NULL,
+		media_dia_quantidade INTEGER DEFAULT  NULL,
+		media_dia_volume NUMERIC(18,2) DEFAULT NULL,
+		oferta_compra NUMERIC(10,2) NOT NULL,
+		oferta_venda NUMERIC(10,2) NOT NULL,
+		VOC INTEGER NOT NULL,
+		VOV INTEGER NOT NULL,
+		vencimento DATE NOT NULL,
+		validade DATE NOT NULL,
+		contratos_abertos BIGINT NOT NULL,
+		estado_atual VARCHAR(80) NOT NULL,
+		relogio_last_change TIMESTAMP NOT NULL,
+		lot_name VARCHAR(70) NOT NULL,
+		lot_id BIGINT  NOT NULL,
+		CONSTRAINT fk_intellect_hot_table_assets_lot_id FOREIGN KEY (lot_id)
+			  REFERENCES Intellect.csv_load_lot(id),
+ 		UNIQUE(asset,data,hora,ultimo,strike,valor_ativo,
+			negocios ,quantidade,volume,media_dia_negocios, media_dia_quantidade, 
+			media_dia_volume,oferta_compra,oferta_venda,VOC,VOV,vencimento,
+			validade ,contratos_abertos,estado_atual),
+		CONSTRAINT pk_intellect_hot_table_assets_idx PRIMARY KEY (id)
 );

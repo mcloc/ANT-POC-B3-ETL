@@ -420,6 +420,8 @@ select ativo, count(1) from B3Log.B3AtivosOpcoes group by ativo;
 
 
 
+
+
 --------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------
@@ -493,7 +495,29 @@ from B3Log.b3signallogger a
 LEFT JOIN B3Log.b3signallogger b ON a.relogio=b.relogio AND b.asset = 'VALE3'
 where  a.asset != 'BOVA11' AND a.asset like 'VALE%' AND a.strike != 0
 --AND a.relogio = '2021-01-26 09:45:02.0'
-AND a.relogio = '2021-01-26 11:56'
+AND a.relogio = '2021-01-26 11:56'CREATE OR REPLACE FUNCTION test_func(filepath text, xcol text, fillval text)
+RETURNS void
+LANGUAGE plpgsql
+AS $func$
+DECLARE sql text;
+BEGIN
+  EXECUTE format($$ALTER TABLE my_table ALTER COLUMN %s SET DEFAULT '%s';$$, xcol, fillval);
+
+  SELECT format($$COPY my_table(%s) FROM '%s' WITH (FORMAT CSV, DELIMITER '|', NULL 'NULL', HEADER true);$$
+        , string_agg(quote_ident(attname), ','), filepath)
+  INTO sql
+  FROM   pg_attribute
+  WHERE attrelid = 'my_table'::regclass
+      AND attname != 'xtra_col'
+      AND attnum > 0;
+  EXECUTE sql;
+
+  EXECUTE format($$ALTER TABLE my_table ALTER COLUMN %s DROP DEFAULT;$$, xcol);
+END;
+$func$;
+
+SELECT test_func('/workdir/some_file.txt', 'xtra_col', 'b');
+
 --ORDER BY data ASC, hora ASC
 ORDER BY b.asset, a.relogio ASC, a.data ASC, a.hora ASC
 
@@ -640,12 +664,39 @@ select _SQL_populateVolatilidadeHistorica('VALE3', '2020-01-01', '2021-03-30')
 
 select * from B3Log.volatilidade_historica
 
--- ************ F I M **************** populateVolatilidadeHistorica *********************************
+-- ************ F I M **************** loadFromCSV *********************************
 
 
 
+/**
+ *   FUNCTION load_from_csv(_asset varchar(12), volatilidade_historica NUMERIC(42,39),  strike NUMERIC(8,2), 
+ * 	dt_vencimento date, risco NUMERIC(8,5), preco_asset NuMERIC(8,2))
+ *	@autho: MC LOC
+ *	@date: 2021-05-15
+ */
+CREATE OR REPLACE FUNCTION load_from_csv(filepath text, lot_name VARCHAR(70), lot_id BIGINT)
+RETURNS void
+LANGUAGE plpgsql
+AS $func$
+DECLARE sql text;
+BEGIN
+  EXECUTE format($$ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN %s SET DEFAULT '%s';$$, 'lot_name', lot_name);
+  EXECUTE format($$ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN %s SET DEFAULT '%s';$$, 'lot_id', lot_id);
+  SELECT format($$COPY B3Log.B3SignalLoggerRaw(%s) FROM '%s' WITH (FORMAT csv, HEADER true, DELIMITER ',');$$
+        , string_agg(quote_ident('lot_name'), ','), string_agg(quote_ident('lot_id'), ',') filepath)
+  INTO sql
+  FROM   pg_attribute
+  WHERE attrelid = 'B3Log.B3SignalLoggerRaw'::regclass
+      AND attname != 'lot_name'
+      AND attnum > 0;
+  EXECUTE sql;
+END;
+$func$;
 
+SELECT test_func('/workdir/some_file.txt', 'xtra_col', 'b');
 
+ 
+-- ************ F I M **************** loadFromCSV *********************************
 
 
 
@@ -665,7 +716,29 @@ select current_schemas(false)
   SELECT  c.*
       FROM   pg_catalog.pg_class c
       JOIN   pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-      WHERE  n.nspname = 'B3Log'
+      WHERE  n.nspname = 'B3Log'CREATE OR REPLACE FUNCTION test_func(filepath text, xcol text, fillval text)
+RETURNS void
+LANGUAGE plpgsql
+AS $func$
+DECLARE sql text;
+BEGIN
+  EXECUTE format($$ALTER TABLE my_table ALTER COLUMN %s SET DEFAULT '%s';$$, xcol, fillval);
+
+  SELECT format($$COPY my_table(%s) FROM '%s' WITH (FORMAT CSV, DELIMITER '|', NULL 'NULL', HEADER true);$$
+        , string_agg(quote_ident(attname), ','), filepath)
+  INTO sql
+  FROM   pg_attribute
+  WHERE attrelid = 'my_table'::regclass
+      AND attname != 'xtra_col'
+      AND attnum > 0;
+  EXECUTE sql;
+
+  EXECUTE format($$ALTER TABLE my_table ALTER COLUMN %s DROP DEFAULT;$$, xcol);
+END;
+$func$;
+
+SELECT test_func('/workdir/some_file.txt', 'xtra_col', 'b');
+
       AND    n.nspname NOT LIKE 'pg_%'  -- exclude system schemas!
       AND    c.relname = 'volatilidade_historica'
       AND    c.relkind = 'r';         -- you probably need this

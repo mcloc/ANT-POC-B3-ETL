@@ -61,11 +61,11 @@ CREATE INDEX b3historical_voltot_idx
  ( VOLTOT DESC );
  CLUSTER b3historical_totneg_idx ON B3Historical;
 
---REINDEX INDEX b3historical_voltot_idx
+--REINDEX INDEX b3signallogger_asset_idx
 CREATE INDEX b3signallogger_asset_idx
- ON B3Log.B3SignalLogger USING BTREE
+ ON B3Log.B3SignalLoggerRaw USING BTREE
  ( asset ASC );
-CLUSTER b3signallogger_asset_idx ON B3Log.B3SignalLogger;
+CLUSTER b3signallogger_asset_idx ON B3Log.B3SignalLoggerRaw;
 
 CREATE INDEX b3signallogger_asset_strike_vencimento_idx
  ON B3Log.B3SignalLogger USING BTREE

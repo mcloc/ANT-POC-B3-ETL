@@ -595,18 +595,62 @@ select * from Intellect.csv_load_lot
 --where status <= -1 
 order by lot_name 
 
-update Intellect.csv_load_lot set status = -1 where id = 49
+update Intellect.csv_load_lot set status = 300 where id = 1
 
 select * from Intellect.processment_errors_log
 
-select * from Intellect.processment_rotines
+select * from Intellect.processment_rotines where active_status = true
+hot_
+
 
 truncate Intellect.csv_load_registry RESTART IDENTITY;
 truncate Intellect.csv_load_lot RESTART IDENTITY CASCADE;
 truncate Intellect.processment_execution RESTART IDENTITY CASCADE;
+truncate b3log.b3ativosopcoes RESTART IDENTITY CASCADE;
 
 
-select count(1) from B3Log.b3signallogger 
+ select 'BOVA11' as ativo, 'BOVA' as substr_ativo, asset as opcao_ativo 
+from B3Log.B3SignalLoggerRaw  
+WHERE lot_id = 1 AND (strike != 0 AND asset like 'BOVA%')
+group by 1,2,3
+order by 1,3
+
+INSERT INTO Intellect.hot_table_derivatives(data,hora,asset,valor_ativo,ultimo,strike,oferta_compra,oferta_venda,vencimento,validade,estado_atual,relogio_last_change,VOC, VOV, contratos_abertos, valor_medio_by_negocios, valor_medio_by_quantidade, negocios, quantidade, volume, lot_name, lot_id) 
+VALUES('2021-05-06 -03', '16:42:41-03', 'PETRR246', 23.42, 3.3, 26.46, 3.01, 3.64, '2021-06-18 -03', '2021-06-18 -03', 'Aberto', '2021-05-06 16:42:45-03', 11000, 10000, 39800, 2315682.5, 3.3, 4, 2805000, 9262730.0,'RTD_20210506','1'::numeric)
+
+
+select * from intellect.hot_table_derivatives
+
+select count(1) from intellect.hot_table_derivatives
+
+select * from intellect.hot_tab:le_assets
+
+select count(1) from intellect.hot_table_assets
+
+select * from B3Log.b3signalloggerRaw
+limit 100
+
+select count(1) from B3Log.b3signalloggerRaw
+
+select min(id) from B3Log.b3signalloggerRaw
+
+select max(id) from B3Log.b3signalloggerRaw
+
+
+delete from  B3Log.b3signalloggerRaw where asset NOT LIKE substring('PETR', '[A-Z]+')||'%'
+
+select relogio from B3Log.b3signalloggerRaw where id = 500000
+
+select asset from B3Log.b3signalloggerRaw where id < 500000
+group by 1
+
+--delete from B3Log.b3signalloggerRaw where id > 500000
+
+
+select * from b3log.b3ativosopcoes; 
+
+--delete from b3log.b3ativosopcoes;
+
 
 SELECT relname, oid, relfilenode FROM pg_class WHERE relname = 'B3SignalLogger';
 
@@ -615,6 +659,14 @@ SELECT * FROM pg_class WHERE relname  like 'b3%';
 SELECT * FROM pg_class WHERE relnamespace = 16394
 
 SELECT * FROM pg_class WHERE oid  = 16392
+
+
+
+select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,   a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume  from B3Log.b3signalloggerraw a 			LEFT JOIN B3Log.b3signalloggerraw b ON a.relogio=b.relogio AND b.asset = 'PETR4' 			where  a.asset like  substring('PETR4', '[A-Z]+')||'%' AND a.strike != 0 	and a.lot_id = 1and b.lot_id = 1ORDER BY a.relogio ASC
+
+select  count(1) from B3Log.b3signalloggerraw a 			LEFT JOIN B3Log.b3signalloggerraw b ON a.relogio=b.relogio AND b.asset = 'PETR4' 			where  a.asset like  substring('PETR4', '[A-Z]+')||'%' AND a.strike != 0 	and a.lot_id = 1and b.lot_id = 1 
+
+
 
 WITH ativos as (
 select asset as ativo, substring(asset, '[A-Z]+') as opcao from B3Log.B3SignalLogger  
@@ -637,3 +689,6 @@ limit 1000;
 
 INSERT INTO Intellect.processment_rotines (name, description, active_status, processment_seq, processment_group, processment_mode, new_thread, thread_name, created_at) VALUES 
 ('handler_start', 'ETL Level-1 populate assets', true, 21, 'etl', 'batch_process', false,null,   now())
+
+
+update Intellect.csv_load_lot set status = 30 where id = 1	
