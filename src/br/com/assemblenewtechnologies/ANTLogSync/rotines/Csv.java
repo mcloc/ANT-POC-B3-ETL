@@ -513,6 +513,8 @@ public class Csv extends AbstractRotine {
 			default:
 				csv_db_registry.changeStatus(file_status);
 			}
+			
+			file.delete();
 
 			return;
 		}
@@ -690,9 +692,9 @@ public class Csv extends AbstractRotine {
 				// INCREMENT CSV LOT STATUS FINISHED TO +1
 				int csv_status = csv_lot.getStatus();
 				if (csv_status < 0)
-					csv_lot.changeStatus(csv_lot.getStatus() - 88);
+					csv_lot.changeStatus(csv_lot.getStatus() - 88); // from X02 status to X90
 				else
-					csv_lot.changeStatus(csv_lot.getStatus() + 88);
+					csv_lot.changeStatus(csv_lot.getStatus() + 88);// from X02 status to X90
 			} catch (Exception e) {
 				LOGGER.error(e.getMessage());
 				throw e;
