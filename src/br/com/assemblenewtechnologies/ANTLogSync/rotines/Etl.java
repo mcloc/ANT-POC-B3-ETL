@@ -404,9 +404,18 @@ public class Etl extends AbstractRotine {
 
 						SimpleDateFormat formatter = new SimpleDateFormat("hh:mm:ss");
 						Time _hora = new Time(formatter.parse(hora).getTime());
-
-						double valor_medio_by_negocios = volume / negocios;
-						double valor_medio_by_quantidade = volume / quantidade;
+						double valor_medio_by_negocios;
+						double valor_medio_by_quantidade;
+						
+						if(negocios != 0)
+							valor_medio_by_negocios = volume / negocios;
+						else
+							valor_medio_by_negocios = 0;
+						
+						if(quantidade != 0)
+							valor_medio_by_quantidade = volume / quantidade;
+						else
+							valor_medio_by_quantidade = 0;
 
 						preparedStatement.setDate(1, _date);
 						preparedStatement.setTime(2, _hora);
@@ -676,10 +685,19 @@ public class Etl extends AbstractRotine {
 
 						SimpleDateFormat formatter = new SimpleDateFormat("hh:mm:ss");
 						Time _hora = new Time(formatter.parse(hora).getTime());
-
-						double valor_medio_by_negocios = volume / negocios;
-						double valor_medio_by_quantidade = volume / quantidade;
-
+						double valor_medio_by_negocios;
+						double valor_medio_by_quantidade;
+						
+						if(negocios != 0)
+							valor_medio_by_negocios = volume / negocios;
+						else
+							valor_medio_by_negocios = 0;
+						
+						if(quantidade != 0)
+							valor_medio_by_quantidade = volume / quantidade;
+						else
+							valor_medio_by_quantidade = 0;
+						
 						preparedStatement.setDate(1, _date);
 						preparedStatement.setTime(2, _hora);
 						preparedStatement.setString(3, asset);
