@@ -323,7 +323,7 @@ public class Etl extends AbstractRotine {
 				int quantidade;
 				Double volume;
 
-				String compiledQuery = "INSERT INTO Intellect.hot_table_derivatives("
+				String compiledQuery = "INSERT INTO Intellect.hot_table_assets("
 						+ "data,hora,asset,valor_ativo,ultimo,strike,oferta_compra,oferta_venda,vencimento,validade,estado_atual,relogio_last_change,"
 						+ "VOC, VOV, contratos_abertos, valor_medio_by_negocios, valor_medio_by_quantidade, negocios, quantidade, volume, lot_name, lot_id) VALUES"
 						+ "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
@@ -432,8 +432,8 @@ public class Etl extends AbstractRotine {
 						preparedStatement.setInt(13, VOC);
 						preparedStatement.setInt(14, VOV);
 						preparedStatement.setBigDecimal(15, contratos_abertos);
-						preparedStatement.setDouble(16, valor_medio_by_negocios);
-						preparedStatement.setDouble(17, valor_medio_by_quantidade);
+						preparedStatement.setDouble(16, MathHelper.round(valor_medio_by_negocios,2));
+						preparedStatement.setDouble(17, MathHelper.round(valor_medio_by_quantidade,2));
 						preparedStatement.setInt(18, negocios);
 						preparedStatement.setInt(19, quantidade);
 						preparedStatement.setDouble(20, volume);
