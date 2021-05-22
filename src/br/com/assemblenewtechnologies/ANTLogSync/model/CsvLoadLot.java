@@ -381,7 +381,7 @@ public class CsvLoadLot {
 		checkConnection();
 		
 		// GET ALL LOTs STATUS FINISHED TO INITIATE ETL PHASE 1
-		String status_finished = CsvLoadLot.getFinishedReadyToPurgeStatusCommaSeparated();
+		String status_finished = CsvLoadLot.getFinishedStatusStringCommaSeparated();
 		Statement stmt = _connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");

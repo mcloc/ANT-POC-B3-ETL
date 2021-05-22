@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.MathHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadLot;
 import br.com.assemblenewtechnologies.ANTLogSync.process_handlers.ETLHandler;
 
@@ -87,7 +88,7 @@ public class Etl extends AbstractRotine {
 		for (BigDecimal csv_lot_id : csv_lot_finished) {
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 			try {
-				LOGGER.debug("Fetching assets from B3Log.B3SignalLoggerRaw:");
+				LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw:");
 				stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo "
 						+ "from B3Log.B3SignalLoggerRaw  " + "WHERE strike = 0" + "and lot_id = " + csv_lot_id + "  "
@@ -170,7 +171,8 @@ public class Etl extends AbstractRotine {
 
 		long _now = System.currentTimeMillis();
 		long _diff_time = _now - start_time;
-		LOGGER.debug("Total time to populate assets: " + _diff_time + "ms ");
+		if(csv_lot_finished != null && csv_lot_finished.size() > 0)
+			LOGGER.info("Total time to populate assets: " + _diff_time + "ms ");
 	}
 
 	private void insertNewAssetsInDB(Connection connection, List<String> _inserted_ativo, List<String> _ativos_options,
@@ -693,8 +695,8 @@ public class Etl extends AbstractRotine {
 						preparedStatement.setInt(13, VOC);
 						preparedStatement.setInt(14, VOV);
 						preparedStatement.setBigDecimal(15, contratos_abertos);
-						preparedStatement.setDouble(16, valor_medio_by_negocios);
-						preparedStatement.setDouble(17, valor_medio_by_quantidade);
+						preparedStatement.setDouble(16, MathHelper.round(valor_medio_by_negocios,2));
+						preparedStatement.setDouble(17, MathHelper.round(valor_medio_by_quantidade,2));
 						preparedStatement.setInt(18, negocios);
 						preparedStatement.setInt(19, quantidade);
 						preparedStatement.setDouble(20, volume);
