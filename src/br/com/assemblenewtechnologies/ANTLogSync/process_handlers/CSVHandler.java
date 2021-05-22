@@ -38,6 +38,8 @@ public class CSVHandler implements Runnable {
 				try {
 					csv_rotine.setStartTime();
 					csv_rotine.csv_check_for_files();
+					csv_rotine.csv_set_purge_lots();
+					csv_rotine.csv_check_for_lots_to_purge();
 					csv_rotine.setExecuting(false);
 				} catch (Exception e) {
 					LOGGER.error("[CSV Thread] Error");

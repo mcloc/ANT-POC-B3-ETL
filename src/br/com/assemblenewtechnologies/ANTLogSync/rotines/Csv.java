@@ -4,15 +4,19 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.postgresql.copy.CopyManager;
@@ -21,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
 import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
 import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadLot;
@@ -88,7 +93,7 @@ public class Csv extends AbstractRotine {
 	}
 
 //	public synchronized void csv_check_for_files()  throws Exception {
-	public void csv_check_for_files()  throws Exception {
+	public void csv_check_for_files() throws Exception {
 		if (isExecuting()) {
 			LOGGER.error("[CSV] checking for files already executing, returning");
 			return;
@@ -109,7 +114,61 @@ public class Csv extends AbstractRotine {
 		csv_load_start();
 	}
 
-	public void csv_load_start() throws Exception {
+	public void csv_check_for_lots_to_purge() throws Exception {
+		if (isExecuting()) {
+			LOGGER.error("[CSV] already executing, returning");
+			return;
+		}
+
+		setExecuting(true);
+
+		checkConnection();
+
+		long start_time = System.currentTimeMillis();
+		LOGGER.debug("Initializing B3 SignalLogger purge phase - 'csv_check_for_lots_to_purge' ...");
+
+		Statement stmt;
+		ResultSet rs;
+		List<BigDecimal> csv_lot_finished2purge;
+		try {
+			csv_lot_finished2purge = CsvLoadLot.getFinishedLotsReadyToPurge();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			throw e;
+		}
+
+		// FOR EACH FINISHED LOT
+		for (BigDecimal csv_lot_id : csv_lot_finished2purge) {
+			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
+			try {
+
+				String SQL = "DELETE FROM B3Log.B3SignalLoggerRaw WHERE lot_id = ?";
+				int affectedrows = 0;
+				PreparedStatement pstmt = connection.prepareStatement(SQL);
+				pstmt.setBigDecimal(1, csv_lot_id);
+				affectedrows = pstmt.executeUpdate();
+
+				LOGGER.info("[CSV] purged: " + affectedrows + " rows in table B3Log.B3SignalLoggerRaw from lot: "
+						+ csv_lot.getLot_name());
+
+				// INCREMENT CSV LOT STATUS FINISHED TO +1
+				int csv_status = csv_lot.getStatus();
+				if (csv_status < 0)
+					csv_lot.changeStatus(csv_lot.getStatus() - 1);
+				else
+					csv_lot.changeStatus(csv_lot.getStatus() + 1);
+
+			} catch (Exception e) {
+				LOGGER.error(e.getMessage());
+				throw e;
+			}
+		}
+
+		LOGGER.debug("[CSV] checking for finished lots ready to purge from raw table...");
+
+	}
+
+	private void csv_load_start() throws Exception {
 		rows_processed = 0;
 		directories_processed = 0;
 		files_processed = 0;
@@ -142,11 +201,11 @@ public class Csv extends AbstractRotine {
 
 	}
 
-	private void processRTD(File[] rtd_list)  {
+	private void processRTD(File[] rtd_list) {
 		String last_directory = null;
 		boolean in_root_dir = false;
-		
-		//FOREACH RTD DIRECTORY in 'data_load' dir
+
+		// FOREACH RTD DIRECTORY in 'data_load' dir
 		for (File _file_pointer : rtd_list) {
 			if (_file_pointer.isDirectory())
 				try {
@@ -266,8 +325,7 @@ public class Csv extends AbstractRotine {
 
 		Arrays.sort(_logdata_list);
 
-		LOGGER.info("[CSV] processing " + current_lot_directory_name + " :" + _logdata_list.length
-				+ " files now...");
+		LOGGER.info("[CSV] processing " + current_lot_directory_name + " :" + _logdata_list.length + " files now...");
 		int i = 0;
 		for (File _logdata_file : _logdata_list) {
 			/**
@@ -334,7 +392,7 @@ public class Csv extends AbstractRotine {
 				throw e;
 			}
 		} // END OF LOOP
-		
+
 		LOGGER.info("[CSV] processed " + current_lot_directory_name + " :" + i
 				+ " files have been processed in this lot...");
 	}
@@ -514,7 +572,7 @@ public class Csv extends AbstractRotine {
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
 			if (csv_load_lot.isFinished())
-				csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_NOTARCHIVED);
+				csv_load_lot.changeStatus(CsvLoadLot.STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED);
 			else
 				csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_NOTFINISHED_NOTARCHIVED);
 			throw new Exception(e);
@@ -533,20 +591,20 @@ public class Csv extends AbstractRotine {
 		if (csv_load_lot.getFiles_error_not_loaded() > 0 && csv_load_lot.getFiles_loaded() > 0
 				&& csv_load_lot.isFinished()) {
 			if (!GlobalProperties.getInstance().isCSV_ARCHIVE_ON())
-				csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_ARCHIVED);
+				csv_load_lot.changeStatus(CsvLoadLot.STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED);
 			else
-				csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG);
+				csv_load_lot.changeStatus(CsvLoadLot.STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG);
 			return;
 		}
 
 		if (csv_load_lot.getFiles_loaded() > 0 && csv_load_lot.getFiles_error_not_loaded() == 0
 				&& csv_load_lot.isFinished()) {
-			csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_NOERRORS_ARCHIVED);
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED);
 			return;
 		}
 
 		if (csv_load_lot.isFinished())
-			csv_load_lot.changeStatus(CsvLoadLot.STATUS_FINISHED_WITHERRORS_ARCHIVED);
+			csv_load_lot.changeStatus(CsvLoadLot.STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED);
 		else
 			csv_load_lot.changeStatus(CsvLoadLot.STATUS_ERROR_ARCHIVED);
 
@@ -589,4 +647,59 @@ public class Csv extends AbstractRotine {
 		this.connection = connection;
 	}
 
+	public void checkConnection() throws Exception {
+		try {
+			if (connection == null || connection.isClosed()) {
+				connection = DBConnectionHelper.getNewConn();
+				connection.setAutoCommit(true);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	public void csv_set_purge_lots() throws Exception {
+		if (isExecuting()) {
+			LOGGER.error("[CSV] already executing, returning");
+			return;
+		}
+
+		setExecuting(true);
+
+		checkConnection();
+
+		long start_time = System.currentTimeMillis();
+		LOGGER.debug("Initializing B3 SignalLogger purge phase - 'csv_set_purge_lots' ...");
+
+		Statement stmt;
+		ResultSet rs;
+		List<BigDecimal> csv_lot_finished2purge;
+		try {
+			csv_lot_finished2purge = CsvLoadLot.getFinishedNormalizedLots();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			throw e;
+		}
+
+		// FOR EACH FINISHED LOT
+		for (BigDecimal csv_lot_id : csv_lot_finished2purge) {
+			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
+			try {
+
+				// INCREMENT CSV LOT STATUS FINISHED TO +1
+				int csv_status = csv_lot.getStatus();
+				if (csv_status < 0)
+					csv_lot.changeStatus(csv_lot.getStatus() - 88);
+				else
+					csv_lot.changeStatus(csv_lot.getStatus() + 88);
+			} catch (Exception e) {
+				LOGGER.error(e.getMessage());
+				throw e;
+			}
+		}
+
+		LOGGER.debug("[CSV] csv_set_purge_lots for finished->normalized  lots to ready to purge from raw table...");
+
+	}
 }

@@ -40,15 +40,15 @@ public class CsvLoadLot {
 	 * 
 	 * // found the "fim_de_lote.txt" file on the lot
 	 * // WIL NOT PROCECESS AGAIN
-	 * STATUS_FINISHED_NOERRORS_ARCHIVED = 30;
+	 * STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED = 30;
 	 * 
 	 * // found the "fim_de_lote.txt" file on the lot
 	 * // WIL NOT PROCECESS AGAIN
-	 * STATUS_FINISHED_WITHERRORS_ARCHIVED = -30;
+	 * STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED = -30;
 	 * 
 	 * // found the "fim_de_lote.txt" file on the lot
 	 * // WIL NOT PROCECESS AGAIN
-	 * STATUS_FINISHED_WITHERRORS_NOTARCHIVED = -31;
+	 * STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED = -31;
 	 * 
 	 * //archive_buffer may be left behind. No "fim_de_lote.txt" found
 	 * // **** MAY RESUME PROCECESS AGAIN
@@ -66,22 +66,35 @@ public class CsvLoadLot {
 	 */
 
 	public static final int STATUS_LOADING = 0;
-	public static final int STATUS_ARCHIVING = 10;
-	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED = 30;
-	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED_ASSETS_EXTRACTED = 31; 
-	public static final int STATUS_FINISHED_WITHERRORS_ARCHIVED = -30;
-	public static final int STATUS_FINISHED_WITHERRORS_ARCHIVED_ASSETS_EXTRACTED = -31;
-	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED = -40;
-	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED_ASSETS_EXTRACTED = -41;
-	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED_BYCONFIG = 41;
-	public static final int STATUS_FINISHED_NOERRORS_ARCHIVED_BYCONFIG_ASSETS_EXTRACTED = 41;
-	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG = -50;
-	public static final int STATUS_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG_ASSETS_EXTRACTED = -51;
-	public static final int STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -60; 
-	public static final int STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -100;
+	public static final int STATUS_ARCHIVING = 100;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED = 300;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_ASSETS_EXTRACTED = 301;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_NORMALIZED = 302;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_READY_TO_PURGE = 390;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_PURGED = 391;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED = -300;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED_ASSETS_EXTRACTED = -301;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED_NORMALIZED = -302;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED_READY_TO_PURGE = -390;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED_PURGED = -391;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED = -400;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_ASSETS_EXTRACTED = -401;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_NORMALIZED = -402;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_READY_TO_PURGE = -490;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_PURGED = -491;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_BYCONFIG = 400;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_BYCONFIG_ASSETS_EXTRACTED = 401;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_BYCONFIG_NORMALIZED = 402;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_BYCONFIG_READY_TO_PURGE = 490;
+	public static final int STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_BYCONFIG_PURGED = 491;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG = -500;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG_ASSETS_EXTRACTED = -501;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG_NORMALIZED = -502;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG_READY_TO_PURGE = -590;
+	public static final int STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_BYCONFIG_PURGED = -591;
+	public static final int STATUS_ERROR_NOTFINISHED_NOTARCHIVED = -600; 
+	public static final int STATUS_ERROR_NOTFINISHED_ARCHIVED_BY_CLEANUP_PROCESS = -1000;
 	public static final int STATUS_ERROR_ARCHIVED = -1; 
-	
-	
 	
 	
 	private static Logger LOGGER = LoggerFactory.getLogger(CsvLoadLot.class);
@@ -125,6 +138,7 @@ public class CsvLoadLot {
 		Timestamp _updated_at;
 		Timestamp _created_at;
 		try {
+			checkConnection();
 			_now = System.currentTimeMillis();
 			_created_at = new Timestamp(_now);
 			_updated_at = new Timestamp(_now);
@@ -169,6 +183,7 @@ public class CsvLoadLot {
 		long _now;
 		Timestamp _updated_at;
 		try {
+			checkConnection();
 			_now = System.currentTimeMillis();
 			_updated_at = new Timestamp(_now);
 			preparedStatement = _connection.prepareStatement(compiledQuery);
@@ -191,6 +206,7 @@ public class CsvLoadLot {
 	public static boolean checkIfLotAlreadyProcessed(String lot) throws Exception {
 		Statement stmt;
 		try {
+			checkConnection();
 			stmt = _connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot WHERE lot_name = '" + lot+ "' "
 				+"ORDER BY updated_at DESC limit 1");
@@ -209,6 +225,7 @@ public class CsvLoadLot {
 	public static CsvLoadLot getLotByLotName(String lot) throws Exception {
 		Statement stmt;
 		try {
+			checkConnection();
 			stmt = _connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot " + "WHERE lot_name = '" + lot
 					+ "' order by updated_at DESC limit 1");
@@ -236,13 +253,7 @@ public class CsvLoadLot {
 	
 	public static CsvLoadLot getLotByLotId(BigDecimal lot_id) throws Exception {
 		Statement stmt;
-		try {
-			if(_connection == null || _connection.isClosed()) 
-				_connection = DBConnectionHelper.getConn();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new Exception("No database connection...");
-		}
+		CsvLoadLot.checkConnection();
 		try {
 			stmt = _connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot " + "WHERE id = '" + lot_id
@@ -271,9 +282,9 @@ public class CsvLoadLot {
 
 	private static void setFinishedStatus(CsvLoadLot csv_lot) {
 		switch(csv_lot.status) {
-			case STATUS_FINISHED_NOERRORS_ARCHIVED:
-			case STATUS_FINISHED_WITHERRORS_ARCHIVED:
-			case STATUS_FINISHED_WITHERRORS_NOTARCHIVED:
+			case STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED:
+			case STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED:
+			case STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED:
 				csv_lot.finished = true;
 				break;
 			default:
@@ -283,20 +294,56 @@ public class CsvLoadLot {
 	
 	public static List<Integer> getFinishedStatus(){
 		List<Integer> status_finished = new ArrayList<Integer>();
-		status_finished.add(STATUS_FINISHED_NOERRORS_ARCHIVED);
-		status_finished.add(STATUS_FINISHED_WITHERRORS_ARCHIVED);
-		status_finished.add(STATUS_FINISHED_WITHERRORS_NOTARCHIVED);
+		status_finished.add(STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED);
+		status_finished.add(STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED);
+		status_finished.add(STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED);
+		status_finished.add(STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_BYCONFIG);
 		
 		return status_finished;
 	}
 	
-//	private static List<String> getFinishedStatusString(){
-//		List<Integer> status_finished = getFinishedStatus();
-//		List<>
-//	}
+	public static List<Integer> getFinishedReadyToPurgeStatus(){
+		List<Integer> status_finished = new ArrayList<Integer>();
+		status_finished.add(STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_READY_TO_PURGE);
+		status_finished.add(STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED_READY_TO_PURGE);
+		status_finished.add(STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_READY_TO_PURGE);
+		status_finished.add(STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_BYCONFIG_READY_TO_PURGE);
+		
+		return status_finished;
+	}
+	
+	public static List<Integer> getFinishedNormalizedStatus(){
+		List<Integer> status_finished = new ArrayList<Integer>();
+		status_finished.add(STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_NORMALIZED);
+		status_finished.add(STATUS_LOADED_FINISHED_WITHERRORS_ARCHIVED_NORMALIZED);
+		status_finished.add(STATUS_LOADED_FINISHED_WITHERRORS_NOTARCHIVED_NORMALIZED);
+		status_finished.add(STATUS_LOADED_FINISHED_NOERRORS_ARCHIVED_BYCONFIG_NORMALIZED);
+		
+		return status_finished;
+	}
+	
+	public static String getFinishedNormalizedStatusCommaSeparated(){
+		List<Integer> status_finished = getFinishedNormalizedStatus();
+		StringBuilder sb = implodeByComma(status_finished);
+		
+		return sb.toString();
+	}
+
+	public static String getFinishedReadyToPurgeStatusCommaSeparated(){
+		List<Integer> status_finished = getFinishedReadyToPurgeStatus();
+		StringBuilder sb = implodeByComma(status_finished);
+		
+		return sb.toString();
+	}
 	
 	public static String getFinishedStatusStringCommaSeparated(){
 		List<Integer> status_finished = getFinishedStatus();
+		StringBuilder sb = implodeByComma(status_finished);
+		
+		return sb.toString();
+	}
+	
+	private static StringBuilder implodeByComma(List<Integer> status_finished) {
 		StringBuilder sb = new StringBuilder();
 		int i = 1;
 		for (Integer s : status_finished) {
@@ -306,8 +353,7 @@ public class CsvLoadLot {
 				sb.append(""+s).append(",");
 			i++;
 		}
-		
-		return sb.toString();
+		return sb;
 	}
 	
 	public static String getFinishedStatusStringCommaSeparated(int status_increment){
@@ -328,6 +374,72 @@ public class CsvLoadLot {
 		}
 		
 		return sb.toString();
+	}
+	
+	
+	public static List<BigDecimal> getFinishedLots() throws Exception {
+		checkConnection();
+		
+		// GET ALL LOTs STATUS FINISHED TO INITIATE ETL PHASE 1
+		String status_finished = CsvLoadLot.getFinishedReadyToPurgeStatusCommaSeparated();
+		Statement stmt = _connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rs = stmt.executeQuery(
+				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
+		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
+		while (rs.next()) {
+			csv_lot_finished.add(rs.getBigDecimal("id"));
+		}
+		return csv_lot_finished;
+	}
+	
+	public static List<BigDecimal> getFinishedLotsReadyToPurge() throws Exception {
+		checkConnection();
+		
+		// GET ALL LOTs STATUS FINISHED TO INITIATE ETL PHASE 1
+		String status_finished = CsvLoadLot.getFinishedReadyToPurgeStatusCommaSeparated();
+		Statement stmt = _connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rs = stmt.executeQuery(
+				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
+		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
+		while (rs.next()) {
+			csv_lot_finished.add(rs.getBigDecimal("id"));
+		}
+		return csv_lot_finished;
+	}
+
+	public static List<BigDecimal> getFinishedLotsAssetsExtracted() throws Exception {
+		checkConnection();
+		
+		// GET ALL LOTs STATUS FINISHED INCREMENTED BY 1 (populated assets) TO INITIATE
+		// ETL PHASE 1
+		int status_increment = 1;
+		String status_finished = CsvLoadLot.getFinishedStatusStringCommaSeparated(status_increment);
+		Statement stmt = _connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rs = stmt.executeQuery(
+				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
+		LOGGER.debug("status_finishedAssetsExtracted: " + status_finished);
+		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
+		while (rs.next()) {
+			csv_lot_finished.add(rs.getBigDecimal("id"));
+		}
+		return csv_lot_finished;
+	}
+	
+	public static List<BigDecimal> getFinishedNormalizedLots() throws Exception {
+		checkConnection();
+		
+		// GET ALL LOTs STATUS FINISHED INCREMENTED BY 1 (populated assets) TO INITIATE
+		// ETL PHASE 1
+		String status_finished = CsvLoadLot.getFinishedNormalizedStatusCommaSeparated();
+		Statement stmt = _connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rs = stmt.executeQuery(
+				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
+		LOGGER.debug("status_finishedAssetsExtracted: " + status_finished);
+		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
+		while (rs.next()) {
+			csv_lot_finished.add(rs.getBigDecimal("id"));
+		}
+		return csv_lot_finished;
 	}
 
 	public void incrementFilesLoaded() {
@@ -491,6 +603,17 @@ public class CsvLoadLot {
 	public static void set_connection(Connection _connection) {
 		CsvLoadLot._connection = _connection;
 	}
-
+	
+	private static void checkConnection() throws Exception {
+		try {
+			if (_connection == null || _connection.isClosed()) {
+				_connection = DBConnectionHelper.getNewConn();
+				_connection.setAutoCommit(true);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
 	
 }

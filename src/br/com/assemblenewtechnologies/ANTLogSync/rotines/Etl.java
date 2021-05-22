@@ -80,7 +80,7 @@ public class Etl extends AbstractRotine {
 		Statement stmt;
 		ResultSet rs;
 
-		List<BigDecimal> csv_lot_finished = getFinishedLots();
+		List<BigDecimal> csv_lot_finished = CsvLoadLot.getFinishedLots();
 		Map<String, String> ativo_opcoes_db = getAssetsInDB();
 
 		// FOR EACH FINISHED LOT
@@ -206,34 +206,7 @@ public class Etl extends AbstractRotine {
 		return ativo_opcoes_db;
 	}
 
-	private List<BigDecimal> getFinishedLots() throws SQLException {
-		// GET ALL LOTs STATUS FINISHED TO INITIATE ETL PHASE 1
-		String status_finished = CsvLoadLot.getFinishedStatusStringCommaSeparated();
-		Statement stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rs = stmt.executeQuery(
-				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
-		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
-		while (rs.next()) {
-			csv_lot_finished.add(rs.getBigDecimal("id"));
-		}
-		return csv_lot_finished;
-	}
 
-	private List<BigDecimal> getFinishedLotsAssetsExtracted() throws SQLException {
-		// GET ALL LOTs STATUS FINISHED INCREMENTED BY 1 (populated assets) TO INITIATE
-		// ETL PHASE 1
-		int status_increment = 1;
-		String status_finished = CsvLoadLot.getFinishedStatusStringCommaSeparated(status_increment);
-		Statement stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rs = stmt.executeQuery(
-				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
-		LOGGER.debug("status_finishedAssetsExtracted: " + status_finished);
-		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
-		while (rs.next()) {
-			csv_lot_finished.add(rs.getBigDecimal("id"));
-		}
-		return csv_lot_finished;
-	}
 
 	public void etl1_normalization() throws Exception {
 		start_time = System.currentTimeMillis();
@@ -241,7 +214,7 @@ public class Etl extends AbstractRotine {
 		Map<String, Object> asset_book_values;
 
 		List<String> ativos_list = new LinkedList<String>();
-		List<BigDecimal> csv_lot_finished = getFinishedLotsAssetsExtracted();
+		List<BigDecimal> csv_lot_finished = CsvLoadLot.getFinishedLotsAssetsExtracted();
 
 		for (BigDecimal csv_lot_id : csv_lot_finished) {
 			LOGGER.info("[ETL] etl1_normalization...");
@@ -933,7 +906,6 @@ public class Etl extends AbstractRotine {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	public void checkConnection() throws Exception {
