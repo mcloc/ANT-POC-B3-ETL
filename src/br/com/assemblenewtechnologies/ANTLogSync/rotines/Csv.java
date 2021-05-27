@@ -191,7 +191,7 @@ public class Csv extends AbstractRotine {
 				LOGGER.info("[CSV] total rows per sec: " + rows_processed / total_time + " seconds");
 				
 				LOGGER.info("[CSV] CLUSTERING RAW DATA INDEX");
-				clusterRawDataIndex();
+//				clusterRawDataIndex();
 				
 			}
 		} catch (Exception e) {
@@ -363,8 +363,8 @@ public class Csv extends AbstractRotine {
 				LOGGER.info("[CSV] END OF LOT found. Removing directory: " + index.getName() + " lot: "
 						+ csv_load_lot.getId() + " setted as finished.");
 				FileUtils.deleteDirectory(index);
-
 				zipArchive(current_lot_directory_name);
+				clusterRawDataIndex();
 				return; // get out of function NO MORE FILES After FIM_DE_LOTE.txt
 			}
 

@@ -230,7 +230,14 @@ public class Etl extends AbstractRotine {
 			}
 
 			if (ativos_list.size() == 0) {
-				throw new Exception("No mapped Assets found on B3Log.B3AtivosOpcoes");
+				LOGGER.error("No mapped Assets found on B3Log.B3AtivosOpcoes");
+				int csv_status = csv_lot.getStatus();
+				if (csv_status < 0)
+					csv_lot.changeStatus(csv_lot.getStatus() - 1);
+				else
+					csv_lot.changeStatus(csv_lot.getStatus() + 1);
+
+				continue;
 			}
 
 			LOGGER.info("etl1_normalization(): Total assets to normalize on this lot:" + csv_lot.getLot_name() + " - "
