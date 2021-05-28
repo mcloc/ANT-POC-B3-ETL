@@ -221,7 +221,7 @@ public class Etl extends AbstractRotine {
 			Statement stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
 					ResultSet.CONCUR_READ_ONLY);
 			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLoggerraw a "
-					+ "WHERE strike = 0 and lot_id = " + csv_lot_id + " group by 1,2 order by 1,2");
+					+ "WHERE lot_id = " + csv_lot_id + " AND strike = 0 group by 1,2 order by 1,2");
 			while (rs.next()) {
 				ativos_list.add(rs.getString("asset"));
 			}
@@ -293,8 +293,10 @@ public class Etl extends AbstractRotine {
 				String sql = "select  a.data, a.hora, a.asset, a.ultimo valor_ativo, 0 as preco_opcao, a.strike, a.oferta_compra, "
 						+ " a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
-						+ " from B3Log.b3signalloggerraw a " + " where a.asset = '" + _ativo
-						+ "' AND a.strike = 0 and a.lot_id = " + csv_lot.getId() + " " + " ORDER BY a.relogio ASC";
+						+ " from B3Log.b3signalloggerraw a "  
+						+ " where a.lot_id = " + csv_lot.getId() + " AND a.strike = 0 AND " 
+						+ " a.asset = '" + _ativo+ "' "
+						+ " ORDER BY a.relogio ASC";
 
 //					LOGGER.info(sql);
 				rs = stmt.executeQuery(sql);
@@ -574,9 +576,11 @@ public class Etl extends AbstractRotine {
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
 						+ " from B3Log.b3signalloggerraw a "
 						+ "			LEFT JOIN B3Log.b3signalloggerraw b ON a.relogio=b.relogio AND b.asset = '" + _ativo
-						+ "' " + "			where  a.asset like  substring('" + _ativo
-						+ "', '[A-Z]+')||'%' AND a.strike != 0 " + "	and a.lot_id = " + csv_lot.getId() + " "
-						+ "and b.lot_id = " + csv_lot.getId() + " " + "ORDER BY a.relogio ASC";
+						+ "' " + "			where   a.lot_id = " + csv_lot.getId() + " "
+						+ "and b.lot_id = " + csv_lot.getId() + " AND a.strike != 0 and "
+						+ "a.asset like  substring('" + _ativo 
+						+ "', '[A-Z]+')||'%'  " 
+						+ "ORDER BY a.relogio ASC";
 
 //					LOGGER.info(sql);
 				rs = stmt.executeQuery(sql);

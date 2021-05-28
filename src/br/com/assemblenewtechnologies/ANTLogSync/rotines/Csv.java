@@ -183,7 +183,7 @@ public class Csv extends AbstractRotine {
 				LOGGER.info("[CSV] total rows per sec: " + rows_processed / total_time + " seconds");
 				
 				LOGGER.info("[CSV] CLUSTERING RAW DATA INDEX");
-				clusterRawDataIndex();
+//				clusterRawDataIndex();
 				
 			}
 		} catch (Exception e) {
@@ -202,7 +202,7 @@ public class Csv extends AbstractRotine {
 		try {
 			LOGGER.info("[CSV] clustering table B3SignalLoggerRaw asset index.");
 			PreparedStatement preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(
-					"CLUSTER b3signallogger_asset_idx ON B3Log.B3SignalLoggerRaw;");
+					"CLUSTER b3signallogger_lot_id_asset_idx ON B3Log.B3SignalLoggerRaw;");
 			preparedStatement.execute();
 			long timer4 = System.currentTimeMillis();
 			long diff_time = timer4 - _start_time;
@@ -356,6 +356,7 @@ public class Csv extends AbstractRotine {
 						+ csv_load_lot.getId() + " setted as finished.");
 				FileUtils.deleteDirectory(index);
 				zipArchive(current_lot_directory_name);
+//				clusterRawDataIndex();
 				return; // get out of function NO MORE FILES After FIM_DE_LOTE.txt
 			}
 
