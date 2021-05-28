@@ -30,27 +30,22 @@ public class Etl extends AbstractRotine {
 	private String thread_name = "ETL_HANDLER";
 	private Thread thread;
 	private ETLHandler runnable;
-	private Connection connection;
 
 	private static final int BULK_BATCH_INSERT_SIZE = 150000;
 
 	public Etl() throws Exception {
 		try {
-			connection = DBConnectionHelper.getETLConn();
-			connection.setAutoCommit(true);
+			DBConnectionHelper.getETLConn().setAutoCommit(true);
 		} catch (Exception e) {
 			e.printStackTrace();
-			connection.close();
-			throw new Exception("No database connection...");
+			DBConnectionHelper.getETLConn().close();
+			throw new Exception("No database DBConnectionHelper.getETLConn()...");
 		}
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				try {
-					if (connection != null) {
-						if (!connection.isClosed())
-							connection.close();
-					}
+					DBConnectionHelper.closeETLConn();
 				} catch (Exception e) {
 					LOGGER.error("ETL processment shutdown error");
 					LOGGER.error(e.getMessage(), e);
@@ -89,7 +84,8 @@ public class Etl extends AbstractRotine {
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 			try {
 				LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw:");
-				stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+				stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
+						ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo "
 						+ "from B3Log.B3SignalLoggerRaw  " + "WHERE strike = 0" + "and lot_id = " + csv_lot_id + "  "
 						+ "group by 1,2" + "order by 1,2");
@@ -114,7 +110,8 @@ public class Etl extends AbstractRotine {
 					_ativos.put(rs.getString("asset"), rs.getString("substr_ativo"));
 				}
 
-				stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+				stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
+						ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery("select asset as opcao " + "from B3Log.B3SignalLoggerRaw  " + "WHERE strike != 0"
 						+ "and lot_id = " + csv_lot_id + "  " + "group by 1" + "order by 1");
 //				rows = 0;
@@ -144,7 +141,7 @@ public class Etl extends AbstractRotine {
 					Map.Entry<String, String> entry = itr.next();
 					String _ativo = entry.getKey();
 					String _ativo_substr = entry.getValue();
-					insertNewAssetsInDB(connection, _inserted_ativo, _ativos_options, _ativo, _ativo_substr);
+					insertNewAssetsInDB(_inserted_ativo, _ativos_options, _ativo, _ativo_substr);
 				}
 
 				// TODO: INSERT ASSETS WITH NO DERIVATIVES (strike = 0 and none != 0) they are
@@ -171,12 +168,12 @@ public class Etl extends AbstractRotine {
 
 		long _now = System.currentTimeMillis();
 		long _diff_time = _now - start_time;
-		if(csv_lot_finished != null && csv_lot_finished.size() > 0)
+		if (csv_lot_finished != null && csv_lot_finished.size() > 0)
 			LOGGER.info("Total time to populate assets: " + _diff_time + "ms ");
 	}
 
-	private void insertNewAssetsInDB(Connection connection, List<String> _inserted_ativo, List<String> _ativos_options,
-			String _ativo, String _ativo_substr) throws SQLException {
+	private void insertNewAssetsInDB(List<String> _inserted_ativo, List<String> _ativos_options, String _ativo,
+			String _ativo_substr) throws Exception {
 		PreparedStatement preparedStatement;
 		for (String _option : _ativos_options) {
 			if (_option.contains(_ativo_substr)) {
@@ -185,7 +182,8 @@ public class Etl extends AbstractRotine {
 						+ "VALUES (?,?,?)";
 //		    					LOGGER.info(sql);
 
-				preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+				preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(sql,
+						Statement.RETURN_GENERATED_KEYS);
 				preparedStatement.setString(1, _ativo);
 				preparedStatement.setString(2, _ativo_substr);
 				preparedStatement.setString(3, _option);
@@ -195,11 +193,11 @@ public class Etl extends AbstractRotine {
 		}
 	}
 
-	private Map<String, String> getAssetsInDB() throws SQLException {
+	private Map<String, String> getAssetsInDB() throws Exception {
 		Statement stmt;
 		ResultSet rs;
 		// GET ASSESTS ALREADY IN DB
-		stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		rs = stmt.executeQuery("select * from B3Log.B3AtivosOpcoes");
 		Map<String, String> ativo_opcoes_db = new HashMap<String, String>();
 		while (rs.next()) {
@@ -207,8 +205,6 @@ public class Etl extends AbstractRotine {
 		}
 		return ativo_opcoes_db;
 	}
-
-
 
 	public void etl1_normalization() throws Exception {
 		start_time = System.currentTimeMillis();
@@ -222,7 +218,8 @@ public class Etl extends AbstractRotine {
 			LOGGER.info("[ETL] etl1_normalization...");
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw for this lot:" + csv_lot.getLot_name());
-			Statement stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			Statement stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
+					ResultSet.CONCUR_READ_ONLY);
 			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLoggerraw a "
 					+ "WHERE strike = 0 and lot_id = " + csv_lot_id + " group by 1,2 order by 1,2");
 			while (rs.next()) {
@@ -334,7 +331,7 @@ public class Etl extends AbstractRotine {
 						+ "data,hora,asset,valor_ativo,ultimo,strike,oferta_compra,oferta_venda,vencimento,validade,estado_atual,relogio_last_change,"
 						+ "VOC, VOV, contratos_abertos, valor_medio_by_negocios, valor_medio_by_quantidade, negocios, quantidade, volume, lot_name, lot_id) VALUES"
 						+ "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
-				preparedStatement = connection.prepareStatement(compiledQuery);
+				preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(compiledQuery);
 
 				int _option_counter = 0;
 				long _option_start_time = System.currentTimeMillis();
@@ -346,7 +343,7 @@ public class Etl extends AbstractRotine {
 						LOGGER.info("records processed on this asset: " + _option_counter + " total spent time: "
 								+ (__diff_time / 1000) + " sec");
 					}
-					
+
 					data = rs.getString("data");
 					hora = rs.getString("hora");
 					asset = rs.getString("asset");
@@ -370,7 +367,7 @@ public class Etl extends AbstractRotine {
 					asset_book_values = hidrateAssetRTDValues(data, hora, asset, valor_ativo, preco_opcao, strike,
 							oferta_compra, oferta_venda, vencimento, validade, estado_atual, relogio, VOC, VOV,
 							contratos_abertos, negocios, quantidade, volume);
-					
+
 					boolean buffer_added = false;
 					if (!buffer_last_values.containsKey(asset)) {
 						LOGGER.info("Adding asset:" + asset + " to buffer");
@@ -413,13 +410,13 @@ public class Etl extends AbstractRotine {
 						Time _hora = new Time(formatter.parse(hora).getTime());
 						double valor_medio_by_negocios;
 						double valor_medio_by_quantidade;
-						
-						if(negocios != 0)
+
+						if (negocios != 0)
 							valor_medio_by_negocios = volume / negocios;
 						else
 							valor_medio_by_negocios = 0;
-						
-						if(quantidade != 0)
+
+						if (quantidade != 0)
 							valor_medio_by_quantidade = volume / quantidade;
 						else
 							valor_medio_by_quantidade = 0;
@@ -439,8 +436,8 @@ public class Etl extends AbstractRotine {
 						preparedStatement.setInt(13, VOC);
 						preparedStatement.setInt(14, VOV);
 						preparedStatement.setBigDecimal(15, contratos_abertos);
-						preparedStatement.setDouble(16, MathHelper.round(valor_medio_by_negocios,2));
-						preparedStatement.setDouble(17, MathHelper.round(valor_medio_by_quantidade,2));
+						preparedStatement.setDouble(16, MathHelper.round(valor_medio_by_negocios, 2));
+						preparedStatement.setDouble(17, MathHelper.round(valor_medio_by_quantidade, 2));
 						preparedStatement.setInt(18, negocios);
 						preparedStatement.setInt(19, quantidade);
 						preparedStatement.setDouble(20, volume);
@@ -465,7 +462,7 @@ public class Etl extends AbstractRotine {
 						long diff_time = timer3 - timer2;
 						LOGGER.info("BULK insert of: " + inserted.length + " inserted.lenght");
 						LOGGER.info("Total time to INSERT: " + inserted.length + " registros " + diff_time + " ms");
-						// connection.commit();
+						// DBConnectionHelper.getETLConn().commit();
 						preparedStatement.clearBatch();
 
 						asset_counter_changes = 0L;
@@ -503,7 +500,7 @@ public class Etl extends AbstractRotine {
 					long diff_time = timer3 - timer2;
 					LOGGER.info("BULK insert of: " + inserted.length + " inserted.lenght");
 					LOGGER.info("Total time to INSERT: " + inserted.length + " registros " + diff_time + " ms");
-					// connection.commit();
+					// DBConnectionHelper.getETLConn().commit();
 					preparedStatement.clearBatch();
 
 					asset_counter_changes = 0L;
@@ -616,7 +613,7 @@ public class Etl extends AbstractRotine {
 						+ "data,hora,asset,valor_ativo,ultimo,strike,oferta_compra,oferta_venda,vencimento,validade,estado_atual,relogio_last_change,"
 						+ "VOC, VOV, contratos_abertos, valor_medio_by_negocios, valor_medio_by_quantidade, negocios, quantidade, volume, lot_name, lot_id) VALUES"
 						+ "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
-				preparedStatement = connection.prepareStatement(compiledQuery);
+				preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(compiledQuery);
 
 				int _option_counter = 0;
 				long _option_start_time = System.currentTimeMillis();
@@ -694,17 +691,17 @@ public class Etl extends AbstractRotine {
 						Time _hora = new Time(formatter.parse(hora).getTime());
 						double valor_medio_by_negocios;
 						double valor_medio_by_quantidade;
-						
-						if(negocios != 0)
+
+						if (negocios != 0)
 							valor_medio_by_negocios = volume / negocios;
 						else
 							valor_medio_by_negocios = 0;
-						
-						if(quantidade != 0)
+
+						if (quantidade != 0)
 							valor_medio_by_quantidade = volume / quantidade;
 						else
 							valor_medio_by_quantidade = 0;
-						
+
 						preparedStatement.setDate(1, _date);
 						preparedStatement.setTime(2, _hora);
 						preparedStatement.setString(3, asset);
@@ -720,8 +717,8 @@ public class Etl extends AbstractRotine {
 						preparedStatement.setInt(13, VOC);
 						preparedStatement.setInt(14, VOV);
 						preparedStatement.setBigDecimal(15, contratos_abertos);
-						preparedStatement.setDouble(16, MathHelper.round(valor_medio_by_negocios,2));
-						preparedStatement.setDouble(17, MathHelper.round(valor_medio_by_quantidade,2));
+						preparedStatement.setDouble(16, MathHelper.round(valor_medio_by_negocios, 2));
+						preparedStatement.setDouble(17, MathHelper.round(valor_medio_by_quantidade, 2));
 						preparedStatement.setInt(18, negocios);
 						preparedStatement.setInt(19, quantidade);
 						preparedStatement.setDouble(20, volume);
@@ -746,7 +743,7 @@ public class Etl extends AbstractRotine {
 						long diff_time = timer3 - timer2;
 						LOGGER.info("BULK insert of: " + inserted.length + " inserted.lenght");
 						LOGGER.info("Total time to INSERT: " + inserted.length + " registros " + diff_time + " ms");
-						// connection.commit();
+						// DBConnectionHelper.getETLConn().commit();
 						preparedStatement.clearBatch();
 
 						asset_counter_changes = 0L;
@@ -784,7 +781,7 @@ public class Etl extends AbstractRotine {
 					long diff_time = timer3 - timer2;
 					LOGGER.info("BULK insert of: " + inserted.length + " inserted.lenght");
 					LOGGER.info("Total time to INSERT: " + inserted.length + " registros " + diff_time + " ms");
-					// connection.commit();
+					// DBConnectionHelper.getETLConn().commit();
 					preparedStatement.clearBatch();
 
 					asset_counter_changes = 0L;
@@ -926,24 +923,7 @@ public class Etl extends AbstractRotine {
 
 	}
 
-	public void closeConnection() {
-		try {
-			if (connection != null && !connection.isClosed())
-				connection.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void checkConnection() throws Exception {
-		try {
-			if (connection == null || connection.isClosed()) {
-				connection = DBConnectionHelper.getETLConn();
-				connection.setAutoCommit(true);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
+	public void closeConnection() throws Exception {
+		DBConnectionHelper.closeETLConn();
 	}
 }

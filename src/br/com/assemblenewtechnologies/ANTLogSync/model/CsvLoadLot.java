@@ -1,7 +1,6 @@
 package br.com.assemblenewtechnologies.ANTLogSync.model;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,8 +28,6 @@ public class CsvLoadLot {
 	private int files_loaded = 0;
 	private int files_error_not_loaded = 0;
 	
-	private static Connection _connection;
-
 	/**
 	 * CSV LOT STATUS:
 	 * 
@@ -99,10 +96,10 @@ public class CsvLoadLot {
 	
 	private static Logger LOGGER = LoggerFactory.getLogger(CsvLoadLot.class);
 
-	public static CsvLoadLot registerCSVLot(String lot_name, String load_path, int status,Connection _connection) throws Exception {
+	public static CsvLoadLot registerCSVLot(String lot_name, String load_path, int status) throws Exception {
 		CsvLoadLot csv_lot;
 		try {
-			csv_lot = new CsvLoadLot(lot_name, load_path, status,_connection);
+			csv_lot = new CsvLoadLot(lot_name, load_path, status);
 		} catch (Exception e) {
 			LOGGER.error("Error registering CSV Loading file");
 			throw new Exception(e.getMessage(), e);
@@ -111,8 +108,7 @@ public class CsvLoadLot {
 		return csv_lot;
 	}
 
-	public CsvLoadLot(String lot_name2, String load_path2, int status2,Connection _connection) throws Exception {
-		CsvLoadLot._connection = _connection;
+	public CsvLoadLot(String lot_name2, String load_path2, int status2) throws Exception {
 		this.lot_name = lot_name2;
 		this.load_path = load_path2;
 		this.status = status2;
@@ -138,11 +134,10 @@ public class CsvLoadLot {
 		Timestamp _updated_at;
 		Timestamp _created_at;
 		try {
-			checkConnection();
 			_now = System.currentTimeMillis();
 			_created_at = new Timestamp(_now);
 			_updated_at = new Timestamp(_now);
-			preparedStatement = _connection.prepareStatement(compiledQuery, Statement.RETURN_GENERATED_KEYS);
+			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(compiledQuery, Statement.RETURN_GENERATED_KEYS);
 			preparedStatement.setString(1, lot_name);
 			preparedStatement.setString(2, load_path);
 			preparedStatement.setInt(3, status);
@@ -150,8 +145,8 @@ public class CsvLoadLot {
 			preparedStatement.setTimestamp(5, _created_at);
 			preparedStatement.setTimestamp(6, _updated_at);
 			preparedStatement.execute();
-//			if (!_connection.getAutoCommit())
-//				_connection.commit();
+			if (!DBConnectionHelper.getCSVConn().getAutoCommit())
+				DBConnectionHelper.getCSVConn().commit();
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
 			throw new Exception(e.getMessage(), e);
@@ -161,7 +156,7 @@ public class CsvLoadLot {
 		int i = 0;
 		if (generatedKeys.next()) {
 			if (i > 0) {
-//				_connection.close();
+//				DBConnectionHelper.getCSVConn().close();
 				throw new Exception("CsvLoadLot.save() error: more then one inserted ID returned...");
 			}
 			id = generatedKeys.getBigDecimal(1);
@@ -183,10 +178,9 @@ public class CsvLoadLot {
 		long _now;
 		Timestamp _updated_at;
 		try {
-			checkConnection();
 			_now = System.currentTimeMillis();
 			_updated_at = new Timestamp(_now);
-			preparedStatement = _connection.prepareStatement(compiledQuery);
+			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(compiledQuery);
 			preparedStatement.setString(1, lot_name);
 			preparedStatement.setString(2, load_path);
 			preparedStatement.setInt(3, status);
@@ -194,8 +188,8 @@ public class CsvLoadLot {
 			preparedStatement.setInt(5, files_error_not_loaded);
 			preparedStatement.setTimestamp(6, _updated_at);
 			preparedStatement.executeUpdate();
-			if(!_connection.getAutoCommit())
-				_connection.commit();
+			if(!DBConnectionHelper.getCSVConn().getAutoCommit())
+				DBConnectionHelper.getCSVConn().commit();
 		} catch (SQLException e) {
 			LOGGER.error("Error update() CsvLoadLot");
 			LOGGER.error(e.getMessage());
@@ -206,8 +200,7 @@ public class CsvLoadLot {
 	public static boolean checkIfLotAlreadyProcessed(String lot) throws Exception {
 		Statement stmt;
 		try {
-			checkConnection();
-			stmt = _connection.createStatement();
+			stmt = DBConnectionHelper.getCSVConn().createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot WHERE lot_name = '" + lot+ "' "
 				+"ORDER BY updated_at DESC limit 1");
 			int i = 0;
@@ -225,8 +218,7 @@ public class CsvLoadLot {
 	public static CsvLoadLot getLotByLotName(String lot) throws Exception {
 		Statement stmt;
 		try {
-			checkConnection();
-			stmt = _connection.createStatement();
+			stmt = DBConnectionHelper.getCSVConn().createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot " + "WHERE lot_name = '" + lot
 					+ "' order by updated_at DESC limit 1");
 			CsvLoadLot csv_lot = null;
@@ -253,9 +245,8 @@ public class CsvLoadLot {
 	
 	public static CsvLoadLot getLotByLotId(BigDecimal lot_id) throws Exception {
 		Statement stmt;
-		CsvLoadLot.checkConnection();
 		try {
-			stmt = _connection.createStatement();
+			stmt = DBConnectionHelper.getCSVConn().createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_lot " + "WHERE id = '" + lot_id
 					+ "' order by updated_at DESC limit 1");
 			CsvLoadLot csv_lot = null;
@@ -378,11 +369,9 @@ public class CsvLoadLot {
 	
 	
 	public static List<BigDecimal> getFinishedLots() throws Exception {
-		checkConnection();
-		
 		// GET ALL LOTs STATUS FINISHED TO INITIATE ETL PHASE 1
 		String status_finished = CsvLoadLot.getFinishedStatusStringCommaSeparated();
-		Statement stmt = _connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		Statement stmt = DBConnectionHelper.getCSVConn().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
 		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
@@ -393,11 +382,9 @@ public class CsvLoadLot {
 	}
 	
 	public static List<BigDecimal> getFinishedLotsReadyToPurge() throws Exception {
-		checkConnection();
-		
 		// GET ALL LOTs STATUS FINISHED TO INITIATE ETL PHASE 1
 		String status_finished = CsvLoadLot.getFinishedReadyToPurgeStatusCommaSeparated();
-		Statement stmt = _connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		Statement stmt = DBConnectionHelper.getCSVConn().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
 		List<BigDecimal> csv_lot_finished = new ArrayList<BigDecimal>();
@@ -408,13 +395,11 @@ public class CsvLoadLot {
 	}
 
 	public static List<BigDecimal> getFinishedLotsAssetsExtracted() throws Exception {
-		checkConnection();
-		
 		// GET ALL LOTs STATUS FINISHED INCREMENTED BY 1 (populated assets) TO INITIATE
 		// ETL PHASE 1
 		int status_increment = 1;
 		String status_finished = CsvLoadLot.getFinishedStatusStringCommaSeparated(status_increment);
-		Statement stmt = _connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		Statement stmt = DBConnectionHelper.getCSVConn().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
 		LOGGER.debug("status_finishedAssetsExtracted: " + status_finished);
@@ -426,12 +411,10 @@ public class CsvLoadLot {
 	}
 	
 	public static List<BigDecimal> getFinishedNormalizedLots() throws Exception {
-		checkConnection();
-		
 		// GET ALL LOTs STATUS FINISHED INCREMENTED BY 1 (populated assets) TO INITIATE
 		// ETL PHASE 1
 		String status_finished = CsvLoadLot.getFinishedNormalizedStatusCommaSeparated();
-		Statement stmt = _connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		Statement stmt = DBConnectionHelper.getCSVConn().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rs = stmt.executeQuery(
 				"select * from Intellect.csv_load_lot where status in (" + status_finished + ") order by lot_name ASC");
 		LOGGER.debug("status_finishedAssetsExtracted: " + status_finished);
@@ -590,30 +573,16 @@ public class CsvLoadLot {
 		this.finished = finished;
 	}
 
-	/**
-	 * @return the _connection
-	 */
-	public static Connection get_connection() {
-		return _connection;
-	}
 
-	/**
-	 * @param _connection the _connection to set
-	 */
-	public static void set_connection(Connection _connection) {
-		CsvLoadLot._connection = _connection;
-	}
 	
-	private static void checkConnection() throws Exception {
-		try {
-			if (_connection == null || _connection.isClosed()) {
-				_connection = DBConnectionHelper.getNewConn();
-				_connection.setAutoCommit(true);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
-	}
+//	private static void checkConnection() throws Exception {
+//		try {
+//			DBConnectionHelper.getCSVConn().setAutoCommit(true);
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			throw e;
+//		}
+//	}
 	
 }

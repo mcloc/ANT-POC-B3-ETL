@@ -39,7 +39,7 @@ public class MainController {
 	private static ProcessmentExecution processmentExecution;
 	private static Integer processmentStatus;
 	private static int actual_processment = 0;
-	private static Connection connection;
+//	private static Connection connection;
 
 	public static void main(String[] args) throws Exception {
 		start_time = System.currentTimeMillis();
@@ -47,7 +47,7 @@ public class MainController {
 
 		initController();
 
-		processmentExecution = new ProcessmentExecution(GlobalProperties.getInstance().getProcessmentMode(), connection);
+		processmentExecution = new ProcessmentExecution(GlobalProperties.getInstance().getProcessmentMode());
 
 		/**
 		 * Shutdown Hook to capture SIG KILL and CTRL-C interrupts
@@ -107,7 +107,6 @@ public class MainController {
 		// Singleton DBConnection, load Singleton
 		try {
 			DBConnectionHelper.getInstance();
-			connection = DBConnectionHelper.getConn();
 		} catch (Exception e1) {
 			LOGGER.error(e1.getMessage());
 			// Interrupt all threads
@@ -115,10 +114,8 @@ public class MainController {
 			throw new Exception(e1); // no DB we need to throw Exeception runtime Error
 		}
 		
-		ProcessmentErrorLog.setConnection(connection);
-
 		try {
-			controller_data = new ControllerData(connection);
+			controller_data = new ControllerData();
 			processment_map = controller_data.getProcessment_rotines();
 			errors_map = controller_data.getErrors();
 		} catch (Exception e) {
@@ -134,13 +131,7 @@ public class MainController {
 	}
 
 	private static void closeAllThreads() {
-		try {
-			if(connection != null && !connection.isClosed())
-				connection.close();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		DBConnectionHelper.closeAllConnections();
 		Set<Thread> threads = Thread.getAllStackTraces().keySet();
 		for (Thread t : threads) {
 			t.interrupt();

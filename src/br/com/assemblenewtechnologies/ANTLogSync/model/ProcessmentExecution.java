@@ -11,6 +11,8 @@ import java.sql.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
+
 public class ProcessmentExecution {
 	private BigDecimal id; 
 	private String processment_mode;
@@ -25,17 +27,14 @@ public class ProcessmentExecution {
 	public static final int STATUS_FINISHED_INTERRUPTED = -2;
 	
 	private static Logger LOGGER = LoggerFactory.getLogger(ProcessmentExecution.class);
-	private static Connection connection;
 	
 	/**
 	 * Create and save on database
 	 * 
 	 * @param processment_mode
-	 * @param connection2 
 	 * @throws Exception 
 	 */
-	public ProcessmentExecution(String processment_mode, Connection connection2) throws Exception {
-		ProcessmentExecution.connection = connection2;
+	public ProcessmentExecution(String processment_mode) throws Exception {
 		this.processment_mode = processment_mode;
 		this.status = 0;
 		this.save();
@@ -51,7 +50,7 @@ public class ProcessmentExecution {
 		try {
 			_now = System.currentTimeMillis();
 			_updated_at = new Timestamp(_now);
-			preparedStatement = connection.prepareStatement(compiledQuery);
+			preparedStatement = DBConnectionHelper.getConn().prepareStatement(compiledQuery);
 			preparedStatement.setInt(1, status);
 			preparedStatement.setTimestamp(2, _updated_at);
 			preparedStatement.executeUpdate();
@@ -61,8 +60,8 @@ public class ProcessmentExecution {
 //			connection.close();
 			throw new Exception(e.getMessage(), e);
 		}
-		if(!connection.getAutoCommit())
-			connection.commit();	
+		if(!DBConnectionHelper.getConn().getAutoCommit())
+			DBConnectionHelper.getConn().commit();	
 		this.status = status;
 		this.updated_at = _updated_at;
 		
@@ -81,15 +80,15 @@ public class ProcessmentExecution {
 		long _now;
 		try {
 			_now = System.currentTimeMillis();
-			preparedStatement = connection.prepareStatement(compiledQuery,
+			preparedStatement = DBConnectionHelper.getConn().prepareStatement(compiledQuery,
                     Statement.RETURN_GENERATED_KEYS);
 			preparedStatement.setString(1, processment_mode);
 			preparedStatement.setInt(2, status);
 			preparedStatement.setTimestamp(3, new Timestamp(_now));
 			preparedStatement.setTimestamp(4, new Timestamp(_now));
 			preparedStatement.execute();
-			if(!connection.getAutoCommit())
-				connection.commit();	
+			if(!DBConnectionHelper.getConn().getAutoCommit())
+				DBConnectionHelper.getConn().commit();	
 			
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());

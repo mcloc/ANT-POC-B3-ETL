@@ -3,6 +3,7 @@ package br.com.assemblenewtechnologies.ANTLogSync.process_handlers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.rotines.Etl;
 
 public class ETLHandler implements Runnable {
@@ -20,7 +21,6 @@ public class ETLHandler implements Runnable {
 			LOGGER.info("[ETL Thread] Starting...");
 			while (true) {
 				try {
-					etl_rotine.checkConnection();
 					etl_rotine.setStartTime();
 					etl_rotine.etl1_populate_assets();
 					etl_rotine.etl1_normalization();
@@ -28,7 +28,7 @@ public class ETLHandler implements Runnable {
 				} catch (Exception e) {
 					LOGGER.error("[ETL Thread] Error");
 					LOGGER.error(e.getMessage());
-					etl_rotine.closeConnection();
+					DBConnectionHelper.closeETLConn();
 					e.printStackTrace();
 				}
 				Thread.sleep(1000);

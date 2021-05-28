@@ -10,6 +10,7 @@ import java.sql.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.controller.MainController;
 
 public class ProcessmentErrorLog {
@@ -23,7 +24,6 @@ public class ProcessmentErrorLog {
 	private String java_class;
 
 	private static Logger LOGGER = LoggerFactory.getLogger(ProcessmentErrorLog.class);
-	private static Connection connection;
 
 	
 	/**
@@ -76,8 +76,7 @@ public class ProcessmentErrorLog {
 		}
 	}
 
-	private ProcessmentErrorLog(BigDecimal error_id, Connection connection2) throws Exception {
-		ProcessmentErrorLog.connection = connection2;
+	private ProcessmentErrorLog(BigDecimal error_id) throws Exception {
 		ResultSet rs = getErrorById(error_id);
 		int i = 0;
 		while (rs.next()) {
@@ -104,7 +103,7 @@ public class ProcessmentErrorLog {
 				+ "processment_id, processment_errors_id, java_class, created_at) VALUES " + "(?, ?, ?, ?, ?, ?, ?, ?)";
 		PreparedStatement preparedStatement;
 		try {
-			preparedStatement = connection.prepareStatement(compiledQuery);
+			preparedStatement = DBConnectionHelper.getConn().prepareStatement(compiledQuery);
 			preparedStatement.setString(1, name);
 			preparedStatement.setString(2, description);
 			preparedStatement.setInt(3, error_code);
@@ -115,8 +114,8 @@ public class ProcessmentErrorLog {
 			preparedStatement.setString(8, java_class);
 			preparedStatement.setLong(9, System.currentTimeMillis());
 			preparedStatement.execute();
-//			if(!connection.getAutoCommit())
-//				connection.commit();	
+			if(!DBConnectionHelper.getConn().getAutoCommit())
+				DBConnectionHelper.getConn().commit();	
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
 			throw new Exception(e.getMessage(), e);
@@ -126,7 +125,7 @@ public class ProcessmentErrorLog {
 	private ResultSet getErrorById(BigDecimal error_id) throws Exception {
 		Statement stmt;
 		try {
-			stmt = connection.createStatement();
+			stmt = DBConnectionHelper.getConn().createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.processment_errors " + "WHERE id = " + error_id);
 			return rs;
 		} catch (SQLException e1) {
@@ -139,7 +138,7 @@ public class ProcessmentErrorLog {
 	private ResultSet getErrorByCode(int error_code) throws Exception {
 		Statement stmt;
 		try {
-			stmt = connection.createStatement();
+			stmt = DBConnectionHelper.getConn().createStatement();
 			ResultSet rs = stmt
 					.executeQuery("SELECT * FROM Intellect.processment_errors " + "WHERE error_code = " + error_code);
 			return rs;
@@ -249,11 +248,6 @@ public class ProcessmentErrorLog {
 	 */
 	public void setProcessment_errors_id(BigDecimal processment_errors_id) {
 		this.processment_errors_id = processment_errors_id;
-	}
-
-
-	public static void setConnection(Connection connection2) {
-		connection = connection2;
 	}
 
 }

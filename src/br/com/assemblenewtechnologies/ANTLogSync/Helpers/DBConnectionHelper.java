@@ -71,4 +71,18 @@ public class DBConnectionHelper {
 
 		return JDBCConnector.get_etl_conn();
 	}
+	
+	public static void closeAllConnections() {
+		JDBCConnector.close_all_conn();
+	}
+
+	public static void closeETLConn() {
+		JDBCConnector.close_etl_conn();
+		
+	}
+	
+	public static void closeCSVConn() {
+		JDBCConnector.close_csv_conn();
+		
+	}
 }

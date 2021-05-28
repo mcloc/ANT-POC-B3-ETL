@@ -20,7 +20,6 @@ import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 public class JDBCConnector {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JDBCConnector.class);
 	private static Connection _conn;
-	
 	private static Connection _csv_conn;
 	private static Connection _etl_conn;
 
@@ -114,7 +113,7 @@ public class JDBCConnector {
 			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
 			try {
 				_csv_conn =  DriverManager.getConnection(url, connectionProps);
-				_csv_conn.setAutoCommit(false);
+				_csv_conn.setAutoCommit(true);
 				
 				return _csv_conn;
 			} catch (SQLException e) {
@@ -124,13 +123,6 @@ public class JDBCConnector {
 		}
 		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
-	}
-
-	/**
-	 * @param _csv_conn the _csv_conn to set
-	 */
-	public static void set_csv_conn(Connection _csv_conn) {
-		JDBCConnector._csv_conn = _csv_conn;
 	}
 
 	/**
@@ -171,6 +163,40 @@ public class JDBCConnector {
 		JDBCConnector._etl_conn = _etl_conn;
 	}
 
+	public static void close_all_conn() {
+		try {
+			if(_etl_conn != null && !_etl_conn.isClosed())
+				_etl_conn.close();
+			if(_csv_conn != null && !_csv_conn.isClosed())
+				_csv_conn.close();
+			if(_conn != null && !_conn.isClosed())
+				_conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	public static void close_etl_conn() {
+		try {
+			if(_etl_conn != null && !_etl_conn.isClosed())
+				_etl_conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}			
+	}
 	
+	public static void close_csv_conn() {
+		try {
+			if(_csv_conn != null && !_csv_conn.isClosed())
+				_csv_conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}			
+	}
+
 	
 }

@@ -1,7 +1,6 @@
 package br.com.assemblenewtechnologies.ANTLogSync.model;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,7 +25,6 @@ public class CsvLoadRegistry {
 	private Timestamp created_at;
 	private Timestamp updated_at;
 	private BigDecimal processment_execution_id;
-	private static Connection _connection;
 
 	public static final int STATUS_LOADING = 0;
 	public static final int STATUS_ARCHIVING = 1;
@@ -35,18 +33,18 @@ public class CsvLoadRegistry {
 	public static final int STATUS_LOADED_NOTARCHIVED_BY_CONFIG = 4;
 	public static final int STATUS_ERROR_ARCHIVED = -1;
 	public static final int STATUS_ERROR_NOT_ARCHIVED = -2;
-	public static final int STATUS_ERROR_NOT_ARCHIVED_BY_CONFIG  = -4;
+	public static final int STATUS_ERROR_NOT_ARCHIVED_BY_CONFIG = -4;
 	public static final int STATUS_END_LOT = 10;
 	public static final int STATUS_RTDLOG_FILE = 30;
 	public static final int STATUS_UNKNOWN_FILE = -10;
 
 	private static Logger LOGGER = LoggerFactory.getLogger(CsvLoadRegistry.class);
 
-	public static CsvLoadRegistry registerCSV(String lot_name, BigDecimal lot_id, String file_name, String load_path, int status, Connection _connection)
-			throws Exception {
+	public static CsvLoadRegistry registerCSV(String lot_name, BigDecimal lot_id, String file_name, String load_path,
+			int status) throws Exception {
 		CsvLoadRegistry cr;
 		try {
-			cr = new CsvLoadRegistry(lot_name, lot_id, file_name, load_path, status,_connection);
+			cr = new CsvLoadRegistry(lot_name, lot_id, file_name, load_path, status);
 		} catch (Exception e) {
 			LOGGER.error("Error registering CSV Loading file");
 			throw new Exception(e.getMessage(), e);
@@ -59,15 +57,15 @@ public class CsvLoadRegistry {
 	 * Already saves on database
 	 * 
 	 * @param lot_name
-	 * @param lot_id2 
+	 * @param lot_id2
 	 * @param file_name
 	 * @param load_path
 	 * @param status
 	 * @param processment_execution_id
 	 * @throws Exception
 	 */
-	public CsvLoadRegistry(String lot_name, BigDecimal lot_id2, String file_name, String load_path, int status,Connection _connection) throws Exception {
-		CsvLoadRegistry._connection = _connection;
+	public CsvLoadRegistry(String lot_name, BigDecimal lot_id2, String file_name, String load_path, int status)
+			throws Exception {
 		this.lot_name = lot_name;
 		this.lot_id = lot_id2;
 		this.file_name = file_name;
@@ -78,10 +76,11 @@ public class CsvLoadRegistry {
 	}
 
 	private void save() throws Exception {
-		if (lot_id == null || lot_name == null || lot_name.equals("") || file_name == null || file_name.equals("") || load_path == null
-				|| load_path.equals("") || processment_execution_id == null) {
+		if (lot_id == null || lot_name == null || lot_name.equals("") || file_name == null || file_name.equals("")
+				|| load_path == null || load_path.equals("") || processment_execution_id == null) {
 			throw new Exception("CsvLoadRegistry not saved, missing attributes values");
 		}
+
 		String compiledQuery = "INSERT INTO  Intellect.csv_load_registry("
 				+ "lot_name, lot_id, file_name, load_path, status, processment_execution_id, "
 				+ "created_at, updated_at) VALUES " + "(?, ?, ?, ?, ?, ?, ?, ?)";
@@ -93,7 +92,7 @@ public class CsvLoadRegistry {
 			_now = System.currentTimeMillis();
 			_created_at = new Timestamp(_now);
 			_updated_at = new Timestamp(_now);
-			preparedStatement = _connection.prepareStatement(compiledQuery,Statement.RETURN_GENERATED_KEYS);
+			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(compiledQuery, Statement.RETURN_GENERATED_KEYS);
 			preparedStatement.setString(1, lot_name);
 			preparedStatement.setBigDecimal(2, lot_id);
 			preparedStatement.setString(3, file_name);
@@ -103,13 +102,13 @@ public class CsvLoadRegistry {
 			preparedStatement.setTimestamp(7, _created_at);
 			preparedStatement.setTimestamp(8, _updated_at);
 			preparedStatement.execute();
-//			if(!_connection.getAutoCommit())
-//				_connection.commit();	
+//			if(!DBConnectionHelper.getCSVConn().getAutoCommit())
+//				DBConnectionHelper.getCSVConn().commit();	
 		} catch (SQLException e) {
 			LOGGER.error(e.getMessage());
 			throw new Exception(e.getMessage(), e);
 		}
-		
+
 		ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
 		int i = 0;
 		if (generatedKeys.next()) {
@@ -122,8 +121,7 @@ public class CsvLoadRegistry {
 			i++;
 		}
 	}
-	
-	
+
 	public void changeStatus(int _status) throws Exception {
 		status = _status;
 		update();
@@ -132,15 +130,14 @@ public class CsvLoadRegistry {
 	private void update() throws Exception {
 		String compiledQuery = "UPDATE Intellect.csv_load_registry SET "
 				+ "lot_name = ?, lot_id = ?, file_name = ?, load_path = ?, status = ?, error_msg = ?, "
-				+ "updated_at = ? "
-				+ "where id = " + id;
+				+ "updated_at = ? " + "where id = " + id;
 		PreparedStatement preparedStatement;
 		long _now;
 		Timestamp _updated_at;
 		try {
 			_now = System.currentTimeMillis();
 			_updated_at = new Timestamp(_now);
-			preparedStatement = _connection.prepareStatement(compiledQuery);
+			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(compiledQuery);
 			preparedStatement.setString(1, lot_name);
 			preparedStatement.setBigDecimal(2, lot_id);
 			preparedStatement.setString(3, file_name);
@@ -149,18 +146,18 @@ public class CsvLoadRegistry {
 			preparedStatement.setString(6, error_msg);
 			preparedStatement.setTimestamp(7, _updated_at);
 			preparedStatement.executeUpdate();
-			if(!_connection.getAutoCommit())
-				_connection.commit();	
+			if (!DBConnectionHelper.getCSVConn().getAutoCommit())
+				DBConnectionHelper.getCSVConn().commit();
 		} catch (SQLException e) {
 			LOGGER.error("Error update() CsvLoadRegistry");
 			LOGGER.error(e.getMessage());
 			throw new Exception(e.getMessage(), e);
 		}
 	}
-	
-	
+
 	/**
-	 * too much overhead 
+	 * too much overhead
+	 * 
 	 * @param file_name
 	 * @return
 	 * @throws Exception
@@ -168,8 +165,9 @@ public class CsvLoadRegistry {
 	public static boolean checkIfCSVAlreadyProcessed(String file_name) throws Exception {
 		Statement stmt;
 		try {
-			stmt = _connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM Intellect.csv_load_registry " + "WHERE file_name = '" + file_name+"'");
+			stmt = DBConnectionHelper.getCSVConn().createStatement();
+			ResultSet rs = stmt.executeQuery(
+					"SELECT * FROM Intellect.csv_load_registry " + "WHERE file_name = '" + file_name + "'");
 			int i = 0;
 			while (rs.next()) {
 				if (i >= 1) {
@@ -324,20 +322,5 @@ public class CsvLoadRegistry {
 		this.error_msg = error_msg;
 	}
 
-	/**
-	 * @return the _connection
-	 */
-	public static Connection get_connection() {
-		return _connection;
-	}
-
-	/**
-	 * @param _connection the _connection to set
-	 */
-	public static void set_connection(Connection _connection) {
-		CsvLoadRegistry._connection = _connection;
-	}
-
-	
 
 }

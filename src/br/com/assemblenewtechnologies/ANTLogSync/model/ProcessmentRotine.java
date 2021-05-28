@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.constants.ErrorCodes;
 
 public class ProcessmentRotine {

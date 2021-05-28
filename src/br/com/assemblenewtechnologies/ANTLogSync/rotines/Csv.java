@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.DBConnectionHelper;
 import br.com.assemblenewtechnologies.ANTLogSync.Helpers.ZipUtils;
-import br.com.assemblenewtechnologies.ANTLogSync.jdbc.JDBCConnector;
 import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadLot;
 import br.com.assemblenewtechnologies.ANTLogSync.model.CsvLoadRegistry;
 import br.com.assemblenewtechnologies.ANTLogSync.process_handlers.CSVHandler;
@@ -41,8 +40,6 @@ public class Csv extends AbstractRotine {
 	private int files_processed = 0;
 	private int directories_processed = 0;
 	private long rows_processed = 0;
-	private JDBCConnector jdbcConnection;
-	private Connection connection;
 	private long start_time;
 	private long timer1;
 	private CSVHandler runnable;
@@ -68,10 +65,7 @@ public class Csv extends AbstractRotine {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				try {
-					if (connection != null) {
-						if (!connection.isClosed())
-							connection.close();
-					}
+					DBConnectionHelper.closeCSVConn();
 				} catch (Exception e) {
 					LOGGER.error("CSV processment shutdown error");
 					LOGGER.error(e.getMessage(), e);
@@ -112,8 +106,6 @@ public class Csv extends AbstractRotine {
 		}
 
 		csv_load_start();
-		
-		clusterRawDataIndex();
 	}
 
 	public void csv_check_for_lots_to_purge() throws Exception {
@@ -123,8 +115,6 @@ public class Csv extends AbstractRotine {
 		}
 
 		setExecuting(true);
-
-		checkConnection();
 
 		long start_time = System.currentTimeMillis();
 		LOGGER.debug("Initializing B3 SignalLogger purge phase - 'csv_check_for_lots_to_purge' ...");
@@ -146,7 +136,7 @@ public class Csv extends AbstractRotine {
 
 				String SQL = "DELETE FROM B3Log.B3SignalLoggerRaw WHERE lot_id = ?";
 				int affectedrows = 0;
-				PreparedStatement pstmt = connection.prepareStatement(SQL);
+				PreparedStatement pstmt = DBConnectionHelper.getCSVConn().prepareStatement(SQL);
 				pstmt.setBigDecimal(1, csv_lot_id);
 				affectedrows = pstmt.executeUpdate();
 
@@ -193,7 +183,7 @@ public class Csv extends AbstractRotine {
 				LOGGER.info("[CSV] total rows per sec: " + rows_processed / total_time + " seconds");
 				
 				LOGGER.info("[CSV] CLUSTERING RAW DATA INDEX");
-//				clusterRawDataIndex();
+				clusterRawDataIndex();
 				
 			}
 		} catch (Exception e) {
@@ -211,7 +201,7 @@ public class Csv extends AbstractRotine {
 		long _start_time = System.currentTimeMillis();
 		try {
 			LOGGER.info("[CSV] clustering table B3SignalLoggerRaw asset index.");
-			PreparedStatement preparedStatement = connection.prepareStatement(
+			PreparedStatement preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(
 					"CLUSTER b3signallogger_asset_idx ON B3Log.B3SignalLoggerRaw;");
 			preparedStatement.execute();
 			long timer4 = System.currentTimeMillis();
@@ -293,7 +283,7 @@ public class Csv extends AbstractRotine {
 			}
 		} else { // END OF IF ALREADY PROCESSED CREATE NEW csv_load_lot
 			csv_load_lot = CsvLoadLot.registerCSVLot(current_lot_directory_name,
-					GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING, this.connection);
+					GlobalProperties.getInstance().getRtdDiretctory(), CsvLoadLot.STATUS_LOADING);
 
 			LOGGER.info("[CSV] Processing new Lot: " + current_lot_directory_name + " lot id: " + csv_load_lot.getId()
 					+ " actual status: " + csv_load_lot.getStatus());
@@ -358,7 +348,7 @@ public class Csv extends AbstractRotine {
 			if (_logdata_file.getName().toUpperCase().equals("RTD_FIM_DE_LOTE.TXT")) {
 				csv_load_lot.setFinished(true);
 				csv_db_registry = CsvLoadRegistry.registerCSV(current_lot_directory_name, csv_load_lot.getId(),
-						_logdata_file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_END_LOT, connection);
+						_logdata_file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_END_LOT);
 				moveFile2ArchiveBuffer(_logdata_file, CsvLoadRegistry.STATUS_END_LOT);
 				File index = new File(RTD_DIRETCTORY + GlobalProperties.getInstance().getFileSeparator()
 						+ current_lot_directory_name);
@@ -372,7 +362,7 @@ public class Csv extends AbstractRotine {
 			// RTD LOG FILES JUST ARCHIVE IT
 			if (_logdata_file.getName().toUpperCase().endsWith(".LOG")) {
 				csv_db_registry = CsvLoadRegistry.registerCSV(current_lot_directory_name, csv_load_lot.getId(),
-						_logdata_file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_END_LOT, connection);
+						_logdata_file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_END_LOT);
 				moveFile2ArchiveBuffer(_logdata_file, CsvLoadRegistry.STATUS_RTDLOG_FILE);
 				continue; // CONTINUE SEEKING FOR FILES
 			}
@@ -432,9 +422,9 @@ public class Csv extends AbstractRotine {
 	private void loadCSV(File file) throws Exception {
 		try {
 			csv_db_registry = CsvLoadRegistry.registerCSV(current_lot_directory_name, csv_load_lot.getId(),
-					file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_LOADING, connection);
+					file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_LOADING);
 
-			long rowsInserted = new CopyManager((BaseConnection) connection).copyIn(
+			long rowsInserted = new CopyManager((BaseConnection) DBConnectionHelper.getCSVConn()).copyIn(
 					"COPY B3Log.B3SignalLoggerRaw " + "( " + "asset," + "data," + "hora," + "ultimo," + "strike,"
 							+ "negocios," + "quantidade," + "volume," + "oferta_compra," + "oferta_venda," + "VOC,"
 							+ "VOV," + "vencimento," + "validade," + "contratos_abertos," + "estado_atual," + "relogio"
@@ -480,10 +470,10 @@ public class Csv extends AbstractRotine {
 		// B3SignalLoggerRaw
 		// BACK to NULL
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
+			PreparedStatement preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(
 					"ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN " + "lot_name SET DEFAULT NULL;");
 			preparedStatement.execute();
-			preparedStatement = connection
+			preparedStatement = DBConnectionHelper.getCSVConn()
 					.prepareStatement("ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN " + "lot_id SET DEFAULT NULL;");
 			preparedStatement.execute();
 		} catch (Exception e) {
@@ -643,10 +633,10 @@ public class Csv extends AbstractRotine {
 		// B3SignalLoggerRaw
 		PreparedStatement preparedStatement;
 		try {
-			preparedStatement = connection.prepareStatement("ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN "
+			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement("ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN "
 					+ "lot_name SET DEFAULT '" + csv_load_lot.getLot_name() + "';");
 			preparedStatement.execute();
-			preparedStatement = connection.prepareStatement("ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN "
+			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement("ALTER TABLE B3Log.B3SignalLoggerRaw ALTER COLUMN "
 					+ "lot_id SET DEFAULT " + csv_load_lot.getId() + ";");
 			preparedStatement.execute();
 		} catch (Exception e) {
@@ -657,30 +647,23 @@ public class Csv extends AbstractRotine {
 	}
 
 	/**
-	 * @return the connection
+	 * @return the DBConnectionHelper.getCSVConn()
+	 * @throws Exception 
 	 */
-	public Connection getConnection() {
-		return connection;
+	public Connection getConnection() throws Exception {
+		return DBConnectionHelper.getCSVConn();
 	}
 
-	/**
-	 * @param connection the connection to set
-	 */
-	public void setConnection(Connection connection) {
-		this.connection = connection;
-	}
-
-	public void checkConnection() throws Exception {
-		try {
-			if (connection == null || connection.isClosed()) {
-				connection = DBConnectionHelper.getCSVConn();
-				connection.setAutoCommit(true);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
-	}
+//	public void checkConnection() throws Exception {
+//		try {
+//			if (DBConnectionHelper.getCSVConn() == null || DBConnectionHelper.getCSVConn().isClosed()) {
+//				DBConnectionHelper.getCSVConn().setAutoCommit(true);
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			throw e;
+//		}
+//	}
 
 	public void csv_set_purge_lots() throws Exception {
 		if (isExecuting()) {
@@ -690,13 +673,9 @@ public class Csv extends AbstractRotine {
 
 		setExecuting(true);
 
-		checkConnection();
-
 		long start_time = System.currentTimeMillis();
 		LOGGER.debug("Initializing B3 SignalLogger purge phase - 'csv_set_purge_lots' ...");
 
-		Statement stmt;
-		ResultSet rs;
 		List<BigDecimal> csv_lot_finished2purge;
 		try {
 			csv_lot_finished2purge = CsvLoadLot.getFinishedNormalizedLots();
