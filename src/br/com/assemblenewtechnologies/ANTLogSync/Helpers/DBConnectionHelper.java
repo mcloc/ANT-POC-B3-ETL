@@ -16,18 +16,18 @@ public class DBConnectionHelper {
 
 	private Logger LOGGER = LoggerFactory.getLogger(DBConnectionHelper.class);
 	
-	private static JDBCConnector jdbcConnector;
+//	private static JDBCConnector jdbcConnector;
 
 
 	public DBConnectionHelper() throws Exception {
-		try {
-			jdbcConnector = new JDBCConnector();
-		} catch (SQLException e) {
-			LOGGER.error(e.getMessage());
-//			ProcessmentErrorLog.logError(ErrorCodes.DB_CONNECT_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
-//					this.getClass().getName());
-			throw new Exception("No database connection...");
-		}
+//		try {
+//			jdbcConnector = new JDBCConnector();
+//		} catch (SQLException e) {
+//			LOGGER.error(e.getMessage());
+////			ProcessmentErrorLog.logError(ErrorCodes.DB_CONNECT_ERROR, GlobalProperties.getInstance().getProcessmentMode(), null,
+////					this.getClass().getName());
+//			throw new Exception("No database connection...");
+//		}
 	}
 
 	public static synchronized DBConnectionHelper getInstance() throws Exception {
@@ -47,14 +47,28 @@ public class DBConnectionHelper {
 		if (dbInstance == null)
 			throw new Exception("No instance of DBConnectionHelper found");
 
-		return jdbcConnector.getConn();
+		return JDBCConnector.getConn();
 	}
 	
 	public static Connection getNewConn() throws Exception {
 		if (dbInstance == null)
 			throw new Exception("No instance of DBConnectionHelper found");
 
-		return jdbcConnector.getNewConn();
+		return JDBCConnector.getNewConn();
 	}
 
+	
+	public static Connection getCSVConn() throws Exception {
+		if (dbInstance == null)
+			throw new Exception("No instance of DBConnectionHelper found");
+
+		return JDBCConnector.get_csv_conn();
+	}
+	
+	public static Connection getETLConn() throws Exception {
+		if (dbInstance == null)
+			throw new Exception("No instance of DBConnectionHelper found");
+
+		return JDBCConnector.get_etl_conn();
+	}
 }

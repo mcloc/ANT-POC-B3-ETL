@@ -20,6 +20,9 @@ import br.com.assemblenewtechnologies.ANTLogSync.GlobalProperties;
 public class JDBCConnector {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JDBCConnector.class);
 	private static Connection _conn;
+	
+	private static Connection _csv_conn;
+	private static Connection _etl_conn;
 
 	/**
 	 * Create JDBC Connection using GlobalProperties FIXME: GlobalProperties must be
@@ -91,5 +94,83 @@ public class JDBCConnector {
 		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 	}
+
+	/**
+	 * @return the _csv_conn
+	 * @throws SQLException 
+	 */
+	public static Connection get_csv_conn() throws Exception {
+		if(_csv_conn != null && !_csv_conn.isClosed())
+			return _csv_conn;
+		
+		Properties connectionProps = new Properties();
+		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
+		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
+		connectionProps.put("reWriteBatchedInserts", true);
+		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
+			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
+					+ GlobalProperties.getInstance().getDbDatabaseName();
+
+			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
+			try {
+				_csv_conn =  DriverManager.getConnection(url, connectionProps);
+				_csv_conn.setAutoCommit(false);
+				
+				return _csv_conn;
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage());
+				throw new Exception("No database connection...");
+			}
+		}
+		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+	}
+
+	/**
+	 * @param _csv_conn the _csv_conn to set
+	 */
+	public static void set_csv_conn(Connection _csv_conn) {
+		JDBCConnector._csv_conn = _csv_conn;
+	}
+
+	/**
+	 * @return the _etl_conn
+	 * @throws Exception 
+	 */
+	public static Connection get_etl_conn() throws Exception {
+		if(_etl_conn != null && !_etl_conn.isClosed())
+			return _etl_conn;
+		
+		Properties connectionProps = new Properties();
+		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
+		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
+		connectionProps.put("reWriteBatchedInserts", true);
+		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
+			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
+					+ GlobalProperties.getInstance().getDbDatabaseName();
+
+			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
+			try {
+				_etl_conn =  DriverManager.getConnection(url, connectionProps);
+				_etl_conn.setAutoCommit(false);
+				
+				return _etl_conn;
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage());
+				throw new Exception("No database connection...");
+			}
+		}
+		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+	}
+
+	/**
+	 * @param _etl_conn the _etl_conn to set
+	 */
+	public static void set_etl_conn(Connection _etl_conn) {
+		JDBCConnector._etl_conn = _etl_conn;
+	}
+
+	
 	
 }

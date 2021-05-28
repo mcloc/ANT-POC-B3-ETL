@@ -112,6 +112,8 @@ public class Csv extends AbstractRotine {
 		}
 
 		csv_load_start();
+		
+		clusterRawDataIndex();
 	}
 
 	public void csv_check_for_lots_to_purge() throws Exception {
@@ -364,7 +366,6 @@ public class Csv extends AbstractRotine {
 						+ csv_load_lot.getId() + " setted as finished.");
 				FileUtils.deleteDirectory(index);
 				zipArchive(current_lot_directory_name);
-				clusterRawDataIndex();
 				return; // get out of function NO MORE FILES After FIM_DE_LOTE.txt
 			}
 
@@ -672,7 +673,7 @@ public class Csv extends AbstractRotine {
 	public void checkConnection() throws Exception {
 		try {
 			if (connection == null || connection.isClosed()) {
-				connection = DBConnectionHelper.getNewConn();
+				connection = DBConnectionHelper.getCSVConn();
 				connection.setAutoCommit(true);
 			}
 		} catch (Exception e) {

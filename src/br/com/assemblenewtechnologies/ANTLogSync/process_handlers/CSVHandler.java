@@ -17,7 +17,7 @@ public class CSVHandler implements Runnable {
 		csv_rotine = csv;
 		try {
 			if (csv_rotine.getConnection() == null || csv_rotine.getConnection().isClosed()) {
-				csv_rotine.setConnection(DBConnectionHelper.getConn());
+				csv_rotine.setConnection(DBConnectionHelper.getCSVConn());
 				csv_rotine.getConnection().setAutoCommit(true);
 				CsvLoadLot.set_connection(csv_rotine.getConnection());
 				CsvLoadRegistry.set_connection(csv_rotine.getConnection());

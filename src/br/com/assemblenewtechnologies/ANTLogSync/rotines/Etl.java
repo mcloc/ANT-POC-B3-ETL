@@ -36,7 +36,7 @@ public class Etl extends AbstractRotine {
 
 	public Etl() throws Exception {
 		try {
-			connection = DBConnectionHelper.getNewConn();
+			connection = DBConnectionHelper.getETLConn();
 			connection.setAutoCommit(true);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -278,7 +278,7 @@ public class Etl extends AbstractRotine {
 		int _ativo_counter = 0;
 		Connection _conn_chunks = null;
 		try {
-			_conn_chunks = DBConnectionHelper.getNewConn();
+			_conn_chunks = DBConnectionHelper.getETLConn();
 			_conn_chunks.setAutoCommit(false);
 
 			// FOREACH ASSET STRIK = 0 (ATIVOS)
@@ -559,7 +559,7 @@ public class Etl extends AbstractRotine {
 		int _ativo_counter = 0;
 		Connection _conn_chunks = null;
 		try {
-			_conn_chunks = DBConnectionHelper.getNewConn();
+			_conn_chunks = DBConnectionHelper.getETLConn();
 			_conn_chunks.setAutoCommit(false);
 
 			// FOREACH ASSET STRIK = 0 (ATIVOS)
@@ -938,7 +938,7 @@ public class Etl extends AbstractRotine {
 	public void checkConnection() throws Exception {
 		try {
 			if (connection == null || connection.isClosed()) {
-				connection = DBConnectionHelper.getNewConn();
+				connection = DBConnectionHelper.getETLConn();
 				connection.setAutoCommit(true);
 			}
 		} catch (Exception e) {
