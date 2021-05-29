@@ -93,6 +93,31 @@ public class JDBCConnector {
 		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 	}
+	
+	
+	public static Connection getNewNonStaticConn() throws Exception {
+		Properties connectionProps = new Properties();
+		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
+		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
+		connectionProps.put("reWriteBatchedInserts", true);
+		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
+			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
+					+ GlobalProperties.getInstance().getDbDatabaseName();
+
+			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
+			try {
+				Connection conn = DriverManager.getConnection(url, connectionProps);
+				conn.setAutoCommit(false);
+				
+				return conn;
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage());
+				throw new Exception("No database connection...");
+			}
+		}
+		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+	}
 
 	/**
 	 * @return the _csv_conn

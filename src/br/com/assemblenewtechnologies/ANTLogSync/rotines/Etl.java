@@ -296,7 +296,7 @@ public class Etl extends AbstractRotine {
 		int _ativo_counter = 0;
 		Connection _conn_chunks = null;
 		try {
-			_conn_chunks = DBConnectionHelper.getETLConn();
+			_conn_chunks = DBConnectionHelper.getNewNonStaticConn();
 			_conn_chunks.setAutoCommit(false);
 			// FOREACH ASSET STRIK = 0 (ATIVOS)
 			for (String _ativo : ativos_list) {
@@ -308,7 +308,7 @@ public class Etl extends AbstractRotine {
 				LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRawLotBuffer:");
 				LOGGER.info("asset (" + _ativo_counter + "):" + _ativo + " lot: " + csv_lot.getLot_name());
 
-				stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+				stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 				stmt.setFetchSize(BULK_BATCH_INSERT_SIZE);
 				String sql = "select  a.data, a.hora, a.asset, a.ultimo valor_ativo, 0 as preco_opcao, a.strike, a.oferta_compra, "
 						+ " a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
@@ -479,6 +479,7 @@ public class Etl extends AbstractRotine {
 						int[] inserted = preparedStatement.executeBatch();
 						if(!DBConnectionHelper.getETLConn().getAutoCommit())
 							DBConnectionHelper.getETLConn().commit();
+//						_conn_chunks.commit();
 						long timer3 = System.currentTimeMillis();
 						long diff_time = timer3 - timer2;
 						LOGGER.info("BULK insert of: " + inserted.length + " inserted.lenght");
@@ -513,7 +514,6 @@ public class Etl extends AbstractRotine {
 					int[] inserted = preparedStatement.executeBatch();
 					if(!DBConnectionHelper.getETLConn().getAutoCommit())
 						DBConnectionHelper.getETLConn().commit();
-
 //						if (inserted[0] < 0)
 //							throw new Exception("error on bulk insert at record: " + asset_counter_total
 //									+ " from tables b3signalloggerraw " + "records before " + asset_counter_total
@@ -548,6 +548,7 @@ public class Etl extends AbstractRotine {
 				_ativo_counter++;
 				
 			} // END OF FOREACH ASSET STRIK = 0 (ATIVOS)
+			
 			long timer5 = System.currentTimeMillis();
 			long _diff_time = timer5 - start_time;
 			LOGGER.info("Total time to process " + ativos_list.size() + " assets: " + _diff_time + "ms ");
@@ -576,7 +577,7 @@ public class Etl extends AbstractRotine {
 		int _ativo_counter = 0;
 		Connection _conn_chunks = null;
 		try {
-			_conn_chunks = DBConnectionHelper.getETLConn();
+			_conn_chunks = DBConnectionHelper.getNewNonStaticConn();
 			_conn_chunks.setAutoCommit(false);
 
 			// FOREACH ASSET STRIK = 0 (ATIVOS)
@@ -588,7 +589,7 @@ public class Etl extends AbstractRotine {
 				LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRawLotBuffer:");
 				LOGGER.info("asset (" + _ativo_counter + "):" + _ativo + " lot: " + csv_lot.getLot_name());
 
-				stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+				stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 				stmt.setFetchSize(BULK_BATCH_INSERT_SIZE);
 				String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "

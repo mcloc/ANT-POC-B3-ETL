@@ -85,4 +85,8 @@ public class DBConnectionHelper {
 		JDBCConnector.close_csv_conn();
 		
 	}
+
+	public static Connection getNewNonStaticConn() throws Exception {
+		return JDBCConnector.getNewNonStaticConn();
+	}
 }
