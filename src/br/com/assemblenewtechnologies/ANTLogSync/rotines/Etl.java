@@ -81,8 +81,6 @@ public class Etl extends AbstractRotine {
 		// FOR EACH FINISHED LOT
 		CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 		try {
-			LOGGER.info("[ETL] populating raw lot buffer table for lot: " + csv_lot.getLot_name());
-			populateRawLotBufferFromLot(csv_lot_id);
 			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRawLotBuffer:");
 			stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
 					ResultSet.CONCUR_READ_ONLY);
@@ -174,15 +172,23 @@ public class Etl extends AbstractRotine {
 		PreparedStatement preparedStatement = DBConnectionHelper.getETLConn()
 				.prepareStatement("TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
 		preparedStatement.execute();
+		if(!DBConnectionHelper.getETLConn().getAutoCommit())
+			DBConnectionHelper.getETLConn().commit();
+		
+		String sql = "INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
+				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
+				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
+				+ ") " + "select "
+				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
+				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id "
+				+ "from B3Log.B3SignalLoggerRaw  " + "WHERE lot_id = " + csv_lot_id + " " + "order by relogio";
+		
+//		LOGGER.debug(sql);
 		preparedStatement = DBConnectionHelper.getETLConn()
-				.prepareStatement("INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
-						+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
-						+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
-						+ ") " + "select "
-						+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
-						+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id "
-						+ "from B3Log.B3SignalLoggerRaw  " + "WHERE lot_id = " + csv_lot_id + " " + "order by relogio");
+				.prepareStatement(sql);
 		preparedStatement.execute();
+		if(!DBConnectionHelper.getETLConn().getAutoCommit())
+			DBConnectionHelper.getETLConn().commit();
 
 	}
 
@@ -202,6 +208,8 @@ public class Etl extends AbstractRotine {
 				preparedStatement.setString(2, _ativo_substr);
 				preparedStatement.setString(3, _option);
 				preparedStatement.execute();
+				if(!DBConnectionHelper.getETLConn().getAutoCommit())
+					DBConnectionHelper.getETLConn().commit();
 				_inserted_ativo.add(_ativo);
 			}
 		}
@@ -470,12 +478,13 @@ public class Etl extends AbstractRotine {
 						 * execute BATCH INSERT OF BULK_SIZE preperadStatement
 						 */
 						int[] inserted = preparedStatement.executeBatch();
-
+						if(!DBConnectionHelper.getETLConn().getAutoCommit())
+							DBConnectionHelper.getETLConn().commit();
 						long timer3 = System.currentTimeMillis();
 						long diff_time = timer3 - timer2;
 						LOGGER.info("BULK insert of: " + inserted.length + " inserted.lenght");
 						LOGGER.info("Total time to INSERT: " + inserted.length + " registros " + diff_time + " ms");
-						// DBConnectionHelper.getETLConn().commit();
+
 						preparedStatement.clearBatch();
 
 						asset_counter_changes = 0L;
@@ -503,6 +512,8 @@ public class Etl extends AbstractRotine {
 					 * execute BATCH INSERT OF BULK_SIZE preperadStatement
 					 */
 					int[] inserted = preparedStatement.executeBatch();
+					if(!DBConnectionHelper.getETLConn().getAutoCommit())
+						DBConnectionHelper.getETLConn().commit();
 
 //						if (inserted[0] < 0)
 //							throw new Exception("error on bulk insert at record: " + asset_counter_total
@@ -536,6 +547,7 @@ public class Etl extends AbstractRotine {
 				buffer_last_values = new HashMap<String, Map<String, Object>>();
 
 				_ativo_counter++;
+				_conn_chunks.commit();
 			} // END OF FOREACH ASSET STRIK = 0 (ATIVOS)
 
 			long timer5 = System.currentTimeMillis();
@@ -751,7 +763,8 @@ public class Etl extends AbstractRotine {
 						 * execute BATCH INSERT OF BULK_SIZE preperadStatement
 						 */
 						int[] inserted = preparedStatement.executeBatch();
-
+						if(!DBConnectionHelper.getETLConn().getAutoCommit())
+							DBConnectionHelper.getETLConn().commit();
 						long timer3 = System.currentTimeMillis();
 						long diff_time = timer3 - timer2;
 						LOGGER.info("BULK insert of: " + inserted.length + " inserted.lenght");
@@ -784,7 +797,8 @@ public class Etl extends AbstractRotine {
 					 * execute BATCH INSERT OF BULK_SIZE preperadStatement
 					 */
 					int[] inserted = preparedStatement.executeBatch();
-
+					if(!DBConnectionHelper.getETLConn().getAutoCommit())
+						DBConnectionHelper.getETLConn().commit();
 //						if (inserted[0] < 0)
 //							throw new Exception("error on bulk insert at record: " + asset_counter_total
 //									+ " from tables b3signalloggerraw " + "records before " + asset_counter_total
@@ -794,7 +808,6 @@ public class Etl extends AbstractRotine {
 					long diff_time = timer3 - timer2;
 					LOGGER.info("BULK insert of: " + inserted.length + " inserted.lenght");
 					LOGGER.info("Total time to INSERT: " + inserted.length + " registros " + diff_time + " ms");
-					// DBConnectionHelper.getETLConn().commit();
 					preparedStatement.clearBatch();
 
 					asset_counter_changes = 0L;
@@ -817,12 +830,12 @@ public class Etl extends AbstractRotine {
 				buffer_last_values = new HashMap<String, Map<String, Object>>();
 
 				_ativo_counter++;
+				_conn_chunks.commit();
 			} // END OF FOREACH ASSET STRIK = 0 (ATIVOS)
 
 			long timer5 = System.currentTimeMillis();
 			long _diff_time = timer5 - start_time;
 			LOGGER.info("Total time to process " + ativos_list.size() + " assets: " + _diff_time + "ms ");
-
 			if (_conn_chunks != null && !_conn_chunks.isClosed())
 				_conn_chunks.close();
 		} catch (Exception e) {
@@ -946,6 +959,8 @@ public class Etl extends AbstractRotine {
 		for(BigDecimal csv_lot_id : csv_lot_finished) {
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 			try {
+				LOGGER.info("[ETL] populating raw lot buffer table for lot: " + csv_lot.getLot_name());
+				populateRawLotBufferFromLot(csv_lot_id);
 				etl1_populate_assets(csv_lot_id);
 				etl1_normalization(csv_lot_id);
 			} catch (Exception e) {
