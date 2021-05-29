@@ -83,11 +83,11 @@ public class Etl extends AbstractRotine {
 		for (BigDecimal csv_lot_id : csv_lot_finished) {
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 			try {
-				LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw:");
+				LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRawLotBuffer:");
 				stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
 						ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo "
-						+ "from B3Log.B3SignalLoggerRaw  " + "WHERE strike = 0" + "and lot_id = " + csv_lot_id + "  "
+						+ "from B3Log.B3SignalLoggerRawLotBuffer  " + "WHERE strike = 0" + "and lot_id = " + csv_lot_id + "  "
 						+ "group by 1,2" + "order by 1,2");
 				int rows = 0;
 //				if (rs.last()) {
@@ -112,7 +112,7 @@ public class Etl extends AbstractRotine {
 
 				stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
 						ResultSet.CONCUR_READ_ONLY);
-				rs = stmt.executeQuery("select asset as opcao " + "from B3Log.B3SignalLoggerRaw  " + "WHERE strike != 0"
+				rs = stmt.executeQuery("select asset as opcao " + "from B3Log.B3SignalLoggerRawLotBuffer  " + "WHERE strike != 0"
 						+ "and lot_id = " + csv_lot_id + "  " + "group by 1" + "order by 1");
 //				rows = 0;
 //				if (rs.last()) {
@@ -172,6 +172,23 @@ public class Etl extends AbstractRotine {
 			LOGGER.info("Total time to populate assets: " + _diff_time + "ms ");
 	}
 
+	private void populateRawLotBufferFromLot(BigDecimal csv_lot_id) throws Exception {
+		Statement stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
+				ResultSet.CONCUR_READ_ONLY);
+		stmt.executeQuery("TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
+		stmt.executeQuery("INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
+				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
+				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
+				+ ") "
+				+ "select "
+				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
+				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
+				+ "from B3Log.B3SignalLoggerRaw  "
+				+ "WHERE lot_id = " + csv_lot_id + " "
+				+ "order by relogio");
+		
+	}
+
 	private void insertNewAssetsInDB(List<String> _inserted_ativo, List<String> _ativos_options, String _ativo,
 			String _ativo_substr) throws Exception {
 		PreparedStatement preparedStatement;
@@ -217,10 +234,13 @@ public class Etl extends AbstractRotine {
 		for (BigDecimal csv_lot_id : csv_lot_finished) {
 			LOGGER.info("[ETL] etl1_normalization...");
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
-			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRaw for this lot:" + csv_lot.getLot_name());
+			LOGGER.info("[ETL] populating raw lot buffer table for lot: "+csv_lot.getLot_name());
+			populateRawLotBufferFromLot(csv_lot_id);
+			
+			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRawLotBuffer for this lot:" + csv_lot.getLot_name());
 			Statement stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
 					ResultSet.CONCUR_READ_ONLY);
-			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLoggerraw a "
+			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLoggerRawLotBuffer a "
 					+ "WHERE lot_id = " + csv_lot_id + " AND strike = 0 group by 1,2 order by 1,2");
 			while (rs.next()) {
 				ativos_list.add(rs.getString("asset"));
@@ -285,7 +305,7 @@ public class Etl extends AbstractRotine {
 				if (_ativo.equals("B3SA3"))
 					continue;
 
-				LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRaw:");
+				LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRawLotBuffer:");
 				LOGGER.info("asset (" + _ativo_counter + "):" + _ativo + " lot: " + csv_lot.getLot_name());
 
 				stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -293,7 +313,7 @@ public class Etl extends AbstractRotine {
 				String sql = "select  a.data, a.hora, a.asset, a.ultimo valor_ativo, 0 as preco_opcao, a.strike, a.oferta_compra, "
 						+ " a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
-						+ " from B3Log.b3signalloggerraw a "  
+						+ " from B3Log.B3SignalLoggerRawLotBuffer a "  
 						+ " where a.lot_id = " + csv_lot.getId() + " AND a.strike = 0 AND " 
 						+ " a.asset = '" + _ativo+ "' "
 						+ " ORDER BY a.relogio ASC";
@@ -567,15 +587,15 @@ public class Etl extends AbstractRotine {
 				if (_ativo.equals("B3SA3"))
 					continue;
 
-				LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRaw:");
+				LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRawLotBuffer:");
 				LOGGER.info("asset (" + _ativo_counter + "):" + _ativo + " lot: " + csv_lot.getLot_name());
 
 				stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 				stmt.setFetchSize(BULK_BATCH_INSERT_SIZE);
 				String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
-						+ " from B3Log.b3signalloggerraw a "
-						+ "			LEFT JOIN B3Log.b3signalloggerraw b ON a.relogio=b.relogio AND b.asset = '" + _ativo
+						+ " from B3Log.B3SignalLoggerRawLotBuffer a "
+						+ "			LEFT JOIN B3Log.B3SignalLoggerRawLotBuffer b ON a.relogio=b.relogio AND b.asset = '" + _ativo
 						+ "' " + "			where   a.lot_id = " + csv_lot.getId() + " "
 						+ "and b.lot_id = " + csv_lot.getId() + " AND a.strike != 0 and "
 						+ "a.asset like  substring('" + _ativo 
@@ -930,4 +950,5 @@ public class Etl extends AbstractRotine {
 	public void closeConnection() throws Exception {
 		DBConnectionHelper.closeETLConn();
 	}
+
 }
