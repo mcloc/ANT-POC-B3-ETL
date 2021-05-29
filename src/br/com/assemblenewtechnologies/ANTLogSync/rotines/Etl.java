@@ -69,31 +69,27 @@ public class Etl extends AbstractRotine {
 		LOGGER.info("[ETL] etl0_sanity_check...");
 	}
 
-	public void etl1_populate_assets() throws Exception {
+	public void etl1_populate_assets(BigDecimal csv_lot_id) throws Exception {
 		long start_time = System.currentTimeMillis();
 		LOGGER.debug("Initializing B3 SignalLogger ETL phase 1 - 'etl1_populate_assets' ...");
 
 		Statement stmt;
 		ResultSet rs;
 
-		List<BigDecimal> csv_lot_finished = CsvLoadLot.getFinishedLots();
 		Map<String, String> ativo_opcoes_db = getAssetsInDB();
-		
-		
 
 		// FOR EACH FINISHED LOT
-		for (BigDecimal csv_lot_id : csv_lot_finished) {
-			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
-			try {
-				LOGGER.info("[ETL] populating raw lot buffer table for lot: "+csv_lot.getLot_name());
-				populateRawLotBufferFromLot(csv_lot_id);
-				LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRawLotBuffer:");
-				stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
-						ResultSet.CONCUR_READ_ONLY);
-				rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo "
-						+ "from B3Log.B3SignalLoggerRawLotBuffer  " + "WHERE strike = 0" + "and lot_id = " + csv_lot_id + "  "
-						+ "group by 1,2" + "order by 1,2");
-				int rows = 0;
+		CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
+		try {
+			LOGGER.info("[ETL] populating raw lot buffer table for lot: " + csv_lot.getLot_name());
+			populateRawLotBufferFromLot(csv_lot_id);
+			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRawLotBuffer:");
+			stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
+					ResultSet.CONCUR_READ_ONLY);
+			rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') as substr_ativo "
+					+ "from B3Log.B3SignalLoggerRawLotBuffer  " + "WHERE strike = 0" + "and lot_id = " + csv_lot_id
+					+ "  " + "group by 1,2" + "order by 1,2");
+			int rows = 0;
 //				if (rs.last()) {
 //					rows = rs.getRow();
 //					rs.beforeFirst();
@@ -102,22 +98,22 @@ public class Etl extends AbstractRotine {
 //					if (rows == 0)
 //						return;
 //				}
-				List<String> _inserted_ativo = new ArrayList<String>();
-				Map<String, String> _ativos = new HashMap<String, String>();
-				while (rs.next()) {
-					if (rs.getString("asset").equals("B3SA3"))
-						continue;
+			List<String> _inserted_ativo = new ArrayList<String>();
+			Map<String, String> _ativos = new HashMap<String, String>();
+			while (rs.next()) {
+				if (rs.getString("asset").equals("B3SA3"))
+					continue;
 
-					// Assets and Option already on DB
-					if (ativo_opcoes_db.containsKey(rs.getString("asset")))
-						continue;
-					_ativos.put(rs.getString("asset"), rs.getString("substr_ativo"));
-				}
+				// Assets and Option already on DB
+				if (ativo_opcoes_db.containsKey(rs.getString("asset")))
+					continue;
+				_ativos.put(rs.getString("asset"), rs.getString("substr_ativo"));
+			}
 
-				stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
-						ResultSet.CONCUR_READ_ONLY);
-				rs = stmt.executeQuery("select asset as opcao " + "from B3Log.B3SignalLoggerRawLotBuffer  " + "WHERE strike != 0"
-						+ "and lot_id = " + csv_lot_id + "  " + "group by 1" + "order by 1");
+			stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
+					ResultSet.CONCUR_READ_ONLY);
+			rs = stmt.executeQuery("select asset as opcao " + "from B3Log.B3SignalLoggerRawLotBuffer  "
+					+ "WHERE strike != 0" + "and lot_id = " + csv_lot_id + "  " + "group by 1" + "order by 1");
 //				rows = 0;
 //				if (rs.last()) {
 //					rows = rs.getRow();
@@ -128,71 +124,66 @@ public class Etl extends AbstractRotine {
 //						return;
 //				}
 
-				List<String> _ativos_options = new ArrayList<String>();
-				while (rs.next()) {
-					if (rs.getString("opcao").equals("B3SA3"))
-						continue;
+			List<String> _ativos_options = new ArrayList<String>();
+			while (rs.next()) {
+				if (rs.getString("opcao").equals("B3SA3"))
+					continue;
 
-					// Asset and Option already on DB
-					if (ativo_opcoes_db.containsKey(rs.getString("opcao")))
-						continue;
+				// Asset and Option already on DB
+				if (ativo_opcoes_db.containsKey(rs.getString("opcao")))
+					continue;
 
-					_ativos_options.add(rs.getString("opcao"));
-				}
+				_ativos_options.add(rs.getString("opcao"));
+			}
 
-				Iterator<Map.Entry<String, String>> itr = _ativos.entrySet().iterator();
-				while (itr.hasNext()) {
-					Map.Entry<String, String> entry = itr.next();
-					String _ativo = entry.getKey();
-					String _ativo_substr = entry.getValue();
-					insertNewAssetsInDB(_inserted_ativo, _ativos_options, _ativo, _ativo_substr);
-				}
+			Iterator<Map.Entry<String, String>> itr = _ativos.entrySet().iterator();
+			while (itr.hasNext()) {
+				Map.Entry<String, String> entry = itr.next();
+				String _ativo = entry.getKey();
+				String _ativo_substr = entry.getValue();
+				insertNewAssetsInDB(_inserted_ativo, _ativos_options, _ativo, _ativo_substr);
+			}
 
-				// TODO: INSERT ASSETS WITH NO DERIVATIVES (strike = 0 and none != 0) they are
-				// missing
+			// TODO: INSERT ASSETS WITH NO DERIVATIVES (strike = 0 and none != 0) they are
+			// missing
 //		        itr = _ativos.entrySet().iterator();
 //		        while(itr.hasNext())
 //		        {
 //		        	if(_inserted_ativo.add(_ativo);)
 //		        }
-			} catch (Exception e) {
-				LOGGER.error(e.getMessage());
-				// e.printStackTrace();
-				throw e;
-			}
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			// e.printStackTrace();
+			throw e;
+		}
 
-			// INCREMENT CSV LOT STATUS FINISHED TO +1
-			int csv_status = csv_lot.getStatus();
-			if (csv_status < 0)
-				csv_lot.changeStatus(csv_lot.getStatus() - 1);
-			else
-				csv_lot.changeStatus(csv_lot.getStatus() + 1);
-
-		} // END LOOP CSV FINISHED LOTS
+		// INCREMENT CSV LOT STATUS FINISHED TO +1
+		int csv_status = csv_lot.getStatus();
+		if (csv_status < 0)
+			csv_lot.changeStatus(csv_lot.getStatus() - 1);
+		else
+			csv_lot.changeStatus(csv_lot.getStatus() + 1);
 
 		long _now = System.currentTimeMillis();
 		long _diff_time = _now - start_time;
-		if (csv_lot_finished != null && csv_lot_finished.size() > 0)
-			LOGGER.info("Total time to populate assets: " + _diff_time + "ms ");
+
 	}
 
 	private void populateRawLotBufferFromLot(BigDecimal csv_lot_id) throws Exception {
-		
-		PreparedStatement preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
-				"TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
+
+		PreparedStatement preparedStatement = DBConnectionHelper.getETLConn()
+				.prepareStatement("TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
 		preparedStatement.execute();
-		preparedStatement = DBConnectionHelper.getETLConn().prepareStatement("INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
-				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
-				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
-				+ ") "
-				+ "select "
-				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
-				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id "
-				+ "from B3Log.B3SignalLoggerRaw  "
-				+ "WHERE lot_id = " + csv_lot_id + " "
-				+ "order by relogio");
+		preparedStatement = DBConnectionHelper.getETLConn()
+				.prepareStatement("INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
+						+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
+						+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
+						+ ") " + "select "
+						+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
+						+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id "
+						+ "from B3Log.B3SignalLoggerRaw  " + "WHERE lot_id = " + csv_lot_id + " " + "order by relogio");
 		preparedStatement.execute();
-		
+
 	}
 
 	private void insertNewAssetsInDB(List<String> _inserted_ativo, List<String> _ativos_options, String _ativo,
@@ -229,63 +220,62 @@ public class Etl extends AbstractRotine {
 		return ativo_opcoes_db;
 	}
 
-	public void etl1_normalization() throws Exception {
+	public void etl1_normalization(BigDecimal csv_lot_id) throws Exception {
 		start_time = System.currentTimeMillis();
 
 		Map<String, Object> asset_book_values;
 
 		List<String> ativos_list = new LinkedList<String>();
-		List<BigDecimal> csv_lot_finished = CsvLoadLot.getFinishedLotsAssetsExtracted();
+//		List<BigDecimal> csv_lot_finished = CsvLoadLot.getFinishedLotsAssetsExtracted();
 
-		for (BigDecimal csv_lot_id : csv_lot_finished) {
-			LOGGER.info("[ETL] etl1_normalization...");
-			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
-			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRawLotBuffer for this lot:" + csv_lot.getLot_name());
-			Statement stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
-					ResultSet.CONCUR_READ_ONLY);
-			ResultSet rs = stmt.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLoggerRawLotBuffer a "
-					+ "WHERE lot_id = " + csv_lot_id + " AND strike = 0 group by 1,2 order by 1,2");
-			while (rs.next()) {
-				ativos_list.add(rs.getString("asset"));
-			}
+		LOGGER.info("[ETL] etl1_normalization...");
+		CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
+		LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRawLotBuffer for this lot:" + csv_lot.getLot_name());
+		Statement stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
+				ResultSet.CONCUR_READ_ONLY);
+		ResultSet rs = stmt
+				.executeQuery("select asset, substring(asset, '[A-Z]+') from B3Log.B3SignalLoggerRawLotBuffer a "
+						+ "WHERE lot_id = " + csv_lot_id + " AND strike = 0 group by 1,2 order by 1,2");
+		while (rs.next()) {
+			ativos_list.add(rs.getString("asset"));
+		}
 
-			if (ativos_list.size() == 0) {
-				LOGGER.error("No mapped Assets found on B3Log.B3AtivosOpcoes");
-				int csv_status = csv_lot.getStatus();
-				if (csv_status < 0)
-					csv_lot.changeStatus(csv_lot.getStatus() - 1);
-				else
-					csv_lot.changeStatus(csv_lot.getStatus() + 1);
+		if (ativos_list.size() == 0) {
+			LOGGER.error("No mapped Assets found on B3Log.B3AtivosOpcoes");
+			int csv_status = csv_lot.getStatus();
+			if (csv_status < 0)
+				csv_lot.changeStatus(csv_lot.getStatus() - 1);
+			else
+				csv_lot.changeStatus(csv_lot.getStatus() + 1);
 
-				continue;
-			}
+			return;
+		}
 
-			LOGGER.info("etl1_normalization(): Total assets to normalize on this lot:" + csv_lot.getLot_name() + " - "
-					+ ativos_list.size());
+		LOGGER.info("etl1_normalization(): Total assets to normalize on this lot:" + csv_lot.getLot_name() + " - "
+				+ ativos_list.size());
 
-			try {
-				// INSERT DERIVATIVES into hot_table_derivates normalized
-				normalizeDerivatives(ativos_list, csv_lot_finished, csv_lot);
-				// INSERT DERIVATIVES into hot_table_assets normalized
-				normalizeAssets(ativos_list, csv_lot_finished, csv_lot);
+		try {
+			// INSERT DERIVATIVES into hot_table_derivates normalized
+			normalizeDerivatives(ativos_list, csv_lot);
+			// INSERT DERIVATIVES into hot_table_assets normalized
+			normalizeAssets(ativos_list, csv_lot);
 
-				// INCREMENT CSV LOT STATUS FINISHED TO +1
-				int csv_status = csv_lot.getStatus();
-				if (csv_status < 0)
-					csv_lot.changeStatus(csv_lot.getStatus() - 1);
-				else
-					csv_lot.changeStatus(csv_lot.getStatus() + 1);
+			// INCREMENT CSV LOT STATUS FINISHED TO +1
+			int csv_status = csv_lot.getStatus();
+			if (csv_status < 0)
+				csv_lot.changeStatus(csv_lot.getStatus() - 1);
+			else
+				csv_lot.changeStatus(csv_lot.getStatus() + 1);
 
-				LOGGER.info("ETL Normalization Finished for this lot: " + csv_lot.getLot_name() + " actual status: "
-						+ csv_lot.getStatus());
-			} catch (Exception e) {
-				LOGGER.error(e.getMessage(), e);
-				continue;
-			}
+			LOGGER.info("ETL Normalization Finished for this lot: " + csv_lot.getLot_name() + " actual status: "
+					+ csv_lot.getStatus());
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+			return;
 		}
 	}
 
-	private void normalizeAssets(List<String> ativos_list, List<BigDecimal> csv_lot_finished, CsvLoadLot csv_lot)
+	private void normalizeAssets(List<String> ativos_list, CsvLoadLot csv_lot)
 			throws SQLException {
 		Map<String, Map<String, Object>> buffer_last_values = new HashMap<String, Map<String, Object>>();
 		Map<String, Object> asset_book_values;
@@ -316,10 +306,8 @@ public class Etl extends AbstractRotine {
 				String sql = "select  a.data, a.hora, a.asset, a.ultimo valor_ativo, 0 as preco_opcao, a.strike, a.oferta_compra, "
 						+ " a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
-						+ " from B3Log.B3SignalLoggerRawLotBuffer a "  
-						+ " where a.lot_id = " + csv_lot.getId() + " AND a.strike = 0 AND " 
-						+ " a.asset = '" + _ativo+ "' "
-						+ " ORDER BY a.relogio ASC";
+						+ " from B3Log.B3SignalLoggerRawLotBuffer a " + " where a.lot_id = " + csv_lot.getId()
+						+ " AND a.strike = 0 AND " + " a.asset = '" + _ativo + "' " + " ORDER BY a.relogio ASC";
 
 //					LOGGER.info(sql);
 				rs = stmt.executeQuery(sql);
@@ -567,7 +555,7 @@ public class Etl extends AbstractRotine {
 
 	}
 
-	private void normalizeDerivatives(List<String> ativos_list, List<BigDecimal> csv_lot_finished, CsvLoadLot csv_lot)
+	private void normalizeDerivatives(List<String> ativos_list,CsvLoadLot csv_lot)
 			throws Exception, SQLException {
 		Map<String, Map<String, Object>> buffer_last_values = new HashMap<String, Map<String, Object>>();
 		Map<String, Object> asset_book_values;
@@ -598,12 +586,10 @@ public class Etl extends AbstractRotine {
 				String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
 						+ " from B3Log.B3SignalLoggerRawLotBuffer a "
-						+ "			LEFT JOIN B3Log.B3SignalLoggerRawLotBuffer b ON a.relogio=b.relogio AND b.asset = '" + _ativo
-						+ "' " + "			where   a.lot_id = " + csv_lot.getId() + " "
-						+ "and b.lot_id = " + csv_lot.getId() + " AND a.strike != 0 and "
-						+ "a.asset like  substring('" + _ativo 
-						+ "', '[A-Z]+')||'%'  " 
-						+ "ORDER BY a.relogio ASC";
+						+ "			LEFT JOIN B3Log.B3SignalLoggerRawLotBuffer b ON a.relogio=b.relogio AND b.asset = '"
+						+ _ativo + "' " + "			where   a.lot_id = " + csv_lot.getId() + " " + "and b.lot_id = "
+						+ csv_lot.getId() + " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
+						+ "', '[A-Z]+')||'%'  " + "ORDER BY a.relogio ASC";
 
 //					LOGGER.info(sql);
 				rs = stmt.executeQuery(sql);
@@ -952,6 +938,29 @@ public class Etl extends AbstractRotine {
 
 	public void closeConnection() throws Exception {
 		DBConnectionHelper.closeETLConn();
+	}
+
+	public void etl1_execute() throws Exception {
+		List<BigDecimal> csv_lot_finished = CsvLoadLot.getFinishedLots();
+		
+		for(BigDecimal csv_lot_id : csv_lot_finished) {
+			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
+			try {
+				etl1_populate_assets(csv_lot_id);
+				etl1_normalization(csv_lot_id);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+
+		}
+		
+		long _now = System.currentTimeMillis();
+		long _diff_time = _now - start_time;
+		if (csv_lot_finished != null && csv_lot_finished.size() > 0)
+			LOGGER.info("Total time to populate assets: " + _diff_time + "ms ");
+
 	}
 
 }
