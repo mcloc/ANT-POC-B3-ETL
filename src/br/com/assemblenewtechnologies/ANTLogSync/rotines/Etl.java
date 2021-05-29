@@ -298,7 +298,6 @@ public class Etl extends AbstractRotine {
 		try {
 			_conn_chunks = DBConnectionHelper.getETLConn();
 			_conn_chunks.setAutoCommit(false);
-
 			// FOREACH ASSET STRIK = 0 (ATIVOS)
 			for (String _ativo : ativos_list) {
 
@@ -547,9 +546,8 @@ public class Etl extends AbstractRotine {
 				buffer_last_values = new HashMap<String, Map<String, Object>>();
 
 				_ativo_counter++;
-				_conn_chunks.commit();
+				
 			} // END OF FOREACH ASSET STRIK = 0 (ATIVOS)
-
 			long timer5 = System.currentTimeMillis();
 			long _diff_time = timer5 - start_time;
 			LOGGER.info("Total time to process " + ativos_list.size() + " assets: " + _diff_time + "ms ");
@@ -562,9 +560,6 @@ public class Etl extends AbstractRotine {
 			LOGGER.error(e.getMessage(), e);
 			return;
 		}
-		if (_conn_chunks != null && !_conn_chunks.isClosed())
-			_conn_chunks.close();
-
 	}
 
 	private void normalizeDerivatives(List<String> ativos_list,CsvLoadLot csv_lot)
@@ -830,9 +825,7 @@ public class Etl extends AbstractRotine {
 				buffer_last_values = new HashMap<String, Map<String, Object>>();
 
 				_ativo_counter++;
-				_conn_chunks.commit();
 			} // END OF FOREACH ASSET STRIK = 0 (ATIVOS)
-
 			long timer5 = System.currentTimeMillis();
 			long _diff_time = timer5 - start_time;
 			LOGGER.info("Total time to process " + ativos_list.size() + " assets: " + _diff_time + "ms ");
@@ -844,8 +837,6 @@ public class Etl extends AbstractRotine {
 			LOGGER.error(e.getMessage(), e);
 			return;
 		}
-		if (_conn_chunks != null && !_conn_chunks.isClosed())
-			_conn_chunks.close();
 	}
 
 	private Map<String, Object> hidrateAssetRTDValues(String data, String hora, String asset, double valor_ativo,
