@@ -176,9 +176,9 @@ public class Etl extends AbstractRotine {
 			DBConnectionHelper.getETLConn().commit();
 		
 		String sql = "INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
-				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
+				+ "id,asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
 				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
-				+ ") " + "select "
+				+ ") " + "select id,"
 				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
 				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id "
 				+ "from B3Log.B3SignalLoggerRaw  " + "WHERE lot_id = " + csv_lot_id + " " + "order by relogio";
