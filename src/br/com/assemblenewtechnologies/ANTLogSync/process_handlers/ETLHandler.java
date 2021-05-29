@@ -22,7 +22,7 @@ public class ETLHandler implements Runnable {
 			while (true) {
 				try {
 					etl_rotine.setStartTime();
-//					etl_rotine.etl1_populate_assets();
+					etl_rotine.etl1_populate_assets();
 					etl_rotine.etl1_normalization();
 					etl_rotine.setExecuting(false);
 				} catch (Exception e) {

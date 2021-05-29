@@ -78,11 +78,15 @@ public class Etl extends AbstractRotine {
 
 		List<BigDecimal> csv_lot_finished = CsvLoadLot.getFinishedLots();
 		Map<String, String> ativo_opcoes_db = getAssetsInDB();
+		
+		
 
 		// FOR EACH FINISHED LOT
 		for (BigDecimal csv_lot_id : csv_lot_finished) {
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 			try {
+				LOGGER.info("[ETL] populating raw lot buffer table for lot: "+csv_lot.getLot_name());
+				populateRawLotBufferFromLot(csv_lot_id);
 				LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRawLotBuffer:");
 				stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
 						ResultSet.CONCUR_READ_ONLY);
@@ -173,19 +177,21 @@ public class Etl extends AbstractRotine {
 	}
 
 	private void populateRawLotBufferFromLot(BigDecimal csv_lot_id) throws Exception {
-		Statement stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
-				ResultSet.CONCUR_READ_ONLY);
-		stmt.executeQuery("TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
-		stmt.executeQuery("INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
+		
+		PreparedStatement preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
+				"TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
+		preparedStatement.execute();
+		preparedStatement = DBConnectionHelper.getETLConn().prepareStatement("INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
 				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
 				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
 				+ ") "
 				+ "select "
 				+ "asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
-				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
+				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id "
 				+ "from B3Log.B3SignalLoggerRaw  "
 				+ "WHERE lot_id = " + csv_lot_id + " "
 				+ "order by relogio");
+		preparedStatement.execute();
 		
 	}
 
@@ -234,9 +240,6 @@ public class Etl extends AbstractRotine {
 		for (BigDecimal csv_lot_id : csv_lot_finished) {
 			LOGGER.info("[ETL] etl1_normalization...");
 			CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
-			LOGGER.info("[ETL] populating raw lot buffer table for lot: "+csv_lot.getLot_name());
-			populateRawLotBufferFromLot(csv_lot_id);
-			
 			LOGGER.info("Fetching assets from B3Log.B3SignalLoggerRawLotBuffer for this lot:" + csv_lot.getLot_name());
 			Statement stmt = DBConnectionHelper.getETLConn().createStatement(ResultSet.TYPE_FORWARD_ONLY,
 					ResultSet.CONCUR_READ_ONLY);
