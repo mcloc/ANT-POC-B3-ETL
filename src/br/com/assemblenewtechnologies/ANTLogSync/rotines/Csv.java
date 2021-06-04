@@ -182,7 +182,7 @@ public class Csv extends AbstractRotine {
 				LOGGER.info("[CSV] total rows_processed inserted: " + rows_processed);
 				LOGGER.info("[CSV] total rows per sec: " + rows_processed / total_time + " seconds");
 				
-				LOGGER.info("[CSV] CLUSTERING RAW DATA INDEX");
+//				LOGGER.info("[CSV] CLUSTERING RAW DATA INDEX");
 //				clusterRawDataIndex();
 				
 			}
@@ -197,21 +197,21 @@ public class Csv extends AbstractRotine {
 
 	}
 
-	private void clusterRawDataIndex() {
-		long _start_time = System.currentTimeMillis();
-		try {
-			LOGGER.info("[CSV] clustering table B3SignalLoggerRaw asset index.");
-			PreparedStatement preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(
-					"CLUSTER b3signallogger_lot_id_asset_idx ON B3Log.B3SignalLoggerRaw;");
-			preparedStatement.execute();
-			long timer4 = System.currentTimeMillis();
-			long diff_time = timer4 - _start_time;
-			LOGGER.info("[CSV] clustering table B3SignalLoggerRaw asset index total time: " + diff_time);
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
-			e.printStackTrace();
-		}
-	}
+//	private void clusterRawDataIndex() {
+//		long _start_time = System.currentTimeMillis();
+//		try {
+//			LOGGER.info("[CSV] clustering table B3SignalLoggerRaw asset index.");
+//			PreparedStatement preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(
+//					"CLUSTER b3signallogger_lot_id_asset_idx ON B3Log.B3SignalLoggerRaw;");
+//			preparedStatement.execute();
+//			long timer4 = System.currentTimeMillis();
+//			long diff_time = timer4 - _start_time;
+//			LOGGER.info("[CSV] clustering table B3SignalLoggerRaw asset index total time: " + diff_time);
+//		} catch (Exception e) {
+//			LOGGER.error(e.getMessage());
+//			e.printStackTrace();
+//		}
+//	}
 
 	private void processRTD(File[] rtd_list) {
 		String last_directory = null;

@@ -172,9 +172,18 @@ public class Etl extends AbstractRotine {
 		PreparedStatement preparedStatement = DBConnectionHelper.getETLConn()
 				.prepareStatement("TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
 		preparedStatement.execute();
-		if(!DBConnectionHelper.getETLConn().getAutoCommit())
-			DBConnectionHelper.getETLConn().commit();
 		
+		try {
+			LOGGER.info("[ETL] DROP INDEX b3signalloggerbuffer_asset_idx from B3SignalLoggerRawLotBuffer asset.");
+			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
+					"DROP INDEX B3Log.b3signalloggerbuffer_asset_idx;");
+			preparedStatement.execute();	
+			if(!DBConnectionHelper.getETLConn().getAutoCommit())
+				DBConnectionHelper.getETLConn().commit();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+		}
+		LOGGER.info("[ETL] inserting raw lot buffer table" );
 		String sql = "INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
 				+ "id,asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
 				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
@@ -189,7 +198,44 @@ public class Etl extends AbstractRotine {
 		preparedStatement.execute();
 		if(!DBConnectionHelper.getETLConn().getAutoCommit())
 			DBConnectionHelper.getETLConn().commit();
+		
+		LOGGER.info("[ETL] CLUSTERING RAW DATA INDEX");
+		clusterRawDataIndex();
 
+	}
+	
+	private void clusterRawDataIndex() {
+		long _start_time = System.currentTimeMillis();
+		PreparedStatement preparedStatement;
+		try {
+			LOGGER.info("[ETL] CREATE INDEX b3signalloggerbuffer_asset_idx on B3SignalLoggerRawLotBuffer asset.");
+			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(
+					"CREATE INDEX b3signalloggerbuffer_asset_idx\n"
+					+ " ON B3Log.B3SignalLoggerRawLotBuffer USING BTREE\n"
+					+ " ( asset ASC );");
+			preparedStatement.execute();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			e.printStackTrace();
+		}
+			
+		
+		try {
+			LOGGER.info("[ETL] clustering table B3SignalLoggerRawLotBuffer asset index.");
+			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(
+					"CLUSTER b3signalloggerbuffer_asset_idx ON B3Log.B3SignalLoggerRawLotBuffer;");
+			preparedStatement.execute();
+			
+			if(!DBConnectionHelper.getETLConn().getAutoCommit())
+				DBConnectionHelper.getETLConn().commit();
+			
+			long timer4 = System.currentTimeMillis();
+			long diff_time = timer4 - _start_time;
+			LOGGER.info("[ETL] clustering table B3SignalLoggerRawLotBuffer asset index total time: " + diff_time);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 	private void insertNewAssetsInDB(List<String> _inserted_ativo, List<String> _ativos_options, String _ativo,
