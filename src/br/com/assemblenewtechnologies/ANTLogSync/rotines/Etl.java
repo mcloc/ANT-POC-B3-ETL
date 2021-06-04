@@ -179,6 +179,36 @@ public class Etl extends AbstractRotine {
 			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
 					"DROP INDEX B3Log.b3signalloggerbuffer_asset_idx;");
 			preparedStatement.execute();	
+			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
+					"DROP TABLE B3Log.B3SignalLoggerRawLotBuffer;"
+					+ "CREATE TABLE B3Log.B3SignalLoggerRawLotBuffer (\n"
+					+ "                id BIGINT  NOT NULL,\n"
+					+ "                asset VARCHAR(11) NOT NULL,\n"
+					+ "                data DATE NOT NULL,\n"
+					+ "                hora TIME NOT NULL,\n"
+					+ "                ultimo NUMERIC(8,2) NOT NULL,\n"
+					+ "                strike NUMERIC(8,2) NOT NULL,\n"
+					+ "                negocios INTEGER NOT NULL,\n"
+					+ "                quantidade INTEGER NOT NULL,\n"
+					+ "                volume NUMERIC(18,2) NOT NULL,\n"
+					+ "                oferta_compra NUMERIC(8,2) NOT NULL,\n"
+					+ "                oferta_venda NUMERIC(8,2) NOT NULL,\n"
+					+ "                VOC INTEGER NOT NULL,\n"
+					+ "                VOV INTEGER NOT NULL,\n"
+					+ "                vencimento DATE NOT NULL,\n"
+					+ "                validade DATE NOT NULL,\n"
+					+ "                contratos_abertos BIGINT NOT NULL,\n"
+					+ "                estado_atual VARCHAR(80) NOT NULL,\n"
+					+ "                relogio TIMESTAMP NOT NULL,\n"
+					+ "		 	 lot_name VARCHAR(70) NOT NULL,\n"
+					+ "		      lot_id BIGINT  NOT NULL,\n"
+					+ "                CONSTRAINT b3signalloggerrawbuffer_pk PRIMARY KEY (id),\n"
+					+ "                CONSTRAINT fk_B3SignalLoggerrawbuffer_lot_id FOREIGN KEY(lot_id) \n"
+					+ "	  REFERENCES Intellect.csv_load_lot(id)\n"
+					+ ");\n"
+					+ "ALTER TABLE B3Log.B3SignalLoggerRawLotBuffer SET (autovacuum_enabled = false); \n"
+					+ "ALTER TABLE B3Log.B3SignalLoggerRawLotBuffer SET UNLOGGED;");
+			preparedStatement.execute();	
 			if(!DBConnectionHelper.getETLConn().getAutoCommit())
 				DBConnectionHelper.getETLConn().commit();
 		} catch (Exception e) {
@@ -898,6 +928,8 @@ public class Etl extends AbstractRotine {
 	private double getValorAtivo(String _ativo, Timestamp relogio) throws Exception {
 		Statement stmt;
 		double valor_ativo = 0;
+		long start_time = System.currentTimeMillis();
+		
 		try {
 			stmt = DBConnectionHelper.getETL2Conn().createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT ultimo from B3Log.B3SignalLoggerRawLotBuffer a" 
@@ -910,7 +942,7 @@ public class Etl extends AbstractRotine {
 			// TODO: check if connection.close() get calls on finally before the throw
 			throw new Exception(e1);
 		}
-		
+//		LOGGER.info("Total to fetch valor Ativo: " + (System.currentTimeMillis() - start_time));
 		return valor_ativo;
 	}
 
