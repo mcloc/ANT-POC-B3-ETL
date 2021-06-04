@@ -72,12 +72,20 @@ public class DBConnectionHelper {
 		return JDBCConnector.get_etl_conn();
 	}
 	
+	public static Connection getETL2Conn() throws Exception {
+		if (dbInstance == null)
+			throw new Exception("No instance of DBConnectionHelper found");
+
+		return JDBCConnector.get_etl2_conn();
+	}
+	
 	public static void closeAllConnections() {
 		JDBCConnector.close_all_conn();
 	}
 
 	public static void closeETLConn() {
 		JDBCConnector.close_etl_conn();
+		JDBCConnector.close_etl2_conn();
 		
 	}
 	

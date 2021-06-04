@@ -22,6 +22,7 @@ public class JDBCConnector {
 	private static Connection _conn;
 	private static Connection _csv_conn;
 	private static Connection _etl_conn;
+	private static Connection _etl2_conn;
 
 	/**
 	 * Create JDBC Connection using GlobalProperties FIXME: GlobalProperties must be
@@ -180,6 +181,38 @@ public class JDBCConnector {
 		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
 	}
+	
+	
+	/**
+	 * @return the _etl_conn
+	 * @throws Exception 
+	 */
+	public static Connection get_etl2_conn() throws Exception {
+		if(_etl2_conn != null && !_etl2_conn.isClosed())
+			return _etl2_conn;
+		
+		Properties connectionProps = new Properties();
+		connectionProps.put("user", GlobalProperties.getInstance().getDbUser());
+		connectionProps.put("password", GlobalProperties.getInstance().getDbPassword());
+		connectionProps.put("reWriteBatchedInserts", true);
+		if (GlobalProperties.getInstance().getDbms().equals("postgres")) {
+			String url = "jdbc:postgresql://" + GlobalProperties.getInstance().getDbHost() + "/"
+					+ GlobalProperties.getInstance().getDbDatabaseName();
+
+			LOGGER.debug("Trying to connect to database: " + GlobalProperties.getInstance().getDbDatabaseName());
+			try {
+				_etl2_conn =  DriverManager.getConnection(url, connectionProps);
+				_etl2_conn.setAutoCommit(false);
+				
+				return _etl2_conn;
+			} catch (SQLException e) {
+				LOGGER.error(e.getMessage());
+				throw new Exception("No database connection...");
+			}
+		}
+		LOGGER.error("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+		throw new SQLException("DMBS properties not implemented. Only 'postgres' is allowed at the momment");
+	}
 
 	/**
 	 * @param _etl_conn the _etl_conn to set
@@ -207,6 +240,16 @@ public class JDBCConnector {
 		try {
 			if(_etl_conn != null && !_etl_conn.isClosed())
 				_etl_conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}			
+	}
+	
+	public static void close_etl2_conn() {
+		try {
+			if(_etl2_conn != null && !_etl2_conn.isClosed())
+				_etl2_conn.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

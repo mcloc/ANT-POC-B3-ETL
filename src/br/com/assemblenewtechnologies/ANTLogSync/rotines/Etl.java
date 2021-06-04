@@ -430,7 +430,7 @@ public class Etl extends AbstractRotine {
 					quantidade = rs.getInt("quantidade");
 					volume = rs.getDouble("volume");
 
-					asset_book_values = hidrateAssetRTDValues(data, hora, asset, valor_ativo, preco_opcao, strike,
+					asset_book_values = hidrateAssetRTDValues(data, hora, asset, preco_opcao, strike,
 							oferta_compra, oferta_venda, vencimento, validade, estado_atual, relogio, VOC, VOV,
 							contratos_abertos, negocios, quantidade, volume);
 
@@ -455,7 +455,7 @@ public class Etl extends AbstractRotine {
 //							continue;
 					}
 
-					changes = ifRawRecordChanges(valor_ativo, preco_opcao, strike, oferta_compra, oferta_venda,
+					changes = ifRawRecordChanges(preco_opcao, strike, oferta_compra, oferta_venda,
 							estado_atual, VOC, VOV, contratos_abertos, negocios, quantidade, volume, buffer_last_values,
 							asset);
 
@@ -637,15 +637,22 @@ public class Etl extends AbstractRotine {
 
 				stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 				stmt.setFetchSize(BULK_BATCH_INSERT_SIZE);
-				String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
+//				String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
+//						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
+//						+ " from B3Log.B3SignalLoggerRawLotBuffer a "
+//						+ "			LEFT JOIN B3Log.B3SignalLoggerRawLotBuffer b ON a.relogio=b.relogio AND b.asset = '"
+//						+ _ativo + "' " + "			where   a.lot_id = " + csv_lot.getId() + " " + "and b.lot_id = "
+//						+ csv_lot.getId() + " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
+//						+ "', '[A-Z]+')||'%'  " + "ORDER BY a.relogio ASC";
+				
+				String sql = "select  a.data, a.hora, a.asset, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
 						+ " from B3Log.B3SignalLoggerRawLotBuffer a "
-						+ "			LEFT JOIN B3Log.B3SignalLoggerRawLotBuffer b ON a.relogio=b.relogio AND b.asset = '"
-						+ _ativo + "' " + "			where   a.lot_id = " + csv_lot.getId() + " " + "and b.lot_id = "
-						+ csv_lot.getId() + " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
+						+ " where   a.lot_id = " + csv_lot.getId() 
+						+ " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
 						+ "', '[A-Z]+')||'%'  " + "ORDER BY a.relogio ASC";
 
-//					LOGGER.info(sql);
+					LOGGER.info(sql);
 				rs = stmt.executeQuery(sql);
 				long timer1 = System.currentTimeMillis();
 				long db_load_time = timer1 - start_time;
@@ -695,7 +702,6 @@ public class Etl extends AbstractRotine {
 					data = rs.getString("data");
 					hora = rs.getString("hora");
 					asset = rs.getString("asset");
-					valor_ativo = rs.getDouble("valor_ativo");
 					preco_opcao = rs.getDouble("preco_opcao");
 					strike = rs.getDouble("strike");
 					oferta_compra = rs.getDouble("oferta_compra");
@@ -711,8 +717,8 @@ public class Etl extends AbstractRotine {
 					negocios = rs.getInt("negocios");
 					quantidade = rs.getInt("quantidade");
 					volume = rs.getDouble("volume");
-
-					asset_book_values = hidrateAssetRTDValues(data, hora, asset, valor_ativo, preco_opcao, strike,
+//					valor_ativo = getValorAtivo(_ativo, relogio);
+					asset_book_values = hidrateAssetRTDValues(data, hora, asset, preco_opcao, strike,
 							oferta_compra, oferta_venda, vencimento, validade, estado_atual, relogio, VOC, VOV,
 							contratos_abertos, negocios, quantidade, volume);
 
@@ -736,7 +742,7 @@ public class Etl extends AbstractRotine {
 						buffer_added = true;
 					}
 
-					changes = ifRawRecordChanges(valor_ativo, preco_opcao, strike, oferta_compra, oferta_venda,
+					changes = ifRawRecordChanges(preco_opcao, strike, oferta_compra, oferta_venda,
 							estado_atual, VOC, VOV, contratos_abertos, negocios, quantidade, volume, buffer_last_values,
 							asset);
 
@@ -768,6 +774,8 @@ public class Etl extends AbstractRotine {
 							valor_medio_by_quantidade = volume / quantidade;
 						else
 							valor_medio_by_quantidade = 0;
+						
+						valor_ativo = getValorAtivo(_ativo, relogio);
 
 						preparedStatement.setDate(1, _date);
 						preparedStatement.setTime(2, _hora);
@@ -886,7 +894,26 @@ public class Etl extends AbstractRotine {
 		}
 	}
 
-	private Map<String, Object> hidrateAssetRTDValues(String data, String hora, String asset, double valor_ativo,
+	private double getValorAtivo(String _ativo, Timestamp relogio) throws Exception {
+		Statement stmt;
+		double valor_ativo = 0;
+		try {
+			stmt = DBConnectionHelper.getETL2Conn().createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT ultimo from B3Log.B3SignalLoggerRawLotBuffer a" 
+					+ " WHERE asset = '"+_ativo+"' AND relogio = '"+relogio+"' order by relogio DESC limit 1");
+			while (rs.next()) {
+				valor_ativo = rs.getDouble("ultimo");
+			}
+		} catch (SQLException e1) {
+			LOGGER.error(e1.getMessage());
+			// TODO: check if connection.close() get calls on finally before the throw
+			throw new Exception(e1);
+		}
+		
+		return valor_ativo;
+	}
+
+	private Map<String, Object> hidrateAssetRTDValues(String data, String hora, String asset, 
 			double preco_opcao, double strike, double oferta_compra, double oferta_venda, String vencimento,
 			String validade, String estado_atual, Timestamp relogio, int VOC, int VOV, BigDecimal contratos_abertos,
 			int negocios, int quantidade, Double volume) {
@@ -895,7 +922,7 @@ public class Etl extends AbstractRotine {
 		asset_book_values.put("data", data);
 		asset_book_values.put("hora", hora);
 		asset_book_values.put("asset", asset);
-		asset_book_values.put("valor_ativo", valor_ativo);
+//		asset_book_values.put("valor_ativo", valor_ativo);
 		asset_book_values.put("preco_opcao", preco_opcao);
 		asset_book_values.put("strike", strike);
 		asset_book_values.put("oferta_compra", oferta_compra);
@@ -914,11 +941,11 @@ public class Etl extends AbstractRotine {
 		return asset_book_values;
 	}
 
-	private boolean ifRawRecordChanges(double valor_ativo, double preco_opcao, double strike, double oferta_compra,
+	private boolean ifRawRecordChanges(double preco_opcao, double strike, double oferta_compra,
 			double oferta_venda, String estado_atual, int VOC, int VOV, BigDecimal contratos_abertos, int negocios,
 			int quantidade, Double volume, Map<String, Map<String, Object>> buffer_last_values, String asset) {
 
-		double buffer_valor_ativo = (double) buffer_last_values.get(asset).get("valor_ativo");
+//		double buffer_valor_ativo = (double) buffer_last_values.get(asset).get("valor_ativo");
 		double buffer_preco_opcao = (double) buffer_last_values.get(asset).get("preco_opcao");
 		double buffer_strike = (double) buffer_last_values.get(asset).get("strike");
 		double buffer_oferta_compra = (double) buffer_last_values.get(asset).get("oferta_compra");
@@ -934,8 +961,8 @@ public class Etl extends AbstractRotine {
 
 		boolean changes = false;
 
-		if (buffer_valor_ativo != valor_ativo)
-			changes = true;
+//		if (buffer_valor_ativo != valor_ativo)
+//			changes = true;
 		if (buffer_preco_opcao != preco_opcao)
 			changes = true;
 		if (buffer_strike != strike)
