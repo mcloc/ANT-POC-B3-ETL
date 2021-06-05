@@ -169,18 +169,20 @@ public class Etl extends AbstractRotine {
 	}
 
 	private void populateRawLotBufferFromLot(BigDecimal csv_lot_id) throws Exception {
-
-		PreparedStatement preparedStatement = DBConnectionHelper.getETLConn()
-				.prepareStatement("TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
-		preparedStatement.execute();
+		PreparedStatement preparedStatement;
+//		PreparedStatement preparedStatement = DBConnectionHelper.getETLConn()
+//				.prepareStatement("TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
+//		preparedStatement.execute();
 		
 		try {
+			DBConnectionHelper.closeETLConn();
 			LOGGER.info("[ETL] DROP INDEX b3signalloggerbuffer_asset_idx from B3SignalLoggerRawLotBuffer asset.");
 			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
-					"DROP INDEX B3Log.b3signalloggerbuffer_asset_idx;");
-			preparedStatement.execute();	
+					"DROP INDEX IF EXISTS B3Log.b3signalloggerbuffer_asset_idx;");
+			preparedStatement.execute();
+			LOGGER.info("[ETL] DROP AND RECREATE :TABLE  B3SignalLoggerRawLotBuffer.");
 			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
-					"DROP TABLE B3Log.B3SignalLoggerRawLotBuffer;"
+					"DROP TABLE IF EXISTS B3Log.B3SignalLoggerRawLotBuffer;"
 					+ "CREATE TABLE B3Log.B3SignalLoggerRawLotBuffer (\n"
 					+ "                id BIGINT  NOT NULL,\n"
 					+ "                asset VARCHAR(11) NOT NULL,\n"
@@ -240,26 +242,14 @@ public class Etl extends AbstractRotine {
 		PreparedStatement preparedStatement;
 		try {
 			LOGGER.info("[ETL] CREATE INDEX b3signalloggerbuffer_asset_idx on B3SignalLoggerRawLotBuffer asset.");
-			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(
+			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
 					"CREATE INDEX b3signalloggerbuffer_asset_idx\n"
 					+ " ON B3Log.B3SignalLoggerRawLotBuffer USING BTREE\n"
-					+ " ( asset ASC );");
+					+ " ( asset ASC );\n"
+					+ "CLUSTER b3signalloggerbuffer_asset_idx ON B3Log.B3SignalLoggerRawLotBuffer;");
 			preparedStatement.execute();
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
-			e.printStackTrace();
-		}
-			
-		
-		try {
-			LOGGER.info("[ETL] clustering table B3SignalLoggerRawLotBuffer asset index.");
-			preparedStatement = DBConnectionHelper.getCSVConn().prepareStatement(
-					"CLUSTER b3signalloggerbuffer_asset_idx ON B3Log.B3SignalLoggerRawLotBuffer;");
-			preparedStatement.execute();
-			
 			if(!DBConnectionHelper.getETLConn().getAutoCommit())
 				DBConnectionHelper.getETLConn().commit();
-			
 			long timer4 = System.currentTimeMillis();
 			long diff_time = timer4 - _start_time;
 			LOGGER.info("[ETL] clustering table B3SignalLoggerRawLotBuffer asset index total time: " + diff_time);
