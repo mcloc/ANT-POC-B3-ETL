@@ -426,7 +426,7 @@ public class Csv extends AbstractRotine {
 					file.getName(), RTD_DIRETCTORY, CsvLoadRegistry.STATUS_LOADING);
 
 			long rowsInserted = new CopyManager((BaseConnection) DBConnectionHelper.getCSVConn()).copyIn(
-					"COPY B3Log.B3SignalLoggerRaw " + "( " + "asset," + "data," + "hora," + "ultimo," + "strike,"
+					"set datestyle = 'ISO, DMY';COPY B3Log.B3SignalLoggerRaw " + "( " + "asset," + "data," + "hora," + "ultimo," + "strike,"
 							+ "negocios," + "quantidade," + "volume," + "oferta_compra," + "oferta_venda," + "VOC,"
 							+ "VOV," + "vencimento," + "validade," + "contratos_abertos," + "estado_atual," + "relogio"
 							+ ") " + "FROM STDIN (FORMAT csv, HEADER true, DELIMITER ',')",
