@@ -76,6 +76,11 @@ public class CsvLoadRegistry {
 	}
 
 	private void save() throws Exception {
+		
+		//DEBUG
+		if( 1 == 1)
+			return;
+		
 		if (lot_id == null || lot_name == null || lot_name.equals("") || file_name == null || file_name.equals("")
 				|| load_path == null || load_path.equals("") || processment_execution_id == null) {
 			throw new Exception("CsvLoadRegistry not saved, missing attributes values");

@@ -6,11 +6,11 @@ public class GlobalProperties {
 	private final String FILE_SEPARATOR = java.nio.file.FileSystems.getDefault().getSeparator();
 
 	// DB SETTINGS
-	private final String DB_HOST = "localhost";
+	private final String DB_HOST = "127.0.0.1";
 	private final int DB_PORT = 5432;
-	private final String DB_USER = "ANTOption";
+	private final String DB_USER = "antoption_user";
 	private final String DB_PASSWORD = "lacuna";
-	private final String DB_DATABASE_NAME = "ANTOption";
+	private final String DB_DATABASE_NAME = "antoption";
 	private final String DB_LOAD_SCHEMA = "B3Log";
 	private final String DB_ETL_SCHEMA = "Intellect";
 	private final String DB_EXPERTSYSTEM_SCHEMA = "Intellect";
@@ -18,9 +18,9 @@ public class GlobalProperties {
 	private final String dbms = "postgres";
 
 	// PATH SEETINGS
-	private final String RTD_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/data_load/";
-	private final String ARCHIVE_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive/";
-	private final String ARCHIVE_BUFFER_DIRETCTORY = "/ANT-TOOLCHAIN/ANTOption/archive_buffer/";
+	private final String RTD_DIRETCTORY = "/ANTOption/data_load/";
+	private final String ARCHIVE_DIRETCTORY = "/ANTOption/archive/";
+	private final String ARCHIVE_BUFFER_DIRETCTORY = "/ANTOption/archive_buffer/";
 	
 	private final int CSV_RETRY_LOT_TIMEDELAY = 1500;
 	private final int CSV_WAIT2COPY_LOT_TIMEDELAY = 1500;

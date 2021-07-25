@@ -619,7 +619,8 @@ public class Etl extends AbstractRotine {
 			long timer5 = System.currentTimeMillis();
 			long _diff_time = timer5 - start_time;
 			LOGGER.info("Total time to process " + ativos_list.size() + " assets: " + _diff_time + "ms ");
-
+			if(!_conn_chunks.getAutoCommit())
+				_conn_chunks.commit();
 			if (_conn_chunks != null && !_conn_chunks.isClosed())
 				_conn_chunks.close();
 		} catch (Exception e) {
@@ -658,20 +659,20 @@ public class Etl extends AbstractRotine {
 
 				stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 				stmt.setFetchSize(BULK_BATCH_INSERT_SIZE);
-//				String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
-//						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
-//						+ " from B3Log.B3SignalLoggerRawLotBuffer a "
-//						+ "			LEFT JOIN B3Log.B3SignalLoggerRawLotBuffer b ON a.relogio=b.relogio AND b.asset = '"
-//						+ _ativo + "' " + "			where   a.lot_id = " + csv_lot.getId() + " " + "and b.lot_id = "
-//						+ csv_lot.getId() + " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
-//						+ "', '[A-Z]+')||'%'  " + "ORDER BY a.relogio ASC";
-				
-				String sql = "select  a.data, a.hora, a.asset, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
+				String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
 						+ " from B3Log.B3SignalLoggerRawLotBuffer a "
-						+ " where   a.lot_id = " + csv_lot.getId() 
-						+ " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
+						+ "			LEFT JOIN B3Log.B3SignalLoggerRawLotBuffer b ON a.relogio=b.relogio AND b.asset = '"
+						+ _ativo + "' " + "			where   a.lot_id = " + csv_lot.getId() + " " + "and b.lot_id = "
+						+ csv_lot.getId() + " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
 						+ "', '[A-Z]+')||'%'  " + "ORDER BY a.relogio ASC";
+				
+//				String sql = "select  a.data, a.hora, a.asset, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
+//						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
+//						+ " from B3Log.B3SignalLoggerRawLotBuffer a "
+//						+ " where   a.lot_id = " + csv_lot.getId() 
+//						+ " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
+//						+ "', '[A-Z]+')||'%'  " + "ORDER BY a.relogio ASC";
 
 					LOGGER.info(sql);
 				rs = stmt.executeQuery(sql);
@@ -738,7 +739,8 @@ public class Etl extends AbstractRotine {
 					negocios = rs.getInt("negocios");
 					quantidade = rs.getInt("quantidade");
 					volume = rs.getDouble("volume");
-					valor_ativo = 0;
+//					valor_ativo = 0;
+					valor_ativo = rs.getDouble("valor_ativo");
 					asset_book_values = hidrateAssetRTDValues(data, hora, asset, valor_ativo, preco_opcao, strike,
 							oferta_compra, oferta_venda, vencimento, validade, estado_atual, relogio, VOC, VOV,
 							contratos_abertos, negocios, quantidade, volume);
@@ -796,7 +798,7 @@ public class Etl extends AbstractRotine {
 						else
 							valor_medio_by_quantidade = 0;
 						
-						valor_ativo = getValorAtivo(_ativo, relogio);
+//						valor_ativo = getValorAtivo(_ativo, relogio);
 
 						preparedStatement.setDate(1, _date);
 						preparedStatement.setTime(2, _hora);
@@ -905,6 +907,8 @@ public class Etl extends AbstractRotine {
 			long timer5 = System.currentTimeMillis();
 			long _diff_time = timer5 - start_time;
 			LOGGER.info("Total time to process " + ativos_list.size() + " assets: " + _diff_time + "ms ");
+			if(!_conn_chunks.getAutoCommit())
+				_conn_chunks.commit();
 			if (_conn_chunks != null && !_conn_chunks.isClosed())
 				_conn_chunks.close();
 		} catch (Exception e) {
