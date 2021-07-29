@@ -173,14 +173,12 @@ public class Etl extends AbstractRotine {
 //		PreparedStatement preparedStatement = DBConnectionHelper.getETLConn()
 //				.prepareStatement("TRUNCATE B3Log.B3SignalLoggerRawLotBuffer");
 //		preparedStatement.execute();
-		
+		CsvLoadLot csv_lot = CsvLoadLot.getLotByLotId(csv_lot_id);
 		try {
 			DBConnectionHelper.closeETLConn();
-			LOGGER.info("[ETL] DROP INDEX b3signalloggerbuffer_asset_idx AND b3signalloggerbuffer_asset_relogio_idx from B3SignalLoggerRawLotBuffer asset.");
+			LOGGER.info("[ETL] DROP INDEX b3signalloggerbuffer_asset_idx from B3SignalLoggerRawLotBuffer asset.");
 			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
-					"DROP INDEX IF EXISTS B3Log.b3signalloggerbuffer_asset_idx;\n"
-					+"DROP INDEX IF EXISTS B3Log.b3signalloggerbufferassettmp_asset_idx;\n"
-			+"DROP INDEX IF EXISTS B3Log.b3signalloggerbufferassettmp_asset_relogio_idx;\n");
+					"DROP INDEX IF EXISTS B3Log.b3signalloggerbuffer_asset_idx;\n");
 			preparedStatement.execute();
 			LOGGER.info("[ETL] DROP AND RECREATE :TABLE  B3SignalLoggerRawLotBuffer.");
 			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
@@ -206,48 +204,19 @@ public class Etl extends AbstractRotine {
 					+ "                relogio TIMESTAMP NOT NULL,\n"
 					+ "		 	 lot_name VARCHAR(70) NOT NULL,\n"
 					+ "		      lot_id BIGINT  NOT NULL,\n"
-					+ "                CONSTRAINT b3signalloggerrawbuffer_pk PRIMARY KEY (id),\n"
+//					+ "                CONSTRAINT b3signalloggerrawbuffer_pk PRIMARY KEY (id),\n"
 					+ "                CONSTRAINT fk_B3SignalLoggerrawbuffer_lot_id FOREIGN KEY(lot_id) \n"
 					+ "	  REFERENCES Intellect.csv_load_lot(id)\n"
 					+ ");\n"
 					+ "ALTER TABLE B3Log.B3SignalLoggerRawLotBuffer SET (autovacuum_enabled = false); \n"
 					+ "ALTER TABLE B3Log.B3SignalLoggerRawLotBuffer SET UNLOGGED;");
 			preparedStatement.execute();
-			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
-					"DROP TABLE IF EXISTS B3Log.B3SignalLoggerRawLotBuffer_asset_tmp;"
-					+ "CREATE TABLE B3Log.B3SignalLoggerRawLotBuffer_asset_tmp (\n"
-					+ "                id BIGINT  NOT NULL,\n"
-					+ "                asset VARCHAR(11) NOT NULL,\n"
-					+ "                data DATE NOT NULL,\n"
-					+ "                hora TIME NOT NULL,\n"
-					+ "                ultimo NUMERIC(8,2) NOT NULL,\n"
-					+ "                negocios INTEGER NOT NULL,\n"
-					+ "                quantidade INTEGER NOT NULL,\n"
-					+ "                volume NUMERIC(18,2) NOT NULL,\n"
-					+ "                oferta_compra NUMERIC(8,2) NOT NULL,\n"
-					+ "                oferta_venda NUMERIC(8,2) NOT NULL,\n"
-					+ "                VOC INTEGER NOT NULL,\n"
-					+ "                VOV INTEGER NOT NULL,\n"
-					+ "                vencimento DATE NOT NULL,\n"
-					+ "                validade DATE NOT NULL,\n"
-					+ "                contratos_abertos BIGINT NOT NULL,\n"
-					+ "                estado_atual VARCHAR(80) NOT NULL,\n"
-					+ "                relogio TIMESTAMP NOT NULL,\n"
-					+ "		 	 lot_name VARCHAR(70) NOT NULL,\n"
-					+ "		      lot_id BIGINT  NOT NULL,\n"
-					+ "                CONSTRAINT b3signalloggerrawbuffer_asset_tmp_pk PRIMARY KEY (id),\n"
-					+ "                CONSTRAINT fk_B3SignalLoggerrawbuffer_lot_id FOREIGN KEY(lot_id) \n"
-					+ "	  REFERENCES Intellect.csv_load_lot(id)\n"
-					+ ");\n"
-					+ "ALTER TABLE B3Log.B3SignalLoggerRawLotBuffer_asset_tmp SET (autovacuum_enabled = false); \n"
-					+ "ALTER TABLE B3Log.B3SignalLoggerRawLotBuffer_asset_tmp SET UNLOGGED;");
-			preparedStatement.execute();	
 			if(!DBConnectionHelper.getETLConn().getAutoCommit())
 				DBConnectionHelper.getETLConn().commit();
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
 		}
-		LOGGER.info("[ETL] inserting raw lot buffer table" );
+		LOGGER.info("[ETL] inserting raw lot buffer table for lot:" + csv_lot.getLot_name() );
 		String sql = "INSERT INTO B3Log.B3SignalLoggerRawLotBuffer ("
 				+ "id,asset,data,  hora,  ultimo, strike, negocios, quantidade, volume, oferta_compra,oferta_venda, "
 				+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
@@ -269,7 +238,7 @@ public class Etl extends AbstractRotine {
 //		
 //		preparedStatement = DBConnectionHelper.getETLConn()
 //				.prepareStatement(sql);
-		preparedStatement.execute();
+//		preparedStatement.execute();
 		if(!DBConnectionHelper.getETLConn().getAutoCommit())
 			DBConnectionHelper.getETLConn().commit();
 		
@@ -284,7 +253,8 @@ public class Etl extends AbstractRotine {
 		try {
 			LOGGER.info("[ETL] CREATE INDEX b3signalloggerbuffer_asset_idx on B3SignalLoggerRawLotBuffer asset.");
 			preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
-					"CREATE INDEX b3signalloggerbuffer_asset_idx\n"
+					"DROP INDEX IF EXISTS b3signalloggerbuffer_asset_idx\n"
+					+"CREATE INDEX b3signalloggerbuffer_asset_idx\n"
 					+ " ON B3Log.B3SignalLoggerRawLotBuffer USING BTREE\n"
 					+ " ( asset ASC );\n"
 					+ "CLUSTER b3signalloggerbuffer_asset_idx ON B3Log.B3SignalLoggerRawLotBuffer;\n"
@@ -338,7 +308,7 @@ public class Etl extends AbstractRotine {
 	}
 
 	public void etl1_normalization(BigDecimal csv_lot_id) throws Exception {
-		start_time = System.currentTimeMillis();
+		Long start_time = System.currentTimeMillis();
 
 		Map<String, Object> asset_book_values;
 
@@ -384,8 +354,11 @@ public class Etl extends AbstractRotine {
 			else
 				csv_lot.changeStatus(csv_lot.getStatus() + 1);
 
+			LOGGER.info("========================================================");
 			LOGGER.info("ETL Normalization Finished for this lot: " + csv_lot.getLot_name() + " actual status: "
 					+ csv_lot.getStatus());
+			LOGGER.info("ETL Total time to normalize this lot: " + (start_time/1000) + " sec");
+			LOGGER.info("========================================================");
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
 			return;
@@ -430,7 +403,7 @@ public class Etl extends AbstractRotine {
 				rs = stmt.executeQuery(sql);
 				long timer1 = System.currentTimeMillis();
 				long db_load_time = timer1 - start_time;
-				LOGGER.info("sql DB fetch execution time:" + db_load_time + " ms");
+				LOGGER.info("sql DB fetch execution time:" + (db_load_time/1000) + " sec ");
 
 				Long asset_counter_total = 0L;
 				Long asset_counter_changes = 0L;
@@ -691,46 +664,46 @@ public class Etl extends AbstractRotine {
 			_conn_chunks = DBConnectionHelper.getNewNonStaticConn();
 			_conn_chunks.setAutoCommit(false);
 
-			// FOREACH ASSET STRIK = 0 (ATIVOS)
+			// FOREACH ASSET STRIKE = 0 (ATIVOS)
 			for (String _ativo : ativos_list) {
 				// FIXME REGEX QUEBRADO COM ESSE CARA
 				if (_ativo.equals("B3SA3"))
 					continue;
 				
-				recreateAssetTmpTable();
+//				recreateAssetTmpTable();
 
 				LOGGER.info("Fetching raw data from B3Log.B3SignalLoggerRawLotBuffer:");
 				LOGGER.info("asset (" + _ativo_counter + "):" + _ativo + " lot: " + csv_lot.getLot_name());
 
 				
-				String sql = "INSERT INTO B3Log.B3SignalLoggerRawLotBuffer_asset_tmp ("
-						+ "asset,data,  hora,  ultimo, negocios, quantidade, volume, oferta_compra,oferta_venda, "
-						+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
-						+ ") " 
-						+  "select  a.asset,a.data, a.hora,  a.ultimo ,  a.negocios, a.quantidade, a.volume , "
-						+ "a.oferta_compra, a.oferta_venda,  a.VOC, a.VOV, a.vencimento, a.validade, a.contratos_abertos, "
-						+ "a.estado_atual, a.relogio, lot_name, lot_id "
-						+ " from B3Log.B3SignalLoggerRawLotBuffer a " + " where a.lot_id = " + csv_lot.getId()
-						+ " AND a.asset = '" + _ativo + "' " 
-						+ " AND a.strike = 0 " 
-						+ " ORDER BY a.relogio ASC";
-				preparedStatement = DBConnectionHelper.getETLConn()
-						.prepareStatement(sql);
-				preparedStatement.execute();
-				if(!DBConnectionHelper.getETLConn().getAutoCommit())
-					DBConnectionHelper.getETLConn().commit();
-				preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
-						 "CREATE INDEX b3signalloggerbufferassettmp_asset_idx\n"
-						+ " ON B3Log.B3SignalLoggerRawLotBuffer_asset_tmp USING BTREE\n"
-						+ " ( asset ASC);\n"
-						+ "CREATE INDEX b3signalloggerbufferassettmp_asset_relogio_idx\n"
-						+ " ON B3Log.B3SignalLoggerRawLotBuffer_asset_tmp USING BTREE\n"
-						+ " ( asset ASC, relogio ASC );\n"
-						+ "CLUSTER b3signalloggerbufferassettmp_asset_idx ON B3Log.B3SignalLoggerRawLotBuffer_asset_tmp;\n"
-						+ "CLUSTER b3signalloggerbufferassettmp_asset_relogio_idx ON B3Log.B3SignalLoggerRawLotBuffer_asset_tmp;\n"
-						);
-				if(!DBConnectionHelper.getETLConn().getAutoCommit())
-					DBConnectionHelper.getETLConn().commit();
+//				String sql = "INSERT INTO B3Log.B3SignalLoggerRawLotBuffer_asset_tmp ("
+//						+ "asset,data,  hora,  ultimo, negocios, quantidade, volume, oferta_compra,oferta_venda, "
+//						+ "VOC, VOV, vencimento, validade, contratos_abertos,estado_atual, relogio, lot_name, lot_id"
+//						+ ") " 
+//						+  "select  a.asset,a.data, a.hora,  a.ultimo ,  a.negocios, a.quantidade, a.volume , "
+//						+ "a.oferta_compra, a.oferta_venda,  a.VOC, a.VOV, a.vencimento, a.validade, a.contratos_abertos, "
+//						+ "a.estado_atual, a.relogio, lot_name, lot_id "
+//						+ " from B3Log.B3SignalLoggerRawLotBuffer a " + " where a.lot_id = " + csv_lot.getId()
+//						+ " AND a.asset = '" + _ativo + "' " 
+//						+ " AND a.strike = 0 " 
+//						+ " ORDER BY a.relogio ASC";
+//				preparedStatement = DBConnectionHelper.getETLConn()
+//						.prepareStatement(sql);
+//				preparedStatement.execute();
+//				if(!DBConnectionHelper.getETLConn().getAutoCommit())
+//					DBConnectionHelper.getETLConn().commit();
+//				preparedStatement = DBConnectionHelper.getETLConn().prepareStatement(
+//						 "CREATE INDEX b3signalloggerbufferassettmp_asset_idx\n"
+//						+ " ON B3Log.B3SignalLoggerRawLotBuffer_asset_tmp USING BTREE\n"
+//						+ " ( asset ASC);\n"
+//						+ "CREATE INDEX b3signalloggerbufferassettmp_asset_relogio_idx\n"
+//						+ " ON B3Log.B3SignalLoggerRawLotBuffer_asset_tmp USING BTREE\n"
+//						+ " ( asset ASC, relogio ASC );\n"
+//						+ "CLUSTER b3signalloggerbufferassettmp_asset_idx ON B3Log.B3SignalLoggerRawLotBuffer_asset_tmp;\n"
+//						+ "CLUSTER b3signalloggerbufferassettmp_asset_relogio_idx ON B3Log.B3SignalLoggerRawLotBuffer_asset_tmp;\n"
+//						);
+//				if(!DBConnectionHelper.getETLConn().getAutoCommit())
+//					DBConnectionHelper.getETLConn().commit();
 				stmt = _conn_chunks.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 				stmt.setFetchSize(BULK_BATCH_INSERT_SIZE);
 //				String sql = "select  a.data, a.hora, a.asset, b.ultimo valor_ativo, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
@@ -741,7 +714,7 @@ public class Etl extends AbstractRotine {
 //						+ csv_lot.getId() + " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
 //						+ "', '[A-Z]+')||'%'  " + "ORDER BY a.relogio ASC";
 				
-				sql = "select  a.data, a.hora, a.asset, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
+				String sql = "select  a.data, a.hora, a.asset, a.ultimo as preco_opcao, a.strike, a.oferta_compra, a.oferta_venda, a.vencimento, a.validade, a.estado_atual, a.relogio,  "
 						+ " a.VOC, a.VOV, a.contratos_abertos,  a.negocios, a.quantidade, a.volume "
 						+ " from B3Log.B3SignalLoggerRawLotBuffer a "
 						+ " where   a.lot_id = " + csv_lot.getId() + " AND a.strike != 0 and " 
@@ -755,7 +728,7 @@ public class Etl extends AbstractRotine {
 //						+ " AND a.strike != 0 and " + "a.asset like  substring('" + _ativo
 //						+ "', '[A-Z]+')||'%'  " + "ORDER BY a.relogio ASC";
 
-					LOGGER.info(sql);
+				LOGGER.info(sql);
 				rs = stmt.executeQuery(sql);
 				long timer1 = System.currentTimeMillis();
 				long db_load_time = timer1 - start_time;
@@ -820,8 +793,8 @@ public class Etl extends AbstractRotine {
 					negocios = rs.getInt("negocios");
 					quantidade = rs.getInt("quantidade");
 					volume = rs.getDouble("volume");
-//					valor_ativo = 0;
-					valor_ativo = getValorAtivo(asset, relogio, csv_lot.getId());
+					valor_ativo = 0;
+//					valor_ativo = getValorAtivo(asset, relogio, csv_lot.getId());
 					asset_book_values = hidrateAssetRTDValues(data, hora, asset, valor_ativo, preco_opcao, strike,
 							oferta_compra, oferta_venda, vencimento, validade, estado_atual, relogio, VOC, VOV,
 							contratos_abertos, negocios, quantidade, volume);
