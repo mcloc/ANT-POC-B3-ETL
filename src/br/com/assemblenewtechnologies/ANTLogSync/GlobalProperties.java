@@ -1,5 +1,8 @@
 package br.com.assemblenewtechnologies.ANTLogSync;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GlobalProperties {
 
 	private final String PROCESSMENT_MODE = "batch_process";
@@ -27,6 +30,11 @@ public class GlobalProperties {
 	private final int CSV_MAX_WAIT2COPY_LOT = 5;
 	
 	private final boolean CSV_ARCHIVE_ON = false;
+	
+	private static String[] DERIVATIVES = { 
+			"BOVA11",
+			"PETR4"			
+	};
 	
 	
 	private static GlobalProperties instance;
@@ -172,6 +180,15 @@ public class GlobalProperties {
 	 */
 	public boolean isCSV_ARCHIVE_ON() {
 		return CSV_ARCHIVE_ON;
+	}
+
+	public boolean hasDerivatives(String _ativo) {
+		for(String _at : GlobalProperties.DERIVATIVES) {
+			if(_ativo.equals(_at)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	
