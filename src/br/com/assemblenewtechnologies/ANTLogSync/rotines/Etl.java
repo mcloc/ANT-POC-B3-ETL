@@ -32,7 +32,7 @@ public class Etl extends AbstractRotine {
 	private Thread thread;
 	private ETLHandler runnable;
 
-	private static final int BULK_BATCH_INSERT_SIZE = 15000;
+	private static final int BULK_BATCH_INSERT_SIZE = 100000;
 	private static final int BULK_BATCH_FETCH_SIZE = 150000;
 
 	public Etl() throws Exception {
